@@ -1,3 +1,4 @@
+import { Logger } from "../utils/Logger";
 /**
  * MicrophoneController - High-level Microphone Management Interface
  * 
@@ -85,7 +86,7 @@ export class MicrophoneController {
    */
   private detectDevice(): void {
     this.deviceSpecs = this.audioManager.getPlatformSpecs();
-    console.log('📱 [MicrophoneController] Device detected:', this.deviceSpecs);
+    Logger.log('📱 [MicrophoneController] Device detected:', this.deviceSpecs);
     
     // Notify callback
     this.eventCallbacks.onDeviceChange?.(this.deviceSpecs);
@@ -100,7 +101,7 @@ export class MicrophoneController {
   async initialize(): Promise<MediaStreamResources> {
     try {
       this.updateState('initializing');
-      console.log('🎤 [MicrophoneController] Starting initialization');
+      Logger.log('🎤 [MicrophoneController] Starting initialization');
 
       // Acquire resources through lifecycle manager
       const resources = await this.lifecycleManager.acquire();
@@ -114,7 +115,7 @@ export class MicrophoneController {
       this.eventCallbacks.onPermissionChange?.(true);
       this.dispatchCustomEvent('pitchpro:microphoneGranted', { stream: resources.mediaStream });
 
-      console.log('✅ [MicrophoneController] Initialization complete');
+      Logger.log('✅ [MicrophoneController] Initialization complete');
       return resources;
 
     } catch (error) {
@@ -176,7 +177,7 @@ export class MicrophoneController {
    * Stop microphone and release resources
    */
   stop(): void {
-    console.log('🛑 [MicrophoneController] Stopping microphone');
+    Logger.log('🛑 [MicrophoneController] Stopping microphone');
     
     this.lifecycleManager.release();
     this.updateState('ready');
@@ -184,20 +185,20 @@ export class MicrophoneController {
     // Dispatch stop event
     this.dispatchCustomEvent('pitchpro:microphoneStopped', {});
     
-    console.log('✅ [MicrophoneController] Microphone stopped');
+    Logger.log('✅ [MicrophoneController] Microphone stopped');
   }
 
   /**
    * Force stop with complete cleanup
    */
   forceStop(): void {
-    console.log('🚨 [MicrophoneController] Force stopping microphone');
+    Logger.log('🚨 [MicrophoneController] Force stopping microphone');
     
     this.lifecycleManager.forceRelease();
     this.updateState('uninitialized');
     this.isPermissionGranted = false;
     
-    console.log('✅ [MicrophoneController] Force stop complete');
+    Logger.log('✅ [MicrophoneController] Force stop complete');
   }
 
   /**
@@ -209,7 +210,7 @@ export class MicrophoneController {
     const newSensitivity = this.audioManager.getSensitivity();
     
     if (oldSensitivity !== newSensitivity) {
-      console.log(`🔧 [MicrophoneController] Sensitivity changed: ${oldSensitivity}x → ${newSensitivity}x`);
+      Logger.log(`🔧 [MicrophoneController] Sensitivity changed: ${oldSensitivity}x → ${newSensitivity}x`);
       
       // Notify callbacks
       this.eventCallbacks.onSensitivityChange?.(newSensitivity);
@@ -365,7 +366,7 @@ export class MicrophoneController {
       const success = maxVolume > 1; // Consider success if we detected some audio
       
       const frequencyDisplay = detectedFrequency ? detectedFrequency.toFixed(0) : 'none';
-      console.log(`🧪 [MicrophoneController] Microphone test complete: volume=${maxVolume.toFixed(2)}, frequency=${frequencyDisplay}, duration=${duration}ms`);
+      Logger.log(`🧪 [MicrophoneController] Microphone test complete: volume=${maxVolume.toFixed(2)}, frequency=${frequencyDisplay}, duration=${duration}ms`);
       
       return {
         success,
@@ -396,7 +397,7 @@ export class MicrophoneController {
       const oldState = this.currentState;
       this.currentState = newState;
       
-      console.log(`🔄 [MicrophoneController] State changed: ${oldState} → ${newState}`);
+      Logger.log(`🔄 [MicrophoneController] State changed: ${oldState} → ${newState}`);
       
       // Notify callback
       this.eventCallbacks.onStateChange?.(newState);
@@ -467,7 +468,7 @@ export class MicrophoneController {
    * Cleanup and destroy all resources
    */
   destroy(): void {
-    console.log('🗑️ [MicrophoneController] Destroying controller');
+    Logger.log('🗑️ [MicrophoneController] Destroying controller');
     
     // Force stop to ensure cleanup
     this.forceStop();
@@ -485,6 +486,6 @@ export class MicrophoneController {
     this.lastError = null;
     this.deviceSpecs = null;
     
-    console.log('✅ [MicrophoneController] Cleanup complete');
+    Logger.log('✅ [MicrophoneController] Cleanup complete');
   }
 }

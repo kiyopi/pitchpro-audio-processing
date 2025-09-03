@@ -1,3 +1,4 @@
+import { Logger } from "../utils/Logger";
 /**
  * MicrophoneLifecycleManager - Page transition and idle detection microphone control
  * 
@@ -56,7 +57,7 @@ export class MicrophoneLifecycleManager {
     
     // SSR compatibility check
     if (typeof window === 'undefined') {
-      console.log('🔇 [MicrophoneLifecycleManager] SSR environment detected - skipping initialization');
+      Logger.log('🔇 [MicrophoneLifecycleManager] SSR environment detected - skipping initialization');
       return;
     }
     
@@ -79,7 +80,7 @@ export class MicrophoneLifecycleManager {
   async acquire(): Promise<MediaStreamResources> {
     this.refCount++;
     
-    console.log(`🎤 [MicrophoneLifecycleManager] Acquiring resources (refCount: ${this.refCount})`);
+    Logger.log(`🎤 [MicrophoneLifecycleManager] Acquiring resources (refCount: ${this.refCount})`);
     
     try {
       // Initialize AudioManager if not already active
@@ -96,7 +97,7 @@ export class MicrophoneLifecycleManager {
         
         this.callbacks.onStateChange?.('active');
         
-        console.log('🟢 [MicrophoneLifecycleManager] Microphone activated');
+        Logger.log('🟢 [MicrophoneLifecycleManager] Microphone activated');
         return resources;
       }
       
@@ -119,7 +120,7 @@ export class MicrophoneLifecycleManager {
   release(): void {
     this.refCount = Math.max(0, this.refCount - 1);
     
-    console.log(`📉 [MicrophoneLifecycleManager] Releasing resources (refCount: ${this.refCount})`);
+    Logger.log(`📉 [MicrophoneLifecycleManager] Releasing resources (refCount: ${this.refCount})`);
     
     // Only stop monitoring and cleanup when no references remain
     if (this.refCount <= 0) {
@@ -129,7 +130,7 @@ export class MicrophoneLifecycleManager {
       
       this.callbacks.onStateChange?.('inactive');
       
-      console.log('🔴 [MicrophoneLifecycleManager] Microphone deactivated');
+      Logger.log('🔴 [MicrophoneLifecycleManager] Microphone deactivated');
     }
   }
 
@@ -137,7 +138,7 @@ export class MicrophoneLifecycleManager {
    * Force release all resources (emergency cleanup)
    */
   forceRelease(): void {
-    console.log('🚨 [MicrophoneLifecycleManager] Force release - cleaning up all resources');
+    Logger.log('🚨 [MicrophoneLifecycleManager] Force release - cleaning up all resources');
     
     this.refCount = 0;
     this.stopAllMonitoring();
@@ -202,7 +203,7 @@ export class MicrophoneLifecycleManager {
     this.eventListeners.set('focus', focusHandler);
     this.eventListeners.set('blur', blurHandler);
     
-    console.log('👂 [MicrophoneLifecycleManager] Event listeners setup complete');
+    Logger.log('👂 [MicrophoneLifecycleManager] Event listeners setup complete');
   }
 
   /**
@@ -212,7 +213,7 @@ export class MicrophoneLifecycleManager {
     if (!this.isActive) return;
     
     if (this.isPageVisible) {
-      console.log('👁️ [MicrophoneLifecycleManager] Page became visible - resuming monitoring');
+      Logger.log('👁️ [MicrophoneLifecycleManager] Page became visible - resuming monitoring');
       this.updateActivity();
       
       // Check microphone health after page becomes visible
@@ -221,14 +222,14 @@ export class MicrophoneLifecycleManager {
       }, 1000);
       
     } else {
-      console.log('🙈 [MicrophoneLifecycleManager] Page became hidden - reducing monitoring frequency');
+      Logger.log('🙈 [MicrophoneLifecycleManager] Page became hidden - reducing monitoring frequency');
       
       // Consider releasing resources if page stays hidden for too long
       setTimeout(() => {
         if (!this.isPageVisible && this.isActive) {
           const timeSinceActivity = Date.now() - this.lastActivityTime;
           if (timeSinceActivity > this.config.maxIdleTimeBeforeRelease) {
-            console.log('⏰ [MicrophoneLifecycleManager] Long inactivity detected - releasing resources');
+            Logger.log('⏰ [MicrophoneLifecycleManager] Long inactivity detected - releasing resources');
             this.forceRelease();
           }
         }
@@ -256,7 +257,7 @@ export class MicrophoneLifecycleManager {
       this.performHealthCheck();
     }, this.config.healthCheckIntervalMs);
     
-    console.log(`💓 [MicrophoneLifecycleManager] Health monitoring started (${this.config.healthCheckIntervalMs}ms interval)`);
+    Logger.log(`💓 [MicrophoneLifecycleManager] Health monitoring started (${this.config.healthCheckIntervalMs}ms interval)`);
   }
 
   /**
@@ -271,7 +272,7 @@ export class MicrophoneLifecycleManager {
       this.checkIdleTimeout();
     }, 30000); // Check every 30 seconds
     
-    console.log('😴 [MicrophoneLifecycleManager] Idle monitoring started');
+    Logger.log('😴 [MicrophoneLifecycleManager] Idle monitoring started');
   }
 
   /**
@@ -289,7 +290,7 @@ export class MicrophoneLifecycleManager {
       }
     }, 10000); // Check every 10 seconds when visible
     
-    console.log('👁️ [MicrophoneLifecycleManager] Visibility monitoring started');
+    Logger.log('👁️ [MicrophoneLifecycleManager] Visibility monitoring started');
   }
 
   /**
@@ -309,12 +310,12 @@ export class MicrophoneLifecycleManager {
         if (this.autoRecoveryAttempts < this.maxAutoRecoveryAttempts) {
           this.autoRecoveryAttempts++;
           
-          console.log(`🔧 [MicrophoneLifecycleManager] Attempting automatic recovery (${this.autoRecoveryAttempts}/${this.maxAutoRecoveryAttempts})`);
+          Logger.log(`🔧 [MicrophoneLifecycleManager] Attempting automatic recovery (${this.autoRecoveryAttempts}/${this.maxAutoRecoveryAttempts})`);
           
           setTimeout(async () => {
             try {
               await this.audioManager.initialize(); // This will trigger re-initialization if needed
-              console.log('✅ [MicrophoneLifecycleManager] Automatic recovery successful');
+              Logger.log('✅ [MicrophoneLifecycleManager] Automatic recovery successful');
               
               // Dispatch success event
               this.dispatchCustomEvent('pitchpro:lifecycle:autoRecoverySuccess', {});
@@ -350,7 +351,7 @@ export class MicrophoneLifecycleManager {
     const isIdle = timeSinceActivity > this.config.idleTimeoutMs;
     
     if (isIdle && this.isUserActive) {
-      console.log('😴 [MicrophoneLifecycleManager] User idle detected');
+      Logger.log('😴 [MicrophoneLifecycleManager] User idle detected');
       this.isUserActive = false;
       
       // Optionally reduce monitoring frequency during idle
@@ -359,7 +360,7 @@ export class MicrophoneLifecycleManager {
     
     // Check for extreme idle (auto-release)
     if (timeSinceActivity > this.config.maxIdleTimeBeforeRelease) {
-      console.log('⏰ [MicrophoneLifecycleManager] Extreme idle detected - auto-releasing resources');
+      Logger.log('⏰ [MicrophoneLifecycleManager] Extreme idle detected - auto-releasing resources');
       this.forceRelease();
     }
   }
@@ -383,7 +384,7 @@ export class MicrophoneLifecycleManager {
       this.visibilityCheckInterval = null;
     }
     
-    console.log('⏹️ [MicrophoneLifecycleManager] All monitoring stopped');
+    Logger.log('⏹️ [MicrophoneLifecycleManager] All monitoring stopped');
   }
 
   /**
@@ -427,14 +428,14 @@ export class MicrophoneLifecycleManager {
       this.startVisibilityMonitoring();
     }
     
-    console.log('🔧 [MicrophoneLifecycleManager] Configuration updated:', newConfig);
+    Logger.log('🔧 [MicrophoneLifecycleManager] Configuration updated:', newConfig);
   }
 
   /**
    * Cleanup and destroy
    */
   destroy(): void {
-    console.log('🗑️ [MicrophoneLifecycleManager] Destroying lifecycle manager');
+    Logger.log('🗑️ [MicrophoneLifecycleManager] Destroying lifecycle manager');
     
     // Stop all monitoring
     this.stopAllMonitoring();
@@ -452,6 +453,6 @@ export class MicrophoneLifecycleManager {
     });
     this.eventListeners.clear();
     
-    console.log('✅ [MicrophoneLifecycleManager] Cleanup complete');
+    Logger.log('✅ [MicrophoneLifecycleManager] Cleanup complete');
   }
 }

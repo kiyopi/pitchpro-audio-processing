@@ -1,3 +1,4 @@
+import { Logger } from '../utils/Logger';
 /**
  * ErrorNotificationSystem - Framework-agnostic Error Display and Notification
  * 
@@ -12,8 +13,8 @@ export class ErrorNotificationSystem {
   private container: HTMLElement | null = null;
   private notifications = new Map<string, NotificationElement>();
   private notificationCounter = 0;
-  private defaultDuration = 5000; // 5 seconds
-  private maxNotifications = 5;
+  private defaultDuration = 5000; // 5秒自動非表示
+  private maxNotifications = 3; // 最大3個まで表示
   
   // CSS classes for styling
   private cssClasses = {
@@ -36,7 +37,7 @@ export class ErrorNotificationSystem {
   constructor() {
     // SSR compatibility
     if (typeof window === 'undefined') {
-      console.log('🔇 [ErrorNotificationSystem] SSR environment detected - skipping initialization');
+      Logger.log('🔇 [ErrorNotificationSystem] SSR environment detected - skipping initialization');
       return;
     }
     
@@ -60,10 +61,10 @@ export class ErrorNotificationSystem {
       // Add to document body
       document.body.appendChild(this.container);
       
-      console.log('📋 [ErrorNotificationSystem] Notification container created');
+      Logger.log('📋 [ErrorNotificationSystem] Notification container created');
     } else {
       this.container = existingContainer as HTMLElement;
-      console.log('📋 [ErrorNotificationSystem] Using existing notification container');
+      Logger.log('📋 [ErrorNotificationSystem] Using existing notification container');
     }
   }
 
@@ -243,7 +244,7 @@ export class ErrorNotificationSystem {
       }, duration);
     }
 
-    console.log(`📢 [ErrorNotificationSystem] Notification shown: ${config.type} - ${config.title}`);
+    Logger.log(`📢 [ErrorNotificationSystem] Notification shown: ${config.type} - ${config.title}`);
     
     return id;
   }
@@ -332,7 +333,7 @@ export class ErrorNotificationSystem {
       this.notifications.delete(id);
     }, 300);
 
-    console.log(`🗑️ [ErrorNotificationSystem] Notification removed: ${id}`);
+    Logger.log(`🗑️ [ErrorNotificationSystem] Notification removed: ${id}`);
   }
 
   /**
@@ -342,7 +343,7 @@ export class ErrorNotificationSystem {
     const ids = Array.from(this.notifications.keys());
     ids.forEach(id => this.remove(id));
     
-    console.log('🧹 [ErrorNotificationSystem] All notifications cleared');
+    Logger.log('🧹 [ErrorNotificationSystem] All notifications cleared');
   }
 
   /**
@@ -494,14 +495,14 @@ export class ErrorNotificationSystem {
       this.maxNotifications = config.maxNotifications;
     }
     
-    console.log('🔧 [ErrorNotificationSystem] Configuration updated:', config);
+    Logger.log('🔧 [ErrorNotificationSystem] Configuration updated:', config);
   }
 
   /**
    * Destroy the notification system
    */
   destroy(): void {
-    console.log('🗑️ [ErrorNotificationSystem] Destroying notification system');
+    Logger.log('🗑️ [ErrorNotificationSystem] Destroying notification system');
     
     this.clearAll();
     
@@ -518,6 +519,6 @@ export class ErrorNotificationSystem {
     this.container = null;
     this.notifications.clear();
     
-    console.log('✅ [ErrorNotificationSystem] Cleanup complete');
+    Logger.log('✅ [ErrorNotificationSystem] Cleanup complete');
   }
 }

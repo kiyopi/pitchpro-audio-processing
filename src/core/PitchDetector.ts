@@ -1,3 +1,4 @@
+import { Logger } from '../utils/Logger';
 /**
  * PitchDetector - Framework-agnostic High-precision Pitch Detection
  * 
@@ -17,6 +18,8 @@ import type {
 import { AudioManager } from './AudioManager';
 
 export class PitchDetector {
+  private static DEBUG_MODE = false; // デバッグログ制御
+  
   // Core components
   private audioManager: AudioManager;
   private pitchDetector: PitchyDetector<Float32Array> | null = null;
@@ -94,12 +97,12 @@ export class PitchDetector {
       this.componentState = 'initializing';
       this.lastError = null;
       
-      console.log('🎙️ [PitchDetector] Starting initialization via AudioManager');
+      if (PitchDetector.DEBUG_MODE) Logger.log('🎙️ [PitchDetector] Starting initialization via AudioManager');
       
       // Get shared resources from AudioManager
       await this.audioManager.initialize();
       
-      console.log('✅ [PitchDetector] AudioManager resources acquired');
+      if (PitchDetector.DEBUG_MODE) Logger.log('✅ [PitchDetector] AudioManager resources acquired');
       
       // Create dedicated Analyser (with filters)
       const filteredAnalyserId = `pitch-detector-filtered-${Date.now()}`;
@@ -123,7 +126,7 @@ export class PitchDetector {
       });
       this.analyserIds.push(rawAnalyserId);
       
-      console.log('✅ [PitchDetector] Analysers created:', this.analyserIds);
+      if (PitchDetector.DEBUG_MODE) Logger.log('✅ [PitchDetector] Analysers created:', this.analyserIds);
       
       // Initialize PitchDetector
       this.pitchDetector = PitchyDetector.forFloat32Array(this.analyser.fftSize);
@@ -135,7 +138,7 @@ export class PitchDetector {
       // Notify state change
       this.callbacks.onStateChange?.(this.componentState);
       
-      console.log('✅ [PitchDetector] Initialization complete');
+      if (PitchDetector.DEBUG_MODE) Logger.log('✅ [PitchDetector] Initialization complete');
       
     } catch (error) {
       console.error('❌ [PitchDetector] Initialization error:', error);
@@ -322,7 +325,7 @@ export class PitchDetector {
       // Check for 2x harmonic (octave up error)
       const halfFrequency = frequency / 2;
       if (Math.abs(halfFrequency - avgFrequency) / avgFrequency < 0.1 && avgConfidence > confidenceThreshold) {
-        console.log(`🔧 [PitchDetector] Octave correction: ${frequency}Hz → ${halfFrequency}Hz`);
+        Logger.log(`🔧 [PitchDetector] Octave correction: ${frequency}Hz → ${halfFrequency}Hz`);
         this.previousFrequency = halfFrequency;
         return halfFrequency;
       }
@@ -330,7 +333,7 @@ export class PitchDetector {
       // Check for 1/2x harmonic (octave down error)
       const doubleFrequency = frequency * 2;
       if (Math.abs(doubleFrequency - avgFrequency) / avgFrequency < 0.1 && avgConfidence > confidenceThreshold) {
-        console.log(`🔧 [PitchDetector] Octave up correction: ${frequency}Hz → ${doubleFrequency}Hz`);
+        Logger.log(`🔧 [PitchDetector] Octave up correction: ${frequency}Hz → ${doubleFrequency}Hz`);
         this.previousFrequency = doubleFrequency;
         return doubleFrequency;
       }
@@ -392,7 +395,7 @@ export class PitchDetector {
     // Reset harmonic correction
     this.resetHarmonicHistory();
     
-    console.log('🔄 [PitchDetector] Display state reset');
+    Logger.log('🔄 [PitchDetector] Display state reset');
   }
 
   /**
@@ -441,7 +444,7 @@ export class PitchDetector {
    * Reinitialize detector
    */
   async reinitialize(): Promise<void> {
-    console.log('🔄 [PitchDetector] Starting reinitialization');
+    Logger.log('🔄 [PitchDetector] Starting reinitialization');
     
     // Cleanup current state
     this.cleanup();
@@ -452,21 +455,21 @@ export class PitchDetector {
     // Execute reinitialization
     await this.initialize();
     
-    console.log('✅ [PitchDetector] Reinitialization complete');
+    Logger.log('✅ [PitchDetector] Reinitialization complete');
   }
 
   /**
    * Cleanup resources
    */
   cleanup(): void {
-    console.log('🧹 [PitchDetector] Starting cleanup');
+    Logger.log('🧹 [PitchDetector] Starting cleanup');
     
     this.stopDetection();
     
     // Notify AudioManager to release created Analysers
     if (this.analyserIds.length > 0) {
       this.audioManager.release(this.analyserIds);
-      console.log('📤 [PitchDetector] Notified AudioManager of Analyser release:', this.analyserIds);
+      Logger.log('📤 [PitchDetector] Notified AudioManager of Analyser release:', this.analyserIds);
       this.analyserIds = [];
     }
     
@@ -484,6 +487,6 @@ export class PitchDetector {
     this.volumeHistory = [];
     this.resetHarmonicHistory();
     
-    console.log('✅ [PitchDetector] Cleanup complete');
+    Logger.log('✅ [PitchDetector] Cleanup complete');
   }
 }

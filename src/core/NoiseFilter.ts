@@ -1,3 +1,4 @@
+import { Logger } from "../utils/Logger";
 /**
  * NoiseFilter - 3-stage Noise Reduction Filter Chain
  * 
@@ -44,7 +45,7 @@ export class NoiseFilter {
    */
   private createFilterChain(): void {
     if (!this.config.useFilters) {
-      console.log('🔇 [NoiseFilter] Filters disabled - bypassing filter chain');
+      Logger.log('🔇 [NoiseFilter] Filters disabled - bypassing filter chain');
       return;
     }
 
@@ -67,7 +68,7 @@ export class NoiseFilter {
       this.notchFilter.frequency.setValueAtTime(this.config.notchFreq, this.audioContext.currentTime);
       this.notchFilter.Q.setValueAtTime(this.config.notchQ, this.audioContext.currentTime);
 
-      console.log('✅ [NoiseFilter] 3-stage filter chain created', {
+      Logger.log('✅ [NoiseFilter] 3-stage filter chain created', {
         highpass: `${this.config.highpassFreq}Hz (Q=${this.config.highpassQ})`,
         lowpass: `${this.config.lowpassFreq}Hz (Q=${this.config.lowpassQ})`,
         notch: `${this.config.notchFreq}Hz (Q=${this.config.notchQ})`
@@ -114,7 +115,7 @@ export class NoiseFilter {
 
       this.isConnected = true;
 
-      console.log('🔗 [NoiseFilter] Filter chain connected');
+      Logger.log('🔗 [NoiseFilter] Filter chain connected');
       
       // Return the final node in the chain (notch filter) for further connections
       return this.notchFilter!;
@@ -144,7 +145,7 @@ export class NoiseFilter {
       this.inputNode = null;
       this.outputNode = null;
 
-      console.log('🔌 [NoiseFilter] Filter chain disconnected');
+      Logger.log('🔌 [NoiseFilter] Filter chain disconnected');
 
     } catch (error) {
       console.warn('⚠️ [NoiseFilter] Disconnect warning:', error);
@@ -195,7 +196,7 @@ export class NoiseFilter {
         this.config.notchQ = params.notchQ;
       }
 
-      console.log('🔧 [NoiseFilter] Filter parameters updated:', params);
+      Logger.log('🔧 [NoiseFilter] Filter parameters updated:', params);
 
     } catch (error) {
       console.error('❌ [NoiseFilter] Parameter update failed:', error);
@@ -228,7 +229,7 @@ export class NoiseFilter {
       this.connect(this.inputNode, savedOutputNode || undefined);
     }
 
-    console.log(`🔘 [NoiseFilter] Filters ${enabled ? 'enabled' : 'disabled'}`);
+    Logger.log(`🔘 [NoiseFilter] Filters ${enabled ? 'enabled' : 'disabled'}`);
   }
 
   /**
@@ -312,7 +313,7 @@ export class NoiseFilter {
    * Cleanup and destroy filter nodes
    */
   destroy(): void {
-    console.log('🗑️ [NoiseFilter] Destroying filter chain');
+    Logger.log('🗑️ [NoiseFilter] Destroying filter chain');
     
     this.disconnect();
     
@@ -322,7 +323,7 @@ export class NoiseFilter {
     this.lowpassFilter = null;
     this.notchFilter = null;
     
-    console.log('✅ [NoiseFilter] Cleanup complete');
+    Logger.log('✅ [NoiseFilter] Cleanup complete');
   }
 
   /**

@@ -1,3 +1,4 @@
+import { Logger } from "../utils/Logger";
 /**
  * DeviceDetection - Cross-platform device detection and optimization
  * 
@@ -30,7 +31,7 @@ export class DeviceDetection {
     // Cache the result
     DeviceDetection.cachedSpecs = deviceSpecs;
     
-    console.log('📱 [DeviceDetection] Device analysis:', {
+    Logger.log('📱 [DeviceDetection] Device analysis:', {
       userAgent: userAgent.substring(0, 100) + '...',
       deviceType: deviceSpecs.deviceType,
       isIOS: deviceSpecs.isIOS,

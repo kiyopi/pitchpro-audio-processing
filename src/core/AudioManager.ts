@@ -1,3 +1,4 @@
+import { Logger } from '../utils/Logger';
 /**
  * AudioManager - Framework-agnostic Global Audio Resource Management System
  * 
@@ -62,13 +63,13 @@ export class AudioManager {
     
     switch (deviceSpecs.deviceType) {
       case 'iPad':
-        console.log('🔧 [AudioManager] iPad detected - setting default sensitivity 7.0x');
+        Logger.log('🔧 [AudioManager] iPad detected - setting default sensitivity 7.0x');
         return 7.0;
       case 'iPhone':
-        console.log('🔧 [AudioManager] iPhone detected - setting default sensitivity 3.0x');
+        Logger.log('🔧 [AudioManager] iPhone detected - setting default sensitivity 3.0x');
         return 3.0;
       default:
-        console.log('🔧 [AudioManager] PC detected - setting default sensitivity 1.0x');
+        Logger.log('🔧 [AudioManager] PC detected - setting default sensitivity 1.0x');
         return 1.0;
     }
   }
@@ -97,7 +98,7 @@ export class AudioManager {
       } else {
         // Force re-initialization if MediaStream is unhealthy
         console.warn('⚠️ [AudioManager] Unhealthy MediaStream detected - force re-initialization:', healthCheck);
-        console.log('🔄 [AudioManager] Unhealthy MediaStream details:', {
+        Logger.log('🔄 [AudioManager] Unhealthy MediaStream details:', {
           mediaStreamActive: this.mediaStream?.active,
           trackCount: this.mediaStream?.getTracks().length,
           trackStates: this.mediaStream?.getTracks().map(t => ({
@@ -116,7 +117,7 @@ export class AudioManager {
         // Short wait to ensure resource release
         await new Promise(resolve => setTimeout(resolve, 100));
         
-        console.log('🔄 [AudioManager] Cleanup complete - starting re-initialization');
+        Logger.log('🔄 [AudioManager] Cleanup complete - starting re-initialization');
         // Continue to next block for re-initialization
       }
     }
@@ -139,26 +140,26 @@ export class AudioManager {
    */
   private async _doInitialize(): Promise<MediaStreamResources> {
     try {
-      console.log('🎤 [AudioManager] Starting initialization');
+      Logger.log('🎤 [AudioManager] Starting initialization');
 
       // Create AudioContext (single instance)
       if (!this.audioContext) {
         this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-        console.log('✅ [AudioManager] AudioContext creation complete');
+        Logger.log('✅ [AudioManager] AudioContext creation complete');
       }
 
       // Resume AudioContext if suspended
       if (this.audioContext.state === 'suspended') {
         await this.audioContext.resume();
-        console.log('✅ [AudioManager] AudioContext resume complete');
+        Logger.log('✅ [AudioManager] AudioContext resume complete');
       }
 
       // Get MediaStream (single instance)
       if (!this.mediaStream) {
         const deviceSpecs = this.getPlatformSpecs();
         
-        console.log(`🔍 [AudioManager] Device detection: ${deviceSpecs.deviceType}`, navigator.userAgent);
-        console.log(`🔍 [AudioManager] Touch support: ${'ontouchend' in document}`);
+        Logger.log(`🔍 [AudioManager] Device detection: ${deviceSpecs.deviceType}`, navigator.userAgent);
+        Logger.log(`🔍 [AudioManager] Touch support: ${'ontouchend' in document}`);
         
         // Safari WebKit compatibility: Maximum compatibility audio settings
         const audioConstraints: MediaStreamConstraints = {
@@ -194,19 +195,19 @@ export class AudioManager {
           }
         };
         
-        console.log('🎤 [AudioManager] Getting MediaStream with Safari-compatible settings:', audioConstraints);
+        Logger.log('🎤 [AudioManager] Getting MediaStream with Safari-compatible settings:', audioConstraints);
         this.mediaStream = await navigator.mediaDevices.getUserMedia(audioConstraints);
-        console.log('✅ [AudioManager] MediaStream acquisition complete');
+        Logger.log('✅ [AudioManager] MediaStream acquisition complete');
       }
 
       // Create SourceNode (single instance)
       if (!this.sourceNode) {
         this.sourceNode = this.audioContext.createMediaStreamSource(this.mediaStream);
-        console.log('✅ [AudioManager] SourceNode creation complete');
+        Logger.log('✅ [AudioManager] SourceNode creation complete');
         
         // MediaStream state check
         const tracks = this.mediaStream.getTracks();
-        console.log('🎤 [AudioManager] MediaStream tracks:', tracks.map(t => ({
+        Logger.log('🎤 [AudioManager] MediaStream tracks:', tracks.map(t => ({
           kind: t.kind,
           label: t.label,
           enabled: t.enabled,
@@ -222,14 +223,14 @@ export class AudioManager {
         
         // Connect SourceNode -> GainNode
         this.sourceNode.connect(this.gainNode);
-        console.log(`✅ [AudioManager] GainNode creation complete (sensitivity: ${this.currentSensitivity}x)`);
+        Logger.log(`✅ [AudioManager] GainNode creation complete (sensitivity: ${this.currentSensitivity}x)`);
       }
 
       this.isInitialized = true;
       this.refCount++;
       this.lastError = null;
 
-      console.log(`🎤 [AudioManager] Initialization complete (refCount: ${this.refCount})`);
+      Logger.log(`🎤 [AudioManager] Initialization complete (refCount: ${this.refCount})`);
 
       return {
         audioContext: this.audioContext,
@@ -298,11 +299,11 @@ export class AudioManager {
       filterChain.lowpass.connect(filterChain.notch);
       filterChain.notch.connect(analyser);
       
-      console.log(`🔧 [AudioManager] Filtered Analyser created: ${id}`);
+      Logger.log(`🔧 [AudioManager] Filtered Analyser created: ${id}`);
     } else {
       // Direct connection (signal from GainNode)
       finalNode.connect(analyser);
-      console.log(`🔧 [AudioManager] Raw signal Analyser created: ${id}`);
+      Logger.log(`🔧 [AudioManager] Raw signal Analyser created: ${id}`);
     }
     
     // Important: Analyser only passes audio through, don't connect to destination
@@ -349,7 +350,7 @@ export class AudioManager {
       const analyser = this.analysers.get(id)!;
       analyser.disconnect();
       this.analysers.delete(id);
-      console.log(`🗑️ [AudioManager] Analyser removed: ${id}`);
+      Logger.log(`🗑️ [AudioManager] Analyser removed: ${id}`);
     }
 
     if (this.filters.has(id)) {
@@ -358,7 +359,7 @@ export class AudioManager {
       filterChain.lowpass.disconnect();
       filterChain.notch.disconnect();
       this.filters.delete(id);
-      console.log(`🗑️ [AudioManager] Filter chain removed: ${id}`);
+      Logger.log(`🗑️ [AudioManager] Filter chain removed: ${id}`);
     }
   }
 
@@ -373,11 +374,11 @@ export class AudioManager {
     if (this.gainNode) {
       this.gainNode.gain.value = clampedSensitivity;
       this.currentSensitivity = clampedSensitivity;
-      console.log(`🎤 [AudioManager] Microphone sensitivity updated: ${clampedSensitivity.toFixed(1)}x`);
+      Logger.log(`🎤 [AudioManager] Microphone sensitivity updated: ${clampedSensitivity.toFixed(1)}x`);
     } else {
       // If GainNode not initialized, save setting only
       this.currentSensitivity = clampedSensitivity;
-      console.log(`🎤 [AudioManager] Microphone sensitivity set (awaiting initialization): ${clampedSensitivity.toFixed(1)}x`);
+      Logger.log(`🎤 [AudioManager] Microphone sensitivity set (awaiting initialization): ${clampedSensitivity.toFixed(1)}x`);
     }
   }
 
@@ -432,11 +433,11 @@ export class AudioManager {
     analyserIds.forEach(id => this.removeAnalyser(id));
 
     this.refCount = Math.max(0, this.refCount - 1);
-    console.log(`📉 [AudioManager] Reference count decremented: ${this.refCount}`);
+    Logger.log(`📉 [AudioManager] Reference count decremented: ${this.refCount}`);
 
     // Full cleanup only when no one is using it
     if (this.refCount <= 0) {
-      console.log('🧹 [AudioManager] Starting full resource cleanup');
+      Logger.log('🧹 [AudioManager] Starting full resource cleanup');
       this._cleanup();
     }
   }
@@ -445,7 +446,7 @@ export class AudioManager {
    * Force cleanup (for emergency use)
    */
   forceCleanup(): void {
-    console.log('🚨 [AudioManager] Force cleanup executed');
+    Logger.log('🚨 [AudioManager] Force cleanup executed');
     this._cleanup();
   }
 
@@ -453,7 +454,7 @@ export class AudioManager {
    * Internal cleanup process
    */
   private _cleanup(): void {
-    console.log('🧹 [AudioManager] Starting cleanup');
+    Logger.log('🧹 [AudioManager] Starting cleanup');
     
     // Remove all analysers
     for (const id of this.analysers.keys()) {
@@ -463,15 +464,15 @@ export class AudioManager {
     // Stop MediaStream (health check compatible)
     if (this.mediaStream) {
       const tracks = this.mediaStream.getTracks();
-      console.log(`🛑 [AudioManager] Stopping MediaStream: ${tracks.length} tracks`);
+      Logger.log(`🛑 [AudioManager] Stopping MediaStream: ${tracks.length} tracks`);
       
       tracks.forEach((track, index) => {
         try {
           if (track.readyState !== 'ended') {
             track.stop();
-            console.log(`🛑 [AudioManager] Track ${index} stop complete`);
+            Logger.log(`🛑 [AudioManager] Track ${index} stop complete`);
           } else {
-            console.log(`⚠️ [AudioManager] Track ${index} already ended`);
+            Logger.log(`⚠️ [AudioManager] Track ${index} already ended`);
           }
         } catch (error) {
           console.warn(`⚠️ [AudioManager] Track ${index} stop error:`, error);
@@ -485,7 +486,7 @@ export class AudioManager {
     if (this.audioContext && this.audioContext.state !== 'closed') {
       try {
         this.audioContext.close();
-        console.log('🛑 [AudioManager] AudioContext close complete');
+        Logger.log('🛑 [AudioManager] AudioContext close complete');
       } catch (error) {
         console.warn('⚠️ [AudioManager] AudioContext close error:', error);
       }
@@ -510,7 +511,7 @@ export class AudioManager {
     this.initPromise = null;
     this.currentSensitivity = this._getDefaultSensitivity(); // Reset to device-dependent default sensitivity
 
-    console.log('✅ [AudioManager] Cleanup complete');
+    Logger.log('✅ [AudioManager] Cleanup complete');
   }
 
   /**

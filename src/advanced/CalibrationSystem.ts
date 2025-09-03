@@ -1,3 +1,4 @@
+import { Logger } from '../utils/Logger';
 /**
  * CalibrationSystem - Device-specific audio calibration and optimization
  * 
@@ -44,7 +45,7 @@ export class CalibrationSystem {
     this.calibrationInProgress = true;
 
     try {
-      console.log('🎛️ [CalibrationSystem] Starting device calibration');
+      Logger.log('🎛️ [CalibrationSystem] Starting device calibration');
 
       // Step 1: Measure background noise
       const noiseProfile = await this.measureBackgroundNoise(audioContext, mediaStream);
@@ -72,7 +73,7 @@ export class CalibrationSystem {
       this.isCalibrated = true;
       this.calibrationInProgress = false;
 
-      console.log('✅ [CalibrationSystem] Calibration completed successfully');
+      Logger.log('✅ [CalibrationSystem] Calibration completed successfully');
 
       return {
         success: true,
@@ -369,7 +370,7 @@ export class CalibrationSystem {
         audioProcessor.updateFilterSettings(settings.filterSettings);
       }
 
-      console.log('✅ [CalibrationSystem] Calibration applied successfully');
+      Logger.log('✅ [CalibrationSystem] Calibration applied successfully');
       return true;
 
     } catch (error) {
@@ -403,7 +404,7 @@ export class CalibrationSystem {
     this.calibrationInProgress = false;
     this.calibrationData = null;
     
-    console.log('🔄 [CalibrationSystem] Calibration reset');
+    Logger.log('🔄 [CalibrationSystem] Calibration reset');
   }
 
   /**
@@ -423,7 +424,7 @@ export class CalibrationSystem {
       };
 
       localStorage.setItem(calibrationKey, JSON.stringify(dataToSave));
-      console.log('💾 [CalibrationSystem] Calibration saved');
+      Logger.log('💾 [CalibrationSystem] Calibration saved');
       return true;
 
     } catch (error) {
@@ -449,20 +450,20 @@ export class CalibrationSystem {
       // Check if calibration is recent (within 7 days)
       const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days
       if (Date.now() - parsedData.timestamp > maxAge) {
-        console.log('⏰ [CalibrationSystem] Saved calibration is too old, ignoring');
+        Logger.log('⏰ [CalibrationSystem] Saved calibration is too old, ignoring');
         return false;
       }
 
       // Verify device compatibility
       if (parsedData.deviceSpecs.deviceType !== this.deviceSpecs.deviceType) {
-        console.log('📱 [CalibrationSystem] Device type mismatch, ignoring saved calibration');
+        Logger.log('📱 [CalibrationSystem] Device type mismatch, ignoring saved calibration');
         return false;
       }
 
       this.calibrationData = parsedData.calibrationData;
       this.isCalibrated = true;
       
-      console.log('📂 [CalibrationSystem] Calibration loaded successfully');
+      Logger.log('📂 [CalibrationSystem] Calibration loaded successfully');
       return true;
 
     } catch (error) {
