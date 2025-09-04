@@ -404,8 +404,13 @@ export class MicrophoneController {
     }
   }
 
+  // エラー表示防止用: 同一エラーの連続表示を防ぐ
+  private lastErrorId: string | null = null;
+  private errorCooldownTime = 3000; // 3秒間同一エラーの再表示を防ぐ
+  private lastErrorTime = 0;
+
   /**
-   * Handle errors with notification system
+   * Handle errors with notification system (ループ防止改良版)
    */
   private handleError(error: Error, context: string): void {
     console.error(`❌ [MicrophoneController] Error in ${context}:`, error);
@@ -413,11 +418,30 @@ export class MicrophoneController {
     this.lastError = error;
     this.updateState('error');
     
+    // 🚨 エラーループ防止: 同一エラーの連続表示を制限
+    const currentTime = Date.now();
+    const errorId = `${context}:${error.message}`;
+    const isSameError = this.lastErrorId === errorId;
+    const isInCooldown = currentTime - this.lastErrorTime < this.errorCooldownTime;
+    
+    if (isSameError && isInCooldown) {
+      console.warn(`🔄 [MicrophoneController] エラー表示をスキップ（クールダウン中）: ${errorId}`);
+      // コールバックのみ実行（UI表示なし）
+      this.eventCallbacks.onError?.(error);
+      return;
+    }
+    
+    // エラー表示許可: 新しいエラーまたはクールダウン期間終了
+    this.lastErrorId = errorId;
+    this.lastErrorTime = currentTime;
+    
     // Show error notification if system is available
     if (this.errorSystem) {
       if (context === 'initialization' || context === 'lifecycle') {
+        console.log(`📢 [MicrophoneController] マイクエラー表示: ${context} - ${error.message}`);
         this.errorSystem.showMicrophoneError(error, context);
       } else {
+        console.log(`📢 [MicrophoneController] 一般エラー表示: ${context} - ${error.message}`);
         this.errorSystem.showError(
           'マイクエラー',
           `${context}でエラーが発生しました: ${error.message}`,

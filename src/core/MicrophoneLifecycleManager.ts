@@ -33,6 +33,8 @@ export class MicrophoneLifecycleManager {
   private isUserActive = true;
   private autoRecoveryAttempts = 0;
   private maxAutoRecoveryAttempts = 3;
+  private lastRecoveryTime = 0;
+  private recoveryResetInterval = 30000; // 30秒後にリカバリー回数をリセット
   
   // Event listeners storage for cleanup
   private eventListeners = new Map<string, EventListener>();
@@ -306,9 +308,17 @@ export class MicrophoneLifecycleManager {
       if (!healthStatus.healthy) {
         console.warn('⚠️ [MicrophoneLifecycleManager] Unhealthy microphone state detected:', healthStatus);
         
+        // 🚨 自動リカバリー頻度制限: 30秒間隔でリセット
+        const currentTime = Date.now();
+        if (currentTime - this.lastRecoveryTime > this.recoveryResetInterval) {
+          this.autoRecoveryAttempts = 0; // リセット
+          console.log('🔄 [MicrophoneLifecycleManager] リカバリー回数をリセット');
+        }
+        
         // Attempt automatic recovery
         if (this.autoRecoveryAttempts < this.maxAutoRecoveryAttempts) {
           this.autoRecoveryAttempts++;
+          this.lastRecoveryTime = currentTime;
           
           Logger.log(`🔧 [MicrophoneLifecycleManager] Attempting automatic recovery (${this.autoRecoveryAttempts}/${this.maxAutoRecoveryAttempts})`);
           
@@ -322,6 +332,7 @@ export class MicrophoneLifecycleManager {
               
             } catch (error) {
               console.error('❌ [MicrophoneLifecycleManager] Automatic recovery failed:', error);
+              // 🚨 エラーコールバック呼び出しを制限（既にMicrophoneControllerで制限済み）
               this.callbacks.onError?.(error as Error);
               
               // Dispatch failure event
@@ -331,7 +342,9 @@ export class MicrophoneLifecycleManager {
           
         } else {
           console.error('❌ [MicrophoneLifecycleManager] Maximum recovery attempts reached - manual intervention required');
-          this.callbacks.onError?.(new Error('Microphone health check failed - maximum recovery attempts exceeded'));
+          // 🚨 最大試行回数到達時のエラー表示も制限
+          const maxAttemptsError = new Error('Microphone health check failed - maximum recovery attempts exceeded');
+          this.callbacks.onError?.(maxAttemptsError);
         }
       }
       

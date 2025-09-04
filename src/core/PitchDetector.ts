@@ -51,6 +51,13 @@ export class PitchDetector {
   private previousFrequency = 0;
   private harmonicHistory: Array<{frequency: number, confidence: number, timestamp: number}> = [];
   
+  // Pitch-training安定版統合: 無音検出とリセット機能（初期安定化改良版）
+  private frequencyHistory: number[] = [];
+  private stableFrequency: number | null = null;
+  private noSoundCounter = 0;
+  private maxHistoryLength = 8; // 履歴長を短縮（10→8）
+  private initialStabilizationFrames = 3; // 初期安定化フレーム数（5→3）
+  
   // Configuration
   private config: Required<PitchDetectorConfig>;
   private disableHarmonicCorrection = false;
@@ -70,7 +77,7 @@ export class PitchDetector {
     this.config = {
       fftSize: 4096,
       smoothing: 0.1,
-      clarityThreshold: 0.8,
+      clarityThreshold: 0.6, // 0.8 → 0.6 初期検出を早める
       minVolumeAbsolute: 0.01,
       ...config
     };
@@ -252,7 +259,8 @@ export class PitchDetector {
     // - Exclude extreme low frequency noise (G-1, etc.) reliably
     const isValidVocalRange = pitch >= 65 && pitch <= 1200;
     
-    if (pitch && clarity > this.config.clarityThreshold && this.currentVolume > 30 && isValidVocalRange) {
+    // 🔧 音量閾値をさらに緩和（3% → 1.5%）- 初期検出を早める
+    if (pitch && clarity > this.config.clarityThreshold && this.currentVolume > 1.5 && isValidVocalRange) {
       let finalFreq = pitch;
       
       // Harmonic correction control (for 230Hz stuck issue debugging)
@@ -262,14 +270,65 @@ export class PitchDetector {
         finalFreq = this.correctHarmonic(pitch, normalizedVolume);
       }
       
+      // 🎯 pitch-training安定版の周波数安定化ロジック統合
+      const roundedFreq = Math.round(finalFreq * 10) / 10;
+      
+      // 周波数履歴に追加
+      this.frequencyHistory.push(roundedFreq);
+      if (this.frequencyHistory.length > this.maxHistoryLength) {
+        this.frequencyHistory.shift();
+      }
+      
+      // 🚀 初期安定化改良: 3フレームから開始（5→3）
+      if (this.frequencyHistory.length >= this.initialStabilizationFrames) {
+        const historyCount = Math.min(this.frequencyHistory.length, 5);
+        const avgFreq = this.frequencyHistory.slice(-historyCount).reduce((sum, f) => sum + f, 0) / historyCount;
+        
+        // 初回検出の場合、より早く安定化
+        if (this.stableFrequency === null) {
+          this.stableFrequency = roundedFreq;
+          finalFreq = roundedFreq;
+          console.log(`🎯 [PitchDetector] 初期周波数確定: ${finalFreq}Hz (${historyCount}フレーム後)`);
+        } else {
+          // 急激な変化を抑制（±20%以内）
+          if (Math.abs(roundedFreq - avgFreq) / avgFreq > 0.2) {
+            finalFreq = avgFreq + (roundedFreq - avgFreq) * 0.3;
+            finalFreq = Math.round(finalFreq * 10) / 10;
+          } else {
+            // オクターブジャンプ検出
+            const octaveRatio = roundedFreq / this.stableFrequency;
+            if (octaveRatio > 1.8 || octaveRatio < 0.55) {
+              // オクターブジャンプを無視
+              finalFreq = this.stableFrequency;
+            } else {
+              // 正常な変化
+              this.stableFrequency = roundedFreq;
+              finalFreq = roundedFreq;
+            }
+          }
+        }
+      } else {
+        // 🚀 履歴不足の場合も即座に表示（10秒待機の回避）
+        finalFreq = roundedFreq;
+        console.log(`⏳ [PitchDetector] 履歴構築中: ${finalFreq}Hz (${this.frequencyHistory.length}/${this.initialStabilizationFrames})`);
+      }
+      
       // Update frequency display
       this.currentFrequency = Math.round(finalFreq);
       this.detectedNote = this.frequencyToNote(this.currentFrequency);
       this.pitchClarity = clarity;
       
+      // 🔄 無音カウンターリセット
+      this.noSoundCounter = 0;
+      
     } else {
-      // Clear harmonic correction history when signal is weak
-      if (this.currentFrequency === 0) {
+      // 🎯 pitch-training安定版の無音検出・リセット機能
+      this.noSoundCounter++;
+      
+      // 15フレーム以上無音が続いた場合、履歴クリア
+      if (this.noSoundCounter > 15) {
+        this.frequencyHistory = [];
+        this.stableFrequency = null;
         this.resetHarmonicHistory();
       }
       
@@ -392,6 +451,11 @@ export class PitchDetector {
     // Clear buffers
     this.volumeHistory = [];
     
+    // 🎯 pitch-training安定版のリセット機能統合
+    this.frequencyHistory = [];
+    this.stableFrequency = null;
+    this.noSoundCounter = 0;
+    
     // Reset harmonic correction
     this.resetHarmonicHistory();
     
@@ -486,6 +550,11 @@ export class PitchDetector {
     // Clear history
     this.volumeHistory = [];
     this.resetHarmonicHistory();
+    
+    // 🎯 pitch-training安定版のクリーンアップ統合
+    this.frequencyHistory = [];
+    this.stableFrequency = null;
+    this.noSoundCounter = 0;
     
     Logger.log('✅ [PitchDetector] Cleanup complete');
   }
