@@ -38,6 +38,7 @@ export class PitchDetector {
   private rawVolume = 0;
   private currentFrequency = 0;
   private detectedNote = '--';
+  private detectedOctave: number | null = null;
   private pitchClarity = 0;
   
   // Stabilization buffers
@@ -67,8 +68,8 @@ export class PitchDetector {
     this.config = {
       fftSize: 4096,
       smoothing: 0.1,
-      clarityThreshold: 0.8,
-      minVolumeAbsolute: 0.01,
+      clarityThreshold: 0.4,    // 0.8から0.4に現実的な値に変更
+      minVolumeAbsolute: 0.003, // 0.01から0.003に現実的な値に変更
       ...config
     };
     
@@ -127,6 +128,9 @@ export class PitchDetector {
       
       // Initialize PitchDetector
       this.pitchDetector = PitchyDetector.forFloat32Array(this.analyser.fftSize);
+      
+      // デバッグログ: Pitchyインスタンス確認
+      console.log(`[Debug] Pitchyインスタンス作成: ${!!this.pitchDetector}, FFTサイズ: ${this.analyser.fftSize}`);
       
       // Initialization complete
       this.componentState = 'ready';
@@ -195,6 +199,13 @@ export class PitchDetector {
    * Real-time pitch detection loop
    */
   private detectPitch(): void {
+    // デバッグログ: detectPitchメソッドの呼び出し確認
+    console.log(`[Debug] detectPitch呼び出し: detecting=${this.isDetecting}, analyser=${!!this.analyser}, rawAnalyser=${!!this.rawAnalyser}, pitchDetector=${!!this.pitchDetector}`);
+    
+    // デバッグ: AudioManagerの状態確認
+    const audioManagerStatus = this.audioManager.getStatus();
+    console.log(`[Debug] AudioManager状態: context=${audioManagerStatus.audioContextState}, stream=${audioManagerStatus.mediaStreamActive}`);
+    
     if (!this.isDetecting || !this.analyser || !this.rawAnalyser || !this.pitchDetector) return;
     
     const bufferLength = this.analyser.fftSize;
@@ -204,6 +215,11 @@ export class PitchDetector {
     this.analyser.getFloatTimeDomainData(buffer);
     this.rawAnalyser.getFloatTimeDomainData(rawBuffer);
     
+    // デバッグ: バッファーの内容を確認（常に出力）
+    const nonZeroCount = buffer.filter(val => Math.abs(val) > 0.0001).length;
+    const maxValue = Math.max(...buffer.map(val => Math.abs(val)));
+    console.log(`[Debug] バッファー分析: 非ゼロ値=${nonZeroCount}/${bufferLength}, 最大値=${maxValue.toFixed(6)}`);
+    
     // Volume calculation (filtered)
     let sum = 0;
     for (let i = 0; i < bufferLength; i++) {
@@ -211,12 +227,19 @@ export class PitchDetector {
     }
     const rms = Math.sqrt(sum / bufferLength);
     
+    // デバッグ: RMS計算の詳細（常に出力）
+    console.log(`[Debug] RMS計算: sum=${sum.toFixed(6)}, rms=${rms.toFixed(6)}`);
+    
     // Platform-specific volume calculation
     const platformSpecs = this.deviceSpecs;
     const adjustedRms = rms * platformSpecs.gainCompensation;
     const volumePercent = Math.max(0, Math.min(100, 
       (adjustedRms * 100) / platformSpecs.divisor * 6 - platformSpecs.noiseThreshold
     ));
+    
+    // デバッグ: 音量計算の詳細（常に出力）
+    console.log(`[Debug] 音量計算: rms=${rms.toFixed(6)}, adjustedRms=${adjustedRms.toFixed(6)}, volumePercent=${volumePercent.toFixed(2)}%`);
+    console.log(`[Debug] プラットフォーム設定: gain=${platformSpecs.gainCompensation}, divisor=${platformSpecs.divisor}, noise=${platformSpecs.noiseThreshold}`);
     
     // Raw volume calculation (pre-filter)
     let rawSum = 0;
@@ -238,9 +261,13 @@ export class PitchDetector {
     this.rawVolume = rawVolumePercent;
     
     // Pitch detection (using PitchDetector)
-    const audioContext = this.audioManager.getStatus().audioContextState;
-    const sampleRate = audioContext === 'running' ? 44100 : 44100; // Default fallback
+    const status = this.audioManager.getStatus();
+    const sampleRate = 44100; // Fixed sample rate for now
     const [pitch, clarity] = this.pitchDetector.findPitch(buffer, sampleRate);
+    
+    // デバッグログ: Pitchyライブラリの結果（常時出力）
+    console.log(`[Debug] Pitchy結果: pitch=${pitch?.toFixed(1) || 'null'}, clarity=${clarity?.toFixed(3) || 'null'}, volume=${this.currentVolume?.toFixed(1)}%, sampleRate=${sampleRate}`);
+    console.log(`[Debug] Pitchyバッファー: 最初5要素=${buffer.slice(0, 5).map(v => v.toFixed(6)).join(', ')}`);
     
     // Human vocal range filtering (practical adjustment)
     // Optimized for actual human voice range:
@@ -249,7 +276,10 @@ export class PitchDetector {
     // - Exclude extreme low frequency noise (G-1, etc.) reliably
     const isValidVocalRange = pitch >= 65 && pitch <= 1200;
     
-    if (pitch && clarity > this.config.clarityThreshold && this.currentVolume > 30 && isValidVocalRange) {
+    // デバッグログ: 判定条件の詳細
+    console.log(`[Debug] 判定条件: pitch=${!!pitch}, clarity=${clarity?.toFixed(3)}>${this.config.clarityThreshold}, volume=${this.currentVolume?.toFixed(1)}>0.4, range=${isValidVocalRange}`);
+    
+    if (pitch && clarity > this.config.clarityThreshold && this.currentVolume > 0.4 && isValidVocalRange) {
       let finalFreq = pitch;
       
       // Harmonic correction control (for 230Hz stuck issue debugging)
@@ -261,7 +291,9 @@ export class PitchDetector {
       
       // Update frequency display
       this.currentFrequency = Math.round(finalFreq);
-      this.detectedNote = this.frequencyToNote(this.currentFrequency);
+      const noteInfo = this.frequencyToNoteAndOctave(this.currentFrequency);
+      this.detectedNote = noteInfo.note;
+      this.detectedOctave = noteInfo.octave;
       this.pitchClarity = clarity;
       
     } else {
@@ -273,6 +305,7 @@ export class PitchDetector {
       // Clear frequency display
       this.currentFrequency = 0;
       this.detectedNote = '--';
+      this.detectedOctave = null;
       this.pitchClarity = 0;
     }
     
@@ -283,6 +316,7 @@ export class PitchDetector {
     const result: PitchDetectionResult = {
       frequency: this.currentFrequency,
       note: this.detectedNote,
+      octave: this.detectedOctave || undefined,
       clarity: this.pitchClarity,
       volume: displayVolume,
       cents: this.currentFrequency > 0 ? this.frequencyToCents(this.currentFrequency) : undefined
@@ -349,19 +383,27 @@ export class PitchDetector {
   }
 
   /**
-   * Convert frequency to note name
+   * Convert frequency to note name and octave
    */
-  private frequencyToNote(frequency: number): string {
+  private frequencyToNoteAndOctave(frequency: number): { note: string; octave: number | null } {
     const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
     const A4 = 440;
     
-    if (frequency <= 0) return '--';
+    if (frequency <= 0) return { note: '--', octave: null };
     
     const semitonesFromA4 = Math.round(12 * Math.log2(frequency / A4));
     const noteIndex = (semitonesFromA4 + 9 + 120) % 12;
     const octave = Math.floor((semitonesFromA4 + 9) / 12) + 4;
     
-    return noteNames[noteIndex] + octave;
+    return { note: noteNames[noteIndex], octave };
+  }
+  
+  /**
+   * Convert frequency to note name (legacy method)
+   */
+  private frequencyToNote(frequency: number): string {
+    const result = this.frequencyToNoteAndOctave(frequency);
+    return result.octave !== null ? `${result.note}${result.octave}` : result.note;
   }
 
   /**
@@ -383,6 +425,7 @@ export class PitchDetector {
     this.rawVolume = 0;
     this.currentFrequency = 0;
     this.detectedNote = '--';
+    this.detectedOctave = null;
     this.pitchClarity = 0;
     this.stableVolume = 0;
     

@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PitchPro ライブラリ デモ - 音程検出システム</title>
+    
+    <!-- スタイルシート -->
+    <link rel="stylesheet" href="./styles/base.css">
+    <link rel="stylesheet" href="./styles/training.css">
+    
+    <!-- フォント -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucideアイコン -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <style>
+        /* デモページ専用スタイル */
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .pitch-display {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(168, 85, 247, 0.1));
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 2rem 0;
+            text-align: center;
+        }
+        
+        .frequency-large {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #fbbf24;
+            font-family: 'Monaco', 'Consolas', monospace;
+            margin: 1rem 0;
+        }
+        
+        .note-display {
+            font-size: 3rem;
+            color: #22c55e;
+            margin: 0.5rem 0;
+        }
+        
+        .volume-meter {
+            height: 200px;
+            width: 60px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 30px;
+            position: relative;
+            overflow: hidden;
+            margin: 0 auto;
+        }
+        
+        .volume-fill {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: linear-gradient(to top, #22c55e, #fbbf24, #ef4444);
+            transition: height 0.1s ease;
+            border-radius: 30px;
+        }
+        
+        .control-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin: 2rem 0;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .info-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        
+        .info-label {
+            color: #94a3b8;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .info-value {
+            color: #f1f5f9;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+        
+        .status-active {
+            background: #22c55e;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-inactive {
+            background: #6b7280;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .debug-panel {
+            background: rgba(0,0,0,0.6);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 2rem;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .debug-line {
+            margin: 0.25rem 0;
+            padding: 0.25rem;
+            border-left: 2px solid #3b82f6;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <!-- ヘッダー -->
+        <header class="text-center mb-8">
+            <h1 class="text-5xl font-bold text-white mb-4">
+                <i data-lucide="music" style="width: 48px; height: 48px; color: #a855f7;"></i>
+                PitchPro ライブラリ デモ
+            </h1>
+            <p class="text-xl text-white-60">高精度音程検出システムの実装例</p>
+        </header>
+
+        <!-- メインコントロール -->
+        <div class="glass-card">
+            <h2 class="heading-lg mb-4">
+                <i data-lucide="settings-2" class="text-blue-300"></i>
+                <span>音程検出コントロール</span>
+            </h2>
+            
+            <div class="control-buttons">
+                <button id="btn-init" class="btn btn-secondary">
+                    <i data-lucide="power" style="width: 20px; height: 20px;"></i>
+                    <span>初期化</span>
+                </button>
+                <button id="btn-start" class="btn btn-primary" disabled>
+                    <i data-lucide="play" style="width: 20px; height: 20px;"></i>
+                    <span>検出開始</span>
+                </button>
+                <button id="btn-stop" class="btn btn-outline" disabled>
+                    <i data-lucide="stop-circle" style="width: 20px; height: 20px;"></i>
+                    <span>検出停止</span>
+                </button>
+            </div>
+            
+            <div class="text-center mt-4">
+                <span class="status-indicator status-inactive" id="status-indicator"></span>
+                <span id="status-text" class="text-white-60">未初期化</span>
+            </div>
+        </div>
+
+        <!-- ピッチ表示 -->
+        <div class="pitch-display">
+            <h3 class="text-2xl text-white mb-4">リアルタイム音程検出</h3>
+            <div class="frequency-large" id="frequency">-- Hz</div>
+            <div class="note-display" id="note">--</div>
+            <div class="text-white-60">
+                <span id="octave">--</span> オクターブ
+                <span class="mx-3">|</span>
+                <span id="cents">--</span> cents
+            </div>
+        </div>
+
+        <!-- 詳細情報グリッド -->
+        <div class="info-grid">
+            <!-- 音量メーター -->
+            <div class="info-card">
+                <h3 class="heading-sm mb-3">
+                    <i data-lucide="volume-2" class="text-green-300"></i>
+                    <span>音量レベル</span>
+                </h3>
+                <div class="volume-meter">
+                    <div class="volume-fill" id="volume-meter"></div>
+                </div>
+                <div class="text-center mt-3">
+                    <span id="volume-percent" class="text-2xl font-bold text-white">0%</span>
+                </div>
+            </div>
+            
+            <!-- 明瞭度 -->
+            <div class="info-card">
+                <div class="info-label">明瞭度 (Clarity)</div>
+                <div class="info-value" id="clarity">0.00</div>
+                <div class="progress-bar mt-3">
+                    <div class="progress-fill gradient-catalog-purple" id="clarity-bar" style="width: 0%;"></div>
+                </div>
+            </div>
+            
+            <!-- デバイス情報 -->
+            <div class="info-card">
+                <div class="info-label">検出デバイス</div>
+                <div class="info-value" id="device-type">--</div>
+                <div class="text-sm text-white-60 mt-2">
+                    感度: <span id="sensitivity">--</span>x
+                </div>
+            </div>
+            
+            <!-- AudioContext状態 -->
+            <div class="info-card">
+                <div class="info-label">AudioContext</div>
+                <div class="info-value" id="audio-state">--</div>
+                <div class="text-sm text-white-60 mt-2">
+                    サンプルレート: <span id="sample-rate">--</span> Hz
+                </div>
+            </div>
+        </div>
+
+        <!-- デバッグパネル -->
+        <div class="glass-card">
+            <h3 class="heading-sm mb-3">
+                <i data-lucide="terminal" class="text-yellow-300"></i>
+                <span>デバッグ情報</span>
+            </h3>
+            <div class="debug-panel" id="debug-panel">
+                <div class="debug-line">システム待機中...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PitchProライブラリ -->
+    <script src="./js/pitchpro-audio/index.umd.js"></script>
+    
+    <script>
+        // グローバル変数
+        let audioManager = null;
+        let pitchDetector = null;
+        let isInitialized = false;
+        let isDetecting = false;
+        
+        // DOM要素
+        const elements = {
+            btnInit: document.getElementById('btn-init'),
+            btnStart: document.getElementById('btn-start'),
+            btnStop: document.getElementById('btn-stop'),
+            statusIndicator: document.getElementById('status-indicator'),
+            statusText: document.getElementById('status-text'),
+            frequency: document.getElementById('frequency'),
+            note: document.getElementById('note'),
+            octave: document.getElementById('octave'),
+            cents: document.getElementById('cents'),
+            volumeMeter: document.getElementById('volume-meter'),
+            volumePercent: document.getElementById('volume-percent'),
+            clarity: document.getElementById('clarity'),
+            clarityBar: document.getElementById('clarity-bar'),
+            deviceType: document.getElementById('device-type'),
+            sensitivity: document.getElementById('sensitivity'),
+            audioState: document.getElementById('audio-state'),
+            sampleRate: document.getElementById('sample-rate'),
+            debugPanel: document.getElementById('debug-panel')
+        };
+        
+        // デバッグログ
+        function debugLog(message, type = 'info') {
+            const time = new Date().toLocaleTimeString();
+            const line = document.createElement('div');
+            line.className = 'debug-line';
+            line.textContent = `[${time}] ${message}`;
+            elements.debugPanel.appendChild(line);
+            elements.debugPanel.scrollTop = elements.debugPanel.scrollHeight;
+            
+            console.log(`[PitchPro Demo] ${message}`);
+        }
+        
+        // 状態更新
+        function updateStatus(status, message) {
+            elements.statusText.textContent = message;
+            elements.statusIndicator.className = 'status-indicator';
+            
+            if (status === 'active') {
+                elements.statusIndicator.classList.add('status-active');
+            } else {
+                elements.statusIndicator.classList.add('status-inactive');
+            }
+        }
+        
+        // 初期化処理
+        async function initialize() {
+            try {
+                debugLog('初期化開始...');
+                updateStatus('inactive', '初期化中...');
+                
+                // PitchProライブラリ確認
+                if (typeof PitchPro === 'undefined') {
+                    throw new Error('PitchProライブラリが読み込まれていません');
+                }
+                debugLog('PitchProライブラリ検出成功');
+                
+                // デバイス検出
+                const deviceSpecs = PitchPro.DeviceDetection.getDeviceSpecs();
+                elements.deviceType.textContent = deviceSpecs.deviceType;
+                elements.sensitivity.textContent = deviceSpecs.sensitivity.toFixed(1);
+                debugLog(`デバイス: ${deviceSpecs.deviceType}, 感度: ${deviceSpecs.sensitivity}x`);
+                
+                // AudioManager作成
+                audioManager = new PitchPro.AudioManager();
+                debugLog('AudioManager作成完了');
+                
+                // AudioManager初期化
+                const resources = await audioManager.initialize();
+                elements.audioState.textContent = resources.audioContext.state;
+                elements.sampleRate.textContent = resources.audioContext.sampleRate;
+                debugLog(`AudioContext: ${resources.audioContext.state}, SR: ${resources.audioContext.sampleRate}Hz`);
+                
+                // PitchDetector作成
+                pitchDetector = new PitchPro.PitchDetector(audioManager, {
+                    fftSize: 4096,
+                    smoothing: 0.1,
+                    clarityThreshold: 0.6,
+                    minVolumeAbsolute: 0.001
+                });
+                debugLog('PitchDetector作成完了');
+                
+                // コールバック設定
+                pitchDetector.setCallbacks({
+                    onPitchUpdate: handlePitchUpdate,
+                    onError: handleError,
+                    onStateChange: handleStateChange
+                });
+                
+                // PitchDetector初期化
+                await pitchDetector.initialize();
+                debugLog('PitchDetector初期化完了');
+                
+                isInitialized = true;
+                updateStatus('inactive', '準備完了');
+                elements.btnInit.disabled = true;
+                elements.btnStart.disabled = false;
+                
+                debugLog('✅ システム初期化完了');
+                
+            } catch (error) {
+                debugLog(`❌ エラー: ${error.message}`, 'error');
+                updateStatus('inactive', 'エラー発生');
+                alert('初期化エラー: ' + error.message);
+            }
+        }
+        
+        // 検出開始
+        function startDetection() {
+            if (!isInitialized || !pitchDetector) {
+                debugLog('システムが初期化されていません', 'error');
+                return;
+            }
+            
+            debugLog('音程検出開始...');
+            const started = pitchDetector.startDetection();
+            
+            if (started) {
+                isDetecting = true;
+                updateStatus('active', '検出中');
+                elements.btnStart.disabled = true;
+                elements.btnStop.disabled = false;
+                debugLog('✅ 検出開始成功');
+            } else {
+                debugLog('❌ 検出開始失敗', 'error');
+            }
+        }
+        
+        // 検出停止
+        function stopDetection() {
+            if (!isDetecting || !pitchDetector) {
+                return;
+            }
+            
+            pitchDetector.stopDetection();
+            isDetecting = false;
+            updateStatus('inactive', '停止中');
+            elements.btnStart.disabled = false;
+            elements.btnStop.disabled = true;
+            debugLog('⏹ 検出停止');
+            
+            // 表示リセット
+            elements.frequency.textContent = '-- Hz';
+            elements.note.textContent = '--';
+            elements.octave.textContent = '--';
+            elements.cents.textContent = '--';
+            elements.volumePercent.textContent = '0%';
+            elements.volumeMeter.style.height = '0%';
+            elements.clarity.textContent = '0.00';
+            elements.clarityBar.style.width = '0%';
+        }
+        
+        // ピッチ更新ハンドラ
+        function handlePitchUpdate(result) {
+            // 周波数
+            if (result.frequency > 0) {
+                elements.frequency.textContent = `${result.frequency.toFixed(1)} Hz`;
+                elements.note.textContent = result.note || '--';
+                elements.octave.textContent = result.octave || '--';
+                elements.cents.textContent = result.cents !== undefined ? 
+                    (result.cents > 0 ? '+' : '') + result.cents : '--';
+            } else {
+                elements.frequency.textContent = '-- Hz';
+                elements.note.textContent = '--';
+                elements.octave.textContent = '--';
+                elements.cents.textContent = '--';
+            }
+            
+            // 音量
+            const volumePercent = Math.min(100, Math.max(0, result.volume * 100));
+            elements.volumePercent.textContent = `${volumePercent.toFixed(0)}%`;
+            elements.volumeMeter.style.height = `${volumePercent}%`;
+            
+            // 明瞭度
+            const clarityPercent = result.clarity * 100;
+            elements.clarity.textContent = result.clarity.toFixed(2);
+            elements.clarityBar.style.width = `${clarityPercent}%`;
+            
+            // デバッグ出力（頻度を下げる）
+            if (Math.random() < 0.1 && result.frequency > 0) {
+                debugLog(`検出: ${result.frequency.toFixed(1)}Hz, ${result.note}${result.octave || ''}`);
+            }
+        }
+        
+        // エラーハンドラ
+        function handleError(error) {
+            debugLog(`❌ エラー: ${error.message}`, 'error');
+            console.error('PitchDetector Error:', error);
+        }
+        
+        // 状態変更ハンドラ
+        function handleStateChange(state) {
+            debugLog(`状態変更: ${state}`);
+        }
+        
+        // イベントリスナー設定
+        elements.btnInit.addEventListener('click', initialize);
+        elements.btnStart.addEventListener('click', startDetection);
+        elements.btnStop.addEventListener('click', stopDetection);
+        
+        // Lucideアイコン初期化
+        lucide.createIcons();
+        
+        // 初期メッセージ
+        debugLog('PitchPro デモページ準備完了');
+        debugLog('「初期化」ボタンをクリックしてください');
+    </script>
+</body>
+</html>

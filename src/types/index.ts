@@ -23,6 +23,7 @@ export interface PitchDetectorConfig {
 export interface PitchDetectionResult {
   frequency: number;
   note: string;
+  octave?: number;
   clarity: number;
   volume: number;
   cents?: number;

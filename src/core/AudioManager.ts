@@ -14,6 +14,7 @@ import type {
   TrackState,
   DeviceSpecs
 } from '../types';
+import { DeviceDetection } from '../utils/DeviceDetection';
 
 export class AudioManager {
   // Global shared resources
@@ -58,7 +59,7 @@ export class AudioManager {
    * Get device-dependent default sensitivity
    */
   private _getDefaultSensitivity(): number {
-    const deviceSpecs = this.getPlatformSpecs();
+    const deviceSpecs = DeviceDetection.getDeviceSpecs();
     
     switch (deviceSpecs.deviceType) {
       case 'iPad':
@@ -393,34 +394,13 @@ export class AudioManager {
    * Complies with MICROPHONE_PLATFORM_SPECIFICATIONS.md
    */
   getPlatformSpecs(): DeviceSpecs {
-    // Device detection (unified version)
-    const isIPhone = /iPhone/.test(navigator.userAgent);
-    const isIPad = /iPad/.test(navigator.userAgent);
-    const isIPadOS = /Macintosh/.test(navigator.userAgent) && 'ontouchend' in document;
-    const isIOS = isIPhone || isIPad || isIPadOS;
+    // Use DeviceDetection utility for consistent device detection
+    const deviceSpecs = DeviceDetection.getDeviceSpecs();
     
-    // Specification-compliant parameters
-    const deviceType = (isIPad || isIPadOS) ? 'iPad' : isIPhone ? 'iPhone' : 'PC';
-    
+    // Add AudioManager-specific properties
     return {
-      deviceType,
-      isIOS,
-      
-      // Volume calculation divisor (important: this value determines sensitivity)
-      divisor: isIOS ? 4.0 : 6.0,           // iPhone/iPad: 4.0, PC: 6.0
-      
-      // Volume correction (iPhone/iPad low frequency cut response)  
-      gainCompensation: isIOS ? 1.5 : 1.0,  // iPhone/iPad: 1.5, PC: 1.0
-      
-      // Noise threshold (basis for 0% display during silence)
-      noiseThreshold: isIOS ? 12 : 15,      // iPhone/iPad: 12, PC: 15
-      
-      // Smoothing (minimal)
-      smoothingFactor: 0.2,                 // Common to both platforms
-      
-      // Additional device-specific settings
-      sensitivity: this.currentSensitivity,
-      noiseGate: isIOS ? 0.01 : 0.02
+      ...deviceSpecs,
+      sensitivity: this.currentSensitivity || deviceSpecs.sensitivity
     };
   }
 

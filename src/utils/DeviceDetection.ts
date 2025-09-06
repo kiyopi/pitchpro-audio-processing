@@ -138,7 +138,7 @@ export class DeviceDetection {
           noiseGate: 0.02,         // Higher noise gate for PC microphones
           divisor: 6.0,            // Different volume calculation for PC
           gainCompensation: 1.0,   // No additional gain compensation needed
-          noiseThreshold: 15,      // Higher noise threshold
+          noiseThreshold: 5,       // Adjusted noise threshold
           smoothingFactor: 0.2     // Standard smoothing
         };
     }
@@ -155,7 +155,7 @@ export class DeviceDetection {
       noiseGate: 0.02,
       divisor: 6.0,
       gainCompensation: 1.0,
-      noiseThreshold: 15,
+      noiseThreshold: 5,
       smoothingFactor: 0.2
     };
   }

@@ -13,7 +13,7 @@ export class ErrorNotificationSystem {
   private notifications = new Map<string, NotificationElement>();
   private notificationCounter = 0;
   private defaultDuration = 5000; // 5 seconds
-  private maxNotifications = 5;
+  private maxNotifications = 0; // 初期実装: 制限なし
   
   // CSS classes for styling
   private cssClasses = {
