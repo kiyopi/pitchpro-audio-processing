@@ -123,12 +123,12 @@ export class DeviceDetection {
         
       case 'iPhone':
         return {
-          sensitivity: 5.0,        // High sensitivity for iPhone microphone
-          noiseGate: 0.015,        // Medium noise gate
-          divisor: 2.5,            // Lower divisor for higher volume readings
-          gainCompensation: 1.8,   // Higher gain compensation
-          noiseThreshold: 5,       // Lower noise threshold for better response
-          smoothingFactor: 0.25    // Keep smoothing for stability
+          sensitivity: 3.5,        // Moderate sensitivity to avoid noise
+          noiseGate: 0.02,         // Higher noise gate to filter low-freq noise
+          divisor: 3.0,            // Moderate divisor for 60-80% range
+          gainCompensation: 1.5,   // Moderate gain compensation
+          noiseThreshold: 8,       // Moderate threshold to filter noise
+          smoothingFactor: 0.3     // Higher smoothing to reduce flicker
         };
         
       case 'PC':
