@@ -123,7 +123,7 @@ export class DeviceDetection {
         
       case 'iPhone':
         return {
-          sensitivity: 2.5,        // Reduced sensitivity for less noise
+          sensitivity: 2.3,        // Fine-tuned sensitivity for optimal balance
           noiseGate: 0.018,        // Slightly higher noise gate
           divisor: 4.0,            // Keep original divisor
           gainCompensation: 1.5,   // Keep original gain compensation
