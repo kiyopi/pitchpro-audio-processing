@@ -42,7 +42,7 @@ export class PitchDetector {
   private pitchClarity = 0;
   
   // Stabilization buffers
-  private volumeHistory: number[] = [];
+  private volumeHistory: number[] = [0, 0, 0, 0, 0];  // Initialize with zeros to prevent initial spike
   private stableVolume = 0;
   
   // Harmonic correction
@@ -422,7 +422,7 @@ export class PitchDetector {
     this.stableVolume = 0;
     
     // Clear buffers
-    this.volumeHistory = [];
+    this.volumeHistory = [0, 0, 0, 0, 0];  // Reset with initial zeros
     
     // Reset harmonic correction
     this.resetHarmonicHistory();
@@ -516,7 +516,7 @@ export class PitchDetector {
     this.pitchDetector = null;
     
     // Clear history
-    this.volumeHistory = [];
+    this.volumeHistory = [0, 0, 0, 0, 0];  // Reset with initial zeros
     this.resetHarmonicHistory();
     
     console.log('✅ [PitchDetector] Cleanup complete');
