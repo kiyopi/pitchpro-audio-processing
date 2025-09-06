@@ -123,12 +123,12 @@ export class DeviceDetection {
         
       case 'iPhone':
         return {
-          sensitivity: 3.0,        // Original balanced sensitivity
-          noiseGate: 0.015,        // Original noise gate
-          divisor: 4.0,            // Original divisor
-          gainCompensation: 1.5,   // Original gain compensation
-          noiseThreshold: 12,      // Original noise threshold
-          smoothingFactor: 0.2     // Original smoothing factor
+          sensitivity: 2.5,        // Reduced sensitivity for less noise
+          noiseGate: 0.018,        // Slightly higher noise gate
+          divisor: 4.0,            // Keep original divisor
+          gainCompensation: 1.5,   // Keep original gain compensation
+          noiseThreshold: 12,      // Keep original noise threshold
+          smoothingFactor: 0.2     // Keep original smoothing factor
         };
         
       case 'PC':
