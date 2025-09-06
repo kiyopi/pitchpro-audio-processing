@@ -48,8 +48,8 @@ export const DEFAULT_CONFIG = {
   pitchDetector: {
     fftSize: 4096,
     smoothing: 0.1,
-    clarityThreshold: 0.8,
-    minVolumeAbsolute: 0.01
+    clarityThreshold: 0.4,    // 現実的な値に修正
+    minVolumeAbsolute: 0.003  // 現実的な値に修正
   },
   audioManager: {
     sampleRate: 44100,
