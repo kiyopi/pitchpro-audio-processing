@@ -61,17 +61,8 @@ export class AudioManager {
   private _getDefaultSensitivity(): number {
     const deviceSpecs = DeviceDetection.getDeviceSpecs();
     
-    switch (deviceSpecs.deviceType) {
-      case 'iPad':
-        console.log('🔧 [AudioManager] iPad detected - setting default sensitivity 7.0x');
-        return 7.0;
-      case 'iPhone':
-        console.log('🔧 [AudioManager] iPhone detected - setting default sensitivity 3.0x');
-        return 3.0;
-      default:
-        console.log('🔧 [AudioManager] PC detected - setting default sensitivity 1.0x');
-        return 1.0;
-    }
+    console.log(`🔧 [AudioManager] ${deviceSpecs.deviceType} detected - setting default sensitivity ${deviceSpecs.sensitivity}x`);
+    return deviceSpecs.sensitivity;
   }
 
   /**
