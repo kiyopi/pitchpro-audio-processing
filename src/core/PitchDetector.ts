@@ -261,13 +261,12 @@ export class PitchDetector {
     this.rawVolume = rawVolumePercent;
     
     // Pitch detection (using PitchDetector)
-    const status = this.audioManager.getStatus();
     const sampleRate = 44100; // Fixed sample rate for now
     const [pitch, clarity] = this.pitchDetector.findPitch(buffer, sampleRate);
     
     // デバッグログ: Pitchyライブラリの結果（常時出力）
-    console.log(`[Debug] Pitchy結果: pitch=${pitch?.toFixed(1) || 'null'}, clarity=${clarity?.toFixed(3) || 'null'}, volume=${this.currentVolume?.toFixed(1)}%, sampleRate=${sampleRate}`);
-    console.log(`[Debug] Pitchyバッファー: 最初5要素=${buffer.slice(0, 5).map(v => v.toFixed(6)).join(', ')}`);
+    console.log(`[Debug] Pitchy結果: pitch=${pitch?.toFixed(1) || 'null'}, clarity=${clarity?.toFixed(3) || 'null'}, volume=${this.currentVolume?.toFixed(1)}%, sampleRate=${sampleRate.toString()}`);
+    console.log(`[Debug] Pitchyバッファー: 最初5要素=${Array.from(buffer.slice(0, 5)).map(v => v.toFixed(6)).join(', ')}`);
     
     // Human vocal range filtering (practical adjustment)
     // Optimized for actual human voice range:
@@ -398,13 +397,6 @@ export class PitchDetector {
     return { note: noteNames[noteIndex], octave };
   }
   
-  /**
-   * Convert frequency to note name (legacy method)
-   */
-  private frequencyToNote(frequency: number): string {
-    const result = this.frequencyToNoteAndOctave(frequency);
-    return result.octave !== null ? `${result.note}${result.octave}` : result.note;
-  }
 
   /**
    * Convert frequency to cents deviation from nearest note
