@@ -47,10 +47,11 @@ Web音楽アプリケーション開発のための包括的な音響処理ツ�
 
 ### 🚀 新機能（v1.1.0）
 - **適応型フレームレート制御**：30-60FPS間で動的調整、音楽演奏に最適化
-- **統一エラーハンドリング**：カスタムエラークラス、リカバリー機能
-- **包括的テストスイート**：Vitest、ピッチ検出精度テスト、パフォーマンステスト
+- **メモリ最適化**：CircularBufferによるO(1)操作、メモリリーク防止
+- **統一エラーハンドリング**：構造化エラークラス、自動回復機能
+- **包括的テストスイート**：Vitest、デバイス固有・統合テスト完備
 - **型安全性強化**：TypeScript strictモード完全対応
-- **パフォーマンス最適化**：CPU負荷に応じた自動調整、視覚・音声処理分離
+- **パフォーマンス監視**：リアルタイムメトリクス収集とレポート
 
 ## 🎮 デモページ
 
@@ -626,35 +627,46 @@ console.log(`フレームドロップ: ${stats.frameDrops}`);
 - **ビブラート検出対応**（5-8Hz振動の正確な捕捉）
 - **CPU負荷監視**（自動パフォーマンス調整）
 
-### 統一エラーハンドリング
+### 統一エラーハンドリング & メモリ最適化
 
 ```typescript
 import { 
   PitchProError, 
-  ErrorCode, 
-  handleError, 
-  isRecoverableError 
+  AudioContextError,
+  PitchDetectionError,
+  isRecoverableError,
+  performanceMonitor 
 } from '@pitchpro/audio-processing/utils';
 
 try {
   // 音程検出処理
-} catch (error) {
-  const pitchProError = handleError(error);
+  const measure = performanceMonitor.startMeasure('pitch-detection');
+  // 処理実行...
+  measure(); // 自動的にメトリクス記録
   
-  if (isRecoverableError(pitchProError)) {
-    console.log('リトライ可能なエラー:', pitchProError.code);
+} catch (error) {
+  // 構造化エラーハンドリング
+  const pitchError = error instanceof PitchProError 
+    ? error 
+    : new PitchDetectionError('Pitch detection failed', {
+        originalError: error.message,
+        timestamp: Date.now()
+      });
+  
+  if (isRecoverableError(pitchError)) {
+    console.log('リトライ可能:', pitchError.code);
     // 自動復旧処理
   } else {
-    console.error('致命的エラー:', pitchProError.toJSON());
+    console.error('致命的エラー:', pitchError.toJSON());
   }
 }
 
-// カスタムエラーの作成
-throw new PitchProError(
-  'マイクへのアクセスが拒否されました',
-  ErrorCode.MICROPHONE_ACCESS_DENIED,
-  { device: 'iPhone', userAgent: navigator.userAgent }
-);
+// パフォーマンス統計の取得
+const stats = performanceMonitor.getStats('pitch-detection');
+if (stats) {
+  console.log(`平均処理時間: ${stats.mean.toFixed(1)}ms`);
+  console.log(`P95レイテンシー: ${stats.p95.toFixed(1)}ms`);
+}
 ```
 
 ### 包括的テストスイート
@@ -676,11 +688,12 @@ npm run typecheck
 ```
 
 **テスト内容：**
-- ピッチ検出精度テスト（5セント精度検証）
-- デバイス別設定テスト
-- フレームレート制御テスト
-- エラーハンドリングテスト
-- パフォーマンス要件テスト
+- **ピッチ検出精度テスト**：5セント精度検証、ノイズ耐性
+- **デバイス別パフォーマンステスト**：iPhone/Android/Desktop最適化検証
+- **メモリ効率テスト**：CircularBufferの効率性、メモリリーク防止
+- **フレームレート制御テスト**：適応FPS、低電力モード対応
+- **統合テスト**：コンポーネント連携、実世界シナリオ
+- **エラーハンドリングテスト**：回復可能性、構造化エラー
 
 ### 最小要件
 
@@ -735,11 +748,12 @@ graph TB
 
 ### パフォーマンス指標
 
-- **レイテンシー**: <10ms（44.1kHz環境）
-- **精度**: ±5セント（McLeod Pitch Method）
+- **レイテンシー**: <25ms（適応FPS制御、音楽演奏最適化）
+- **精度**: ±5セント（McLeod Pitch Method + 倍音補正）
 - **CPU使用率**: <5%（デスクトップ）、<8%（モバイル）
-- **メモリ使用量**: ~2-4MB（ライブラリ全体）
+- **メモリ使用量**: ~2-4MB（CircularBuffer最適化後）
 - **初期化時間**: <500ms（マイク許可後）
+- **メモリ効率**: O(1)操作（無制限増大防止）
 
 ## 📊 使用統計・ベンチマーク
 
