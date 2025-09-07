@@ -11,9 +11,9 @@ export default defineConfig({
           return 'pitchpro.umd.js'
         }
         if (format === 'es') {
-          return 'pitchpro.esm.js'
+          return 'index.esm.js'
         }
-        return 'pitchpro.cjs.js'
+        return 'index.js'
       },
       formats: ['es', 'cjs', 'umd']
     },
