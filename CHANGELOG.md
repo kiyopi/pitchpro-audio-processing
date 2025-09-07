@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2025-09-07
+
+### 🚀 Added
+- **🔇 Silence Detection Timer**: Automatic detection of prolonged silence periods with battery-saving features
+  - Configurable warning and timeout thresholds
+  - Automatic recovery when voice is detected
+  - Flexible callback system for custom notifications
+  - Real-time silence status monitoring
+
+### 🔧 Fixed
+- **MicrophoneController + PitchDetector Integration**: Resolved TypeError in unified interface
+  - Fixed `TypeError: undefined is not an object (evaluating 'this.audioManager.getPlatformSpecs')`
+  - Changed `MicrophoneController.audioManager` from `private` to `public readonly`
+  - Optimized `PitchDetector` initialization timing to prevent race conditions
+  - Resolved Safari macOS compatibility issues
+
+### ✅ Improved
+- **Integration Tests**: Re-enabled and expanded test coverage
+  - Restored disabled integration test suite
+  - Added comprehensive MicrophoneController + PitchDetector integration tests
+  - Enhanced error handling test scenarios
+  - Improved test reliability across different environments
+
+### 📚 Documentation
+- **Usage Examples**: Fixed inconsistencies between README.md and actual implementation
+- **Silence Detection**: Added comprehensive usage examples and testing methods
+- **API Reference**: Updated with v1.1.1 new features and corrections
+
+### 🎯 Resolution
+- **GitHub Issue #1**: Completely resolved integration errors preventing unified interface usage
+- **Recommended Pattern**: Users can now successfully use the recommended MicrophoneController approach
+
 ## [1.1.0] - 2025-01-07
 
 ### Added
