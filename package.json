@@ -1,6 +1,6 @@
 {
   "name": "@pitchpro/audio-processing",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "High-precision pitch detection and audio processing library for web applications",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
@@ -71,7 +71,9 @@
     "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
+    "@vitest/ui": "^1.0.0",
     "eslint": "^8.0.0",
+    "jsdom": "^23.0.0",
     "rollup": "^4.0.0",
     "typedoc": "^0.25.0",
     "typescript": "^5.0.0",
