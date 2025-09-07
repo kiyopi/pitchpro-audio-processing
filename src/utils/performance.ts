@@ -72,8 +72,55 @@ export function debounce<T extends (...args: any[]) => any>(
   };
 }
 
+/**
+ * Memory-efficient circular buffer for metrics storage
+ * O(1) operations for push and access
+ */
+class CircularBuffer {
+  private buffer: number[];
+  private index = 0;
+  private count = 0;
+  private readonly maxSize: number;
+  
+  constructor(maxSize: number) {
+    this.maxSize = maxSize;
+    this.buffer = new Array(maxSize);
+  }
+  
+  push(value: number): void {
+    this.buffer[this.index] = value;
+    this.index = (this.index + 1) % this.maxSize;
+    if (this.count < this.maxSize) {
+      this.count++;
+    }
+  }
+  
+  toArray(): number[] {
+    if (this.count === 0) return [];
+    
+    const result = new Array(this.count);
+    let bufferIndex = this.count < this.maxSize ? 0 : this.index;
+    
+    for (let i = 0; i < this.count; i++) {
+      result[i] = this.buffer[bufferIndex];
+      bufferIndex = (bufferIndex + 1) % this.maxSize;
+    }
+    
+    return result;
+  }
+  
+  get length(): number {
+    return this.count;
+  }
+  
+  clear(): void {
+    this.index = 0;
+    this.count = 0;
+  }
+}
+
 export class PerformanceMonitor {
-  private metrics: Map<string, number[]> = new Map();
+  private metrics: Map<string, CircularBuffer> = new Map();
   private readonly maxSamples = 100;
   
   startMeasure(label: string): () => void {
@@ -87,15 +134,11 @@ export class PerformanceMonitor {
   
   recordMetric(label: string, value: number): void {
     if (!this.metrics.has(label)) {
-      this.metrics.set(label, []);
+      this.metrics.set(label, new CircularBuffer(this.maxSamples));
     }
     
-    const samples = this.metrics.get(label)!;
-    samples.push(value);
-    
-    if (samples.length > this.maxSamples) {
-      samples.shift();
-    }
+    const buffer = this.metrics.get(label)!;
+    buffer.push(value);
   }
   
   getStats(label: string): {
@@ -105,11 +148,12 @@ export class PerformanceMonitor {
     min: number;
     max: number;
   } | null {
-    const samples = this.metrics.get(label);
-    if (!samples || samples.length === 0) {
+    const buffer = this.metrics.get(label);
+    if (!buffer || buffer.length === 0) {
       return null;
     }
     
+    const samples = buffer.toArray();
     const sorted = [...samples].sort((a, b) => a - b);
     const mean = samples.reduce((a, b) => a + b, 0) / samples.length;
     const median = sorted[Math.floor(sorted.length / 2)];
