@@ -4,27 +4,23 @@ import { resolve } from 'path'
 export default defineConfig({
   build: {
     lib: {
-      entry: {
-        index: resolve(__dirname, 'src/index.ts'),
-        core: resolve(__dirname, 'src/core/index.ts'),
-        advanced: resolve(__dirname, 'src/advanced/index.ts'),
-        utils: resolve(__dirname, 'src/utils/index.ts')
-      },
+      entry: resolve(__dirname, 'src/index.ts'),
       name: 'PitchPro',
-      fileName: (format, entryName) => {
-        if (format === 'es') {
-          return `${entryName}.esm.js`
+      fileName: (format) => {
+        if (format === 'umd') {
+          return 'pitchpro.umd.js'
         }
-        return `${entryName}.js`
+        if (format === 'es') {
+          return 'pitchpro.esm.js'
+        }
+        return 'pitchpro.cjs.js'
       },
-      formats: ['es', 'cjs']
+      formats: ['es', 'cjs', 'umd']
     },
     rollupOptions: {
-      external: ['pitchy'],
+      external: [],
       output: {
-        globals: {
-          pitchy: 'Pitchy'
-        }
+        globals: {}
       }
     },
     sourcemap: true,
@@ -39,6 +35,6 @@ export default defineConfig({
     }
   },
   css: {
-    postcss: false
+    postcss: {}
   }
 })
