@@ -2,7 +2,7 @@
  * PitchPro Audio Processing Library
  * High-precision pitch detection and audio processing for web applications
  * 
- * @version 1.0.0
+ * @version 1.1.3
  * @author PitchPro Team
  * @license MIT
  */
@@ -40,7 +40,7 @@ export type {
 } from './types';
 
 // Constants
-export const VERSION = '1.1.1';
+export const VERSION = '1.1.3';
 export const BUILD_DATE = new Date().toISOString();
 
 // Default configurations
