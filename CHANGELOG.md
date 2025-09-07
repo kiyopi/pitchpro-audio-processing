@@ -7,6 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.3] - 2025-09-07
+
+### 🚨 CRITICAL HOTFIX
+- **マイクレベル低下バグ修正**: 5秒後にマイクレベルが徐々に下がる問題を解決
+  - GainNode値の自動監視・復旧機能を追加
+  - ブラウザのAutoGainControl無効化を強化
+  - MediaStream制約の最適化によるレベル安定性向上
+
+### 🔧 Fixed
+- **Gain Value Drift**: 自動的なゲイン値変動を検出・修正する監視システム
+- **Browser AGC Prevention**: Chrome/Firefox/Safari全プラットフォームでAGC無効化
+- **MediaStream Stability**: より安定したマイクストリーム制約設定
+
+### ✅ Improved
+- **Real-time Monitoring**: 2秒間隔でのゲイン値監視とドリフト検出
+- **Automatic Recovery**: 10%以上のゲイン変動を自動的に補正
+- **Enhanced Logging**: より詳細なデバッグ情報とエラートラッキング
+
+### 🛠️ Technical Changes
+- Added `startGainMonitoring()` with 2-second interval checking
+- Enhanced MediaStream constraints with platform-specific AGC disabling
+- Improved `setSensitivity()` with `setValueAtTime()` for precision
+- Added cleanup of monitoring intervals in `_cleanup()`
+
+## [1.1.2] - 2025-09-07
+
+### ⚠️  BREAKING CHANGES
+- **Build Output Filenames**: Standardized distribution file naming
+  - **BEFORE**: `pitchpro.esm.js`, `pitchpro.cjs.js`
+  - **AFTER**: `index.esm.js`, `index.js`
+  - **MIGRATION**: Update your import paths if using direct file references
+  - **UMD**: Remains `pitchpro.umd.js` (no change)
+
+### 🔧 Fixed
+- **404 Error Resolution**: Fixed silence detection demo page loading issues
+- **Import Path Consistency**: Aligned package.json exports with actual build output
+- **Demo Accessibility**: All demo pages now load correctly
+
+### ✅ Improved
+- **Build Configuration**: Extracted output format constants for maintainability
+- **Development Experience**: Added interactive test demos for integration verification
+- **File Management**: Updated .gitignore to reflect new filename conventions
+
+### 🛠️ Technical Changes
+- Standardized `vite.config.ts` with `OUTPUT_FORMATS` constants
+- Enhanced error handling in demo HTML files
+- Improved backward compatibility measures
+
 ## [1.1.1] - 2025-09-07
 
 ### 🚀 Added

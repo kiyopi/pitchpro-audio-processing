@@ -38,6 +38,9 @@ export class AudioManager {
   // Sensitivity settings (iPad compatibility)
   private currentSensitivity: number; // Device-dependent default sensitivity
   
+  // HOTFIX: Gain monitoring for level drop prevention
+  private gainMonitorInterval: number | null = null;
+  
   // Configuration
   private config: AudioManagerConfig;
 
@@ -160,26 +163,26 @@ export class AudioManager {
             noiseSuppression: this.config.noiseSuppression,
             autoGainControl: this.config.autoGainControl,
             
-            // iOS specific: Ultra high sensitivity settings
-            ...(deviceSpecs.isIOS && {
+            // HOTFIX: Enhanced AGC disable for all platforms to prevent level drop
+            ...(window as any).chrome && {
               googAutoGainControl: false,     // Google AGC complete disable
               googNoiseSuppression: false,    // Google noise suppression disable
               googEchoCancellation: false,    // Google echo cancellation disable
               googHighpassFilter: false,      // Google highpass filter disable
               googTypingNoiseDetection: false, // Typing noise detection disable
               googBeamforming: false,         // Beamforming disable
+            },
+            
+            // Mozilla-specific constraints
+            ...(navigator.userAgent.includes('Firefox')) && {
               mozAutoGainControl: false,      // Mozilla AGC disable
               mozNoiseSuppression: false,     // Mozilla noise suppression disable
-            } as any),
+            },
             
-            // Safari compatibility: Explicit quality settings
+            // Safari compatibility: Explicit quality settings  
             sampleRate: this.config.sampleRate,
             channelCount: this.config.channelCount,
             sampleSize: 16,
-            
-            // Safari WebKit additional stabilization settings
-            latency: this.config.latency,  // 100ms latency tolerance
-            volume: 1.0,   // Volume normalization
             
             // Flexible device selection (Safari compatibility)
             deviceId: { ideal: 'default' }
@@ -210,11 +213,14 @@ export class AudioManager {
       // Create GainNode (for microphone sensitivity adjustment)
       if (!this.gainNode) {
         this.gainNode = this.audioContext.createGain();
-        this.gainNode.gain.value = this.currentSensitivity;
+        this.gainNode.gain.setValueAtTime(this.currentSensitivity, this.audioContext.currentTime);
         
         // Connect SourceNode -> GainNode
         this.sourceNode.connect(this.gainNode);
         console.log(`✅ [AudioManager] GainNode creation complete (sensitivity: ${this.currentSensitivity}x)`);
+        
+        // HOTFIX: Start gain monitoring to prevent level drops
+        this.startGainMonitoring();
       }
 
       this.isInitialized = true;
@@ -363,8 +369,18 @@ export class AudioManager {
     const clampedSensitivity = Math.max(0.1, Math.min(10.0, sensitivity));
     
     if (this.gainNode) {
-      this.gainNode.gain.value = clampedSensitivity;
+      // HOTFIX: Ensure gain value is properly set and monitored
+      this.gainNode.gain.setValueAtTime(clampedSensitivity, this.audioContext?.currentTime || 0);
       this.currentSensitivity = clampedSensitivity;
+      
+      // Verify the gain was actually set
+      setTimeout(() => {
+        if (this.gainNode && Math.abs(this.gainNode.gain.value - clampedSensitivity) > 0.1) {
+          console.warn(`⚠️ [AudioManager] Gain value drift detected! Expected: ${clampedSensitivity}, Actual: ${this.gainNode.gain.value}`);
+          this.gainNode.gain.setValueAtTime(clampedSensitivity, this.audioContext?.currentTime || 0);
+        }
+      }, 100);
+      
       console.log(`🎤 [AudioManager] Microphone sensitivity updated: ${clampedSensitivity.toFixed(1)}x`);
     } else {
       // If GainNode not initialized, save setting only
@@ -378,6 +394,41 @@ export class AudioManager {
    */
   getSensitivity(): number {
     return this.currentSensitivity;
+  }
+
+  /**
+   * HOTFIX: Start gain monitoring to prevent level drops
+   */
+  private startGainMonitoring(): void {
+    if (this.gainMonitorInterval) {
+      clearInterval(this.gainMonitorInterval);
+    }
+    
+    this.gainMonitorInterval = window.setInterval(() => {
+      if (this.gainNode && this.audioContext) {
+        const currentGainValue = this.gainNode.gain.value;
+        const expectedGain = this.currentSensitivity;
+        
+        // Check for significant drift (more than 10% difference)
+        if (Math.abs(currentGainValue - expectedGain) > expectedGain * 0.1) {
+          console.warn(`🚨 [AudioManager] Gain drift detected! Expected: ${expectedGain}, Current: ${currentGainValue}`);
+          
+          // Force reset to expected value
+          this.gainNode.gain.setValueAtTime(expectedGain, this.audioContext.currentTime);
+          console.log(`🔧 [AudioManager] Gain reset to: ${expectedGain}`);
+        }
+      }
+    }, 2000); // Check every 2 seconds
+  }
+
+  /**
+   * HOTFIX: Stop gain monitoring
+   */
+  private stopGainMonitoring(): void {
+    if (this.gainMonitorInterval) {
+      clearInterval(this.gainMonitorInterval);
+      this.gainMonitorInterval = null;
+    }
   }
 
   /**
@@ -425,6 +476,9 @@ export class AudioManager {
    */
   private _cleanup(): void {
     console.log('🧹 [AudioManager] Starting cleanup');
+    
+    // HOTFIX: Stop gain monitoring
+    this.stopGainMonitoring();
     
     // Remove all analysers
     for (const id of this.analysers.keys()) {

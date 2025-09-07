@@ -45,6 +45,24 @@ Web音楽アプリケーション開発のための包括的な音響処理ツ�
 - **完全TypeScript対応**：strictモード対応、厳密な型定義とIntelliSense支援
 - **ES/CommonJS対応**：モダンバンドラーと従来環境の両対応
 
+## ⚠️ 重要：v1.1.2 破壊的変更
+
+**ビルド出力ファイル名の変更**：
+- **変更前**: `pitchpro.esm.js`, `pitchpro.cjs.js`
+- **変更後**: `index.esm.js`, `index.js`
+- **UMD版**: `pitchpro.umd.js`（変更なし）
+
+**移行が必要な場合**：直接ファイルを参照している場合のみ
+```javascript
+// 変更前
+import PitchPro from './dist/pitchpro.esm.js';
+
+// 変更後  
+import PitchPro from './dist/index.esm.js';
+```
+
+NPM/CDNを利用している場合は変更不要です。
+
 ### 🚀 新機能（v1.1.1）
 - **🔇 消音検出タイマー**：長時間無音の自動検出、バッテリー節約機能
 - **🔧 統合インターフェース修正**：MicrophoneController + PitchDetector統合エラー解決
