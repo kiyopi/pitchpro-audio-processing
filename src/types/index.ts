@@ -18,6 +18,18 @@ export interface PitchDetectorConfig {
   smoothing?: number;
   clarityThreshold?: number;
   minVolumeAbsolute?: number;
+  silenceDetection?: SilenceDetectionConfig;
+}
+
+// Silence detection types
+export interface SilenceDetectionConfig {
+  enabled?: boolean;
+  warningThreshold?: number;    // 警告までの時間（ms）
+  timeoutThreshold?: number;    // タイムアウトまでの時間（ms）
+  minVolumeThreshold?: number;  // 消音判定の音量閾値
+  onSilenceWarning?: (duration: number) => void;
+  onSilenceTimeout?: () => void;
+  onSilenceRecovered?: () => void;
 }
 
 export interface PitchDetectionResult {

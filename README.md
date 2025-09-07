@@ -78,50 +78,55 @@ npm install @pitchpro/audio-processing
 
 ### 基本的な使用方法
 
-#### 1. シンプルな音程検出
+PitchProでは、用途に応じて2つの使用パターンから選択できます：
+
+#### 🎯 パターン1: 統合インターフェース（推奨）
+**MicrophoneController**を使用した簡単な統合管理
 
 ```typescript
 import { MicrophoneController, PitchDetector } from '@pitchpro/audio-processing';
 
-// 統合マイクコントローラーの初期化
+// 統合マイクコントローラーの初期化（推奨）
 const micController = new MicrophoneController();
 
-// エラーハンドリング
+// エラーハンドリングと状態管理
 micController.setCallbacks({
   onError: (error) => console.error('マイクエラー:', error),
-  onStateChange: (state) => console.log('状態変更:', state)
+  onStateChange: (state) => console.log('状態変更:', state),
+  onDeviceChange: (specs) => console.log('デバイス最適化:', specs)
 });
 
 // マイク許可とリソース確保
 const resources = await micController.initialize();
 
 // 音程検出器の作成
-const pitchDetector = new PitchDetector({
+const pitchDetector = new PitchDetector(micController.audioManager, {
   fftSize: 4096,
   clarityThreshold: 0.4,        // 実用的なデフォルト値
   minVolumeAbsolute: 0.003,     // 適切な最小音量
-  enableHarmonicCorrection: true
+  smoothing: 0.1                // 平滑化係数
 });
 
-// 外部AudioContextで初期化
-await pitchDetector.initializeWithExternalAudioContext(
-  resources.audioContext,
-  resources.mediaStream
-);
+await pitchDetector.initialize();
 
 // リアルタイム音程検出開始
 pitchDetector.startDetection();
-pitchDetector.setCallback((result) => {
-  if (result.frequency > 0) {
-    console.log(`🎵 検出: ${result.frequency.toFixed(1)}Hz`);
-    console.log(`🎼 音名: ${result.note}`);
-    console.log(`📊 音量: ${result.volume.toFixed(2)}`);
-    console.log(`✨ 信頼度: ${result.clarity.toFixed(2)}`);
+pitchDetector.setCallbacks({
+  onPitchUpdate: (result) => {
+    if (result.frequency > 0) {
+      console.log(`🎵 検出: ${result.frequency.toFixed(1)}Hz`);
+      console.log(`🎼 音名: ${result.note}`);
+      console.log(`📊 音量: ${result.volume.toFixed(2)}`);
+      console.log(`✨ 信頼度: ${result.clarity.toFixed(2)}`);
+    }
   }
 });
 ```
 
-#### 2. 高度なノイズフィルタリング付き
+**利点**: エラー処理統一、自動復旧、デバイス最適化、状態管理、リソース保護
+
+#### 🔧 パターン2: 直接管理（詳細制御）
+**AudioManager**を直接使用したカスタム制御
 
 ```typescript
 import { 
@@ -132,31 +137,41 @@ import {
 
 // AudioManager経由でのリソース管理
 const audioManager = new AudioManager({
-  enableNoiseFilter: true,
-  noiseFilterConfig: {
-    highpassFreq: 80,    // 低域ノイズカット
-    lowpassFreq: 800,    // 高域ノイズカット
-    notchFreq: 60        // 電源ノイズ除去
-  }
+  sampleRate: 44100,
+  channelCount: 1,
+  echoCancellation: false,
+  noiseSuppression: false,
+  autoGainControl: false,
+  latency: 0.1
 });
 
 const resources = await audioManager.initialize();
 
-// カスタムノイズフィルター（オプション）
+// 音程検出器の作成（フィルタリング付きAnalyser使用）
+const pitchDetector = new PitchDetector(audioManager, {
+  fftSize: 4096,
+  clarityThreshold: 0.4,
+  minVolumeAbsolute: 0.003
+});
+
+await pitchDetector.initialize();
+
+// カスタムNoiseFilter（必要に応じて）
 const noiseFilter = new NoiseFilter(resources.audioContext, {
   useFilters: true,
+  highpassFreq: 80,    // 低域ノイズカット
+  lowpassFreq: 800,    // 高域ノイズカット
+  notchFreq: 60,       // 電源ノイズ除去
   highpassQ: 0.7,      // フィルター品質係数
   lowpassQ: 0.7
 });
 
-// フィルターチェーン接続
-const filteredNode = noiseFilter.connect(
-  resources.analyserNode,
-  resources.audioContext.destination
-);
+pitchDetector.startDetection();
 
-console.log('🔧 3段階ノイズフィルタリング有効');
+console.log('🔧 カスタム音響処理パイプライン構築完了');
 ```
+
+**利点**: 細かい制御、カスタムフィルターチェーン、専門的な最適化
 
 ## 📚 コアモジュール詳解
 
@@ -203,7 +218,7 @@ audioManager.release(['pitch-detection']);
 import { PitchDetector } from '@pitchpro/audio-processing/core';
 
 // 高精度設定での音程検出器
-const detector = new PitchDetector({
+const detector = new PitchDetector(audioManager, {
   fftSize: 4096,                   // 高解像度FFT
   clarityThreshold: 0.4,           // 実用的な信頼性閾値
   minVolumeAbsolute: 0.003,        // 適切な最小音量
@@ -212,14 +227,12 @@ const detector = new PitchDetector({
   noiseGate: 0.015                 // ノイズゲート
 });
 
-// 外部AudioContextでの初期化（推奨）
-await detector.initializeWithExternalAudioContext(
-  audioManager.getAudioContext(),
-  audioManager.getMediaStream()
-);
+// PitchDetectorを初期化
+await detector.initialize();
 
 // コールバック設定
-detector.setCallback((result) => {
+detector.setCallbacks({
+  onPitchUpdate: (result) => {
   if (result.clarity > 0.4) {  // 実用的な信頼度で処理
     const note = `${result.note}${result.octave}`;
     console.log(`🎵 ${note} (${result.frequency.toFixed(1)}Hz)`);
@@ -331,7 +344,8 @@ const harmonicCorrector = new HarmonicCorrection({
 });
 
 // リアルタイム倍音補正
-pitchDetector.setCallback((result) => {
+pitchDetector.setCallbacks({
+  onPitchUpdate: (result) => {
   const correction = harmonicCorrector.correctFrequency(
     result.frequency, 
     result.volume
@@ -371,7 +385,8 @@ const voiceAnalyzer = new VoiceAnalyzer({
 });
 
 // 音声品質解析
-pitchDetector.setCallback((result) => {
+pitchDetector.setCallbacks({
+  onPitchUpdate: (result) => {
   const analysis = voiceAnalyzer.analyzeVoice(
     result.frequency,
     result.volume,
@@ -601,6 +616,136 @@ console.log('✅ デバイス能力:', {
 
 ## 🚀 新機能詳細（v1.1.0）
 
+### 🔇 消音検出タイマー機能（v1.1.1）
+
+長時間の無音状態を検出し、自動的に警告やタイムアウト処理を実行する機能です。
+
+#### 基本的な使用方法
+
+```typescript
+import { MicrophoneController, PitchDetector } from '@pitchpro/audio-processing';
+
+const micController = new MicrophoneController();
+await micController.initialize();
+
+const pitchDetector = new PitchDetector(micController.audioManager, {
+  fftSize: 4096,
+  clarityThreshold: 0.4,
+  // 消音検出設定
+  silenceDetection: {
+    enabled: true,
+    warningThreshold: 15000,    // 15秒で警告
+    timeoutThreshold: 30000,    // 30秒でタイムアウト
+    minVolumeThreshold: 0.01,   // 消音判定の音量閾値（1%）
+    onSilenceWarning: (duration) => {
+      console.log(`⚠️ ${duration/1000}秒間無音です`);
+      // ユーザーに無音警告を表示
+    },
+    onSilenceTimeout: () => {
+      console.log('🔇 無音タイムアウトのため検出を停止します');
+      // 自動的に検出停止（省電力）
+    },
+    onSilenceRecovered: () => {
+      console.log('🔊 音声が回復しました');
+      // 音声回復の通知
+    }
+  }
+});
+
+await pitchDetector.initialize();
+pitchDetector.startDetection();
+```
+
+#### 動的な設定変更
+
+```typescript
+// 実行中に消音検出設定を変更
+pitchDetector.setSilenceDetectionConfig({
+  enabled: true,
+  warningThreshold: 10000,    // 10秒に短縮
+  minVolumeThreshold: 0.005   // より敏感に設定（0.5%）
+});
+
+// 現在の消音状態を確認
+const status = pitchDetector.getSilenceStatus();
+console.log('消音検出状態:', {
+  有効: status.isEnabled,
+  現在消音中: status.isSilent,
+  消音継続時間: status.silenceDuration ? `${status.silenceDuration}ms` : '無し',
+  警告済み: status.hasWarned
+});
+```
+
+#### 実用的な応用例
+
+```typescript
+// 音楽練習アプリでの使用例
+const pitchDetector = new PitchDetector(audioManager, {
+  silenceDetection: {
+    enabled: true,
+    warningThreshold: 20000,  // 20秒で「歌い続けてください」
+    timeoutThreshold: 60000,  // 1分で練習セッション終了
+    onSilenceWarning: (duration) => {
+      showNotification({
+        type: 'info',
+        message: '歌い続けてください',
+        details: `${Math.round(duration/1000)}秒間無音です`
+      });
+    },
+    onSilenceTimeout: () => {
+      // 練習セッション自動終了
+      endPracticeSession();
+      saveProgress();
+    }
+  }
+});
+
+// チューナーアプリでの省電力対応
+const tunerDetector = new PitchDetector(audioManager, {
+  silenceDetection: {
+    enabled: true,
+    warningThreshold: 30000,  // 30秒で省電力警告
+    timeoutThreshold: 120000, // 2分で自動停止
+    onSilenceTimeout: () => {
+      // バッテリー節約のため自動停止
+      pitchDetector.stopDetection();
+      showPowerSavingMessage();
+    }
+  }
+});
+```
+
+**特徴:**
+- **バッテリー節約**: 長時間の無音時に自動停止
+- **ユーザー体験向上**: 無音状態の可視化と適切な通知
+- **柔軟な設定**: 用途に応じた閾値とタイマーのカスタマイズ
+- **自動回復**: 音声復帰時の自動検出再開
+
+#### テスト方法
+
+**コマンドライン:**
+```bash
+# 基本機能テスト
+npm run test:silence
+
+# 完全なテストスイート
+npm test -- -t "消音検出機能"
+```
+
+**Webブラウザ（インタラクティブテスト）:**
+```bash
+# 開発サーバー起動
+npx vite serve demos --port 3000
+
+# ブラウザで以下URLを開く
+# http://localhost:3000/silence-detection-test.html
+```
+
+1. 「初期化」→「開始」→「消音検出有効」の順でクリック
+2. マイクに向かって話すと音量バーが反応
+3. 静かにすると設定した時間後に警告・タイムアウトが発生
+4. 設定を変更してリアルタイムで動作確認可能
+
 ### 適応型フレームレート制御
 
 音楽アプリケーション用に最適化された動的フレームレート制御：
@@ -609,7 +754,7 @@ console.log('✅ デバイス能力:', {
 import { PitchDetector } from '@pitchpro/audio-processing/core';
 
 // 適応型フレームレート制御付きで初期化
-const detector = new PitchDetector({
+const detector = new PitchDetector(audioManager, {
   fftSize: 4096,
   clarityThreshold: 0.4
 });
@@ -806,19 +951,17 @@ export const usePitchDetection = () => {
         controllerRef.current = controller;
         
         // 音程検出器設定
-        const detector = new PitchDetector({
+        const detector = new PitchDetector(controller.audioManager, {
           fftSize: 4096,
           clarityThreshold: 0.4,           // 実用的なデフォルト値
           minVolumeAbsolute: 0.003,        // 適切な最小音量
           enableHarmonicCorrection: true
         });
         
-        await detector.initializeWithExternalAudioContext(
-          resources.audioContext,
-          resources.mediaStream
-        );
+        await detector.initialize();
         
-        detector.setCallback((result) => {
+        detector.setCallbacks({
+  onPitchUpdate: (result) => {
           if (result.frequency > 0 && result.clarity > 0.4) {
             setCurrentPitch(result.frequency);
           }
@@ -928,7 +1071,7 @@ PitchProライブラリは実環境での大量テストに基づき、**開封�
 ### 🎯 音程検出パラメータ
 
 ```typescript
-const pitchDetector = new PitchDetector({
+const pitchDetector = new PitchDetector(audioManager, {
   fftSize: 4096,                // 高精度FFT
   smoothing: 0.1,               // 最小限の平滑化
   clarityThreshold: 0.4,        // 40% - 実用的な信頼性閾値

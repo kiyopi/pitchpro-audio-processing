@@ -12,7 +12,8 @@ import type {
   PitchCallback,
   ErrorCallback,
   StateChangeCallback,
-  DeviceSpecs
+  DeviceSpecs,
+  SilenceDetectionConfig
 } from '../types';
 import { AudioManager } from './AudioManager';
 import { AdaptiveFrameRateLimiter } from '../utils/performance-optimized';
@@ -60,7 +61,9 @@ export class PitchDetector {
   private harmonicHistory: Array<{frequency: number, confidence: number, timestamp: number}> = [];
   
   // Configuration
-  private config: Required<PitchDetectorConfig>;
+  private config: Required<Omit<PitchDetectorConfig, 'silenceDetection'>> & { 
+    silenceDetection?: SilenceDetectionConfig 
+  };
   private disableHarmonicCorrection = false;
   
   // Callbacks
@@ -71,7 +74,15 @@ export class PitchDetector {
   } = {};
   
   // Device specifications
-  private deviceSpecs: DeviceSpecs;
+  private deviceSpecs: DeviceSpecs | null = null;
+  
+  // Silence detection
+  private silenceDetectionConfig: SilenceDetectionConfig;
+  private silenceStartTime: number | null = null;
+  private silenceWarningTimer: number | null = null;
+  private silenceTimeoutTimer: number | null = null;
+  private isSilent = false;
+  private hasWarned = false;
 
   constructor(audioManager: AudioManager, config: PitchDetectorConfig = {}) {
     this.audioManager = audioManager;
@@ -83,7 +94,16 @@ export class PitchDetector {
       ...config
     };
     
-    this.deviceSpecs = this.audioManager.getPlatformSpecs();
+    // Initialize silence detection configuration
+    this.silenceDetectionConfig = {
+      enabled: false,
+      warningThreshold: 15000,  // 15秒で警告
+      timeoutThreshold: 30000,  // 30秒でタイムアウト
+      minVolumeThreshold: 0.01, // 消音判定の音量閾値
+      ...config.silenceDetection
+    };
+    
+    // Note: getPlatformSpecs() will be called during initialize() to avoid timing issues
     
     // Initialize performance optimization
     this.frameRateLimiter = new AdaptiveFrameRateLimiter(45); // 45FPS optimal for music
@@ -112,6 +132,10 @@ export class PitchDetector {
       
       // Get shared resources from AudioManager
       await this.audioManager.initialize();
+      
+      // Initialize device specifications after AudioManager is ready
+      this.deviceSpecs = this.audioManager.getPlatformSpecs();
+      console.log('📱 [PitchDetector] Device specs initialized:', this.deviceSpecs.deviceType);
       
       console.log('✅ [PitchDetector] AudioManager resources acquired');
       
@@ -216,6 +240,9 @@ export class PitchDetector {
     // Reset frame rate limiter
     this.frameRateLimiter.reset();
     
+    // Reset silence detection
+    this.resetSilenceTracking();
+    
     // Return state to ready (if initialized)
     if (this.componentState === 'detecting' && this.isInitialized) {
       this.componentState = 'ready';
@@ -240,7 +267,7 @@ export class PitchDetector {
     const audioManagerStatus = this.audioManager.getStatus();
     console.log(`[Debug] AudioManager状態: context=${audioManagerStatus.audioContextState}, stream=${audioManagerStatus.mediaStreamActive}`);
     
-    if (!this.isDetecting || !this.analyser || !this.rawAnalyser || !this.pitchDetector) return;
+    if (!this.isDetecting || !this.analyser || !this.rawAnalyser || !this.pitchDetector || !this.deviceSpecs) return;
     
     const bufferLength = this.analyser.fftSize;
     const buffer = new Float32Array(bufferLength);
@@ -375,6 +402,9 @@ export class PitchDetector {
     // Set VolumeBar to 0 when no pitch is detected (counter extreme low frequency noise)
     const displayVolume = this.currentFrequency > 0 ? this.rawVolume : 0;
     
+    // Process silence detection
+    this.processSilenceDetection(this.currentVolume);
+    
     // Send data to callback
     const result: PitchDetectionResult = {
       frequency: this.currentFrequency,
@@ -482,6 +512,108 @@ export class PitchDetector {
   }
 
   /**
+   * Process silence detection logic
+   */
+  private processSilenceDetection(currentVolume: number): void {
+    if (!this.silenceDetectionConfig.enabled) {
+      return;
+    }
+    
+    const now = Date.now();
+    const volumeThreshold = this.silenceDetectionConfig.minVolumeThreshold || 0.01;
+    const isCurrentlySilent = currentVolume < volumeThreshold;
+    
+    if (isCurrentlySilent) {
+      // Start tracking silence if not already doing so
+      if (!this.isSilent) {
+        this.isSilent = true;
+        this.silenceStartTime = now;
+        this.hasWarned = false;
+        
+        console.log('🔇 [PitchDetector] Silence detected, starting timer');
+        
+        // Schedule warning
+        if (this.silenceDetectionConfig.warningThreshold) {
+          this.silenceWarningTimer = window.setTimeout(() => {
+            this.handleSilenceWarning();
+          }, this.silenceDetectionConfig.warningThreshold);
+        }
+        
+        // Schedule timeout
+        if (this.silenceDetectionConfig.timeoutThreshold) {
+          this.silenceTimeoutTimer = window.setTimeout(() => {
+            this.handleSilenceTimeout();
+          }, this.silenceDetectionConfig.timeoutThreshold);
+        }
+      }
+    } else {
+      // Voice detected - reset silence tracking
+      if (this.isSilent) {
+        const silenceDuration = this.silenceStartTime ? now - this.silenceStartTime : 0;
+        console.log(`🔊 [PitchDetector] Voice recovered after ${silenceDuration}ms of silence`);
+        
+        this.resetSilenceTracking();
+        
+        // Notify recovery
+        if (this.silenceDetectionConfig.onSilenceRecovered) {
+          this.silenceDetectionConfig.onSilenceRecovered();
+        }
+      }
+    }
+  }
+  
+  /**
+   * Handle silence warning
+   */
+  private handleSilenceWarning(): void {
+    if (!this.hasWarned && this.silenceStartTime) {
+      const duration = Date.now() - this.silenceStartTime;
+      this.hasWarned = true;
+      
+      console.log(`⚠️ [PitchDetector] Silence warning: ${duration}ms`);
+      
+      if (this.silenceDetectionConfig.onSilenceWarning) {
+        this.silenceDetectionConfig.onSilenceWarning(duration);
+      }
+    }
+  }
+  
+  /**
+   * Handle silence timeout
+   */
+  private handleSilenceTimeout(): void {
+    console.log('⏰ [PitchDetector] Silence timeout reached');
+    
+    if (this.silenceDetectionConfig.onSilenceTimeout) {
+      this.silenceDetectionConfig.onSilenceTimeout();
+    }
+    
+    // Optionally stop detection on timeout
+    this.stopDetection();
+    this.resetSilenceTracking();
+  }
+  
+  /**
+   * Reset silence tracking state
+   */
+  private resetSilenceTracking(): void {
+    this.isSilent = false;
+    this.silenceStartTime = null;
+    this.hasWarned = false;
+    
+    // Clear timers
+    if (this.silenceWarningTimer) {
+      clearTimeout(this.silenceWarningTimer);
+      this.silenceWarningTimer = null;
+    }
+    
+    if (this.silenceTimeoutTimer) {
+      clearTimeout(this.silenceTimeoutTimer);
+      this.silenceTimeoutTimer = null;
+    }
+  }
+
+  /**
    * Reset display state
    */
   resetDisplayState(): void {
@@ -499,6 +631,9 @@ export class PitchDetector {
     // Reset harmonic correction
     this.resetHarmonicHistory();
     
+    // Reset silence detection
+    this.resetSilenceTracking();
+    
     console.log('🔄 [PitchDetector] Display state reset');
   }
 
@@ -510,6 +645,44 @@ export class PitchDetector {
     if (!enabled) {
       this.resetHarmonicHistory();
     }
+  }
+  
+  /**
+   * Update silence detection configuration
+   */
+  setSilenceDetectionConfig(config: Partial<SilenceDetectionConfig>): void {
+    this.silenceDetectionConfig = {
+      ...this.silenceDetectionConfig,
+      ...config
+    };
+    
+    // Reset tracking if disabled
+    if (!this.silenceDetectionConfig.enabled) {
+      this.resetSilenceTracking();
+    }
+    
+    console.log('🔇 [PitchDetector] Silence detection config updated:', this.silenceDetectionConfig);
+  }
+  
+  /**
+   * Get current silence detection status
+   */
+  getSilenceStatus(): {
+    isEnabled: boolean;
+    isSilent: boolean;
+    silenceDuration: number | null;
+    hasWarned: boolean;
+  } {
+    const silenceDuration = this.silenceStartTime && this.isSilent 
+      ? Date.now() - this.silenceStartTime 
+      : null;
+      
+    return {
+      isEnabled: this.silenceDetectionConfig.enabled || false,
+      isSilent: this.isSilent,
+      silenceDuration,
+      hasWarned: this.hasWarned
+    };
   }
 
   /**

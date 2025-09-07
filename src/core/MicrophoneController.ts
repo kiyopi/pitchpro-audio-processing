@@ -18,7 +18,7 @@ import { MicrophoneLifecycleManager } from './MicrophoneLifecycleManager';
 import { ErrorNotificationSystem } from './ErrorNotificationSystem';
 
 export class MicrophoneController {
-  private audioManager: AudioManager;
+  public readonly audioManager: AudioManager;
   private lifecycleManager: MicrophoneLifecycleManager;
   private errorSystem: ErrorNotificationSystem;
   

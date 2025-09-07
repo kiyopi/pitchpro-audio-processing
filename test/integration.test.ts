@@ -1,12 +1,14 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { AudioManager } from '../src/core/AudioManager';
 import { PitchDetector } from '../src/core/PitchDetector';
+import { MicrophoneController } from '../src/core/MicrophoneController';
 import { AdaptiveFrameRateLimiter } from '../src/utils/performance-optimized';
 import { performanceMonitor } from '../src/utils/performance';
 
-describe.skip('Integration Tests', () => {
+describe('Integration Tests', () => {
   let audioManager: AudioManager;
   let pitchDetector: PitchDetector;
+  let microphoneController: MicrophoneController;
   let mockMediaStream: any;
   let mockAudioContext: any;
   let mockAnalyser: any;
@@ -84,6 +86,7 @@ describe.skip('Integration Tests', () => {
     // Initialize components
     audioManager = new AudioManager();
     pitchDetector = new PitchDetector(audioManager);
+    microphoneController = new MicrophoneController();
   });
 
   afterEach(() => {
@@ -149,7 +152,7 @@ describe.skip('Integration Tests', () => {
       expect(audioManager.getStatus().isInitialized).toBe(true);
 
       // Final cleanup
-      audioManager.cleanup();
+      audioManager.forceCleanup();
       expect(audioManager.getStatus().isInitialized).toBe(false);
       expect(mockMediaStream.getTracks()[0].stop).toHaveBeenCalled();
     });
@@ -292,7 +295,7 @@ describe.skip('Integration Tests', () => {
       await pitchDetector.reinitialize();
 
       expect(pitchDetector.getIsInitialized()).toBe(true);
-      expect(audioManager.getStatus().activeAnalysers).toBeGreaterThanOrEqual(initialAnalysers);
+      expect(audioManager.getStatus().activeAnalysers.length).toBeGreaterThanOrEqual(initialAnalysers.length);
     });
 
     it('長時間実行での安定性', async () => {
@@ -331,6 +334,71 @@ describe.skip('Integration Tests', () => {
       expect(processedFrames).toBeGreaterThan(totalFrames * 0.8); // At least 80% of frames processed
 
       vi.restoreAllMocks();
+    });
+  });
+
+  describe('MicrophoneController + PitchDetector Integration', () => {
+    it('統合インターフェースでの完全な初期化', async () => {
+      // MicrophoneController initialization
+      await microphoneController.initialize();
+      expect(microphoneController.isReady()).toBe(true);
+      expect(microphoneController.audioManager).toBeDefined();
+
+      // PitchDetector with MicrophoneController.audioManager
+      const integratedPitchDetector = new PitchDetector(microphoneController.audioManager);
+      await integratedPitchDetector.initialize();
+      expect(integratedPitchDetector.getIsInitialized()).toBe(true);
+
+      // Verify shared AudioManager works correctly
+      const audioManagerStatus = microphoneController.audioManager.getStatus();
+      expect(audioManagerStatus.isInitialized).toBe(true);
+      expect(audioManagerStatus.mediaStreamActive).toBe(true);
+
+      // Cleanup
+      integratedPitchDetector.cleanup();
+      microphoneController.forceStop();
+    });
+
+    it('統合エラーハンドリング', async () => {
+      const errors: Error[] = [];
+      
+      microphoneController.setCallbacks({
+        onError: (error) => errors.push(error),
+      });
+
+      const integratedPitchDetector = new PitchDetector(microphoneController.audioManager);
+      integratedPitchDetector.setCallbacks({
+        onError: (error) => errors.push(error),
+      });
+
+      // Initialize successfully
+      await microphoneController.initialize();
+      await integratedPitchDetector.initialize();
+
+      // No initialization errors
+      expect(errors).toHaveLength(0);
+
+      // Verify proper cleanup
+      integratedPitchDetector.cleanup();
+      microphoneController.forceStop();
+    });
+
+    it('デバイス最適化の確認', async () => {
+      await microphoneController.initialize();
+      const deviceSpecs = microphoneController.getDeviceSpecs();
+      expect(deviceSpecs).toBeDefined();
+      expect(deviceSpecs!.deviceType).toMatch(/(iPhone|iPad|PC)/);
+
+      const integratedPitchDetector = new PitchDetector(microphoneController.audioManager);
+      await integratedPitchDetector.initialize();
+
+      // Device specs should be consistent
+      const pitchDetectorState = integratedPitchDetector.getState();
+      expect(pitchDetectorState.isInitialized).toBe(true);
+
+      // Cleanup
+      integratedPitchDetector.cleanup();
+      microphoneController.forceStop();
     });
   });
 });

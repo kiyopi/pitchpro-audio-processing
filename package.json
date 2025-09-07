@@ -38,6 +38,7 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
     "test:performance": "vitest run test/performance.test.ts",
+    "test:silence": "node test-silence-detection.js",
     "lint": "eslint src/ --ext .ts,.js",
     "lint:fix": "eslint src/ --ext .ts,.js --fix",
     "typecheck": "tsc --noEmit",
