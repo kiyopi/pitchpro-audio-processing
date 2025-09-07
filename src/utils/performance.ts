@@ -138,11 +138,9 @@ export const performanceMonitor = new PerformanceMonitor();
 // Frame rate limiter for animations
 export class FrameRateLimiter {
   private lastFrameTime = 0;
-  private readonly targetFPS: number;
   private readonly frameInterval: number;
   
   constructor(targetFPS = 20) {
-    this.targetFPS = targetFPS;
     this.frameInterval = 1000 / targetFPS;
   }
   

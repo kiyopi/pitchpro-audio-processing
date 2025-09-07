@@ -15,7 +15,13 @@ import type {
   DeviceSpecs
 } from '../types';
 import { AudioManager } from './AudioManager';
-import { AdaptiveFrameRateLimiter, AudioProcessingThrottle } from '../utils/performance-optimized';
+import { AdaptiveFrameRateLimiter } from '../utils/performance-optimized';
+import { 
+  PitchProError, 
+  AudioContextError, 
+  PitchDetectionError, 
+  isRecoverableError 
+} from '../utils/errors';
 
 export class PitchDetector {
   // Core components
@@ -27,7 +33,6 @@ export class PitchDetector {
   
   // Performance optimization
   private frameRateLimiter: AdaptiveFrameRateLimiter;
-  private processingThrottle: AudioProcessingThrottle;
   
   // State management
   private componentState: 'uninitialized' | 'initializing' | 'ready' | 'detecting' | 'error' = 'uninitialized';
@@ -82,7 +87,6 @@ export class PitchDetector {
     
     // Initialize performance optimization
     this.frameRateLimiter = new AdaptiveFrameRateLimiter(45); // 45FPS optimal for music
-    this.processingThrottle = new AudioProcessingThrottle();
   }
 
   /**
@@ -151,13 +155,25 @@ export class PitchDetector {
       console.log('✅ [PitchDetector] Initialization complete');
       
     } catch (error) {
-      console.error('❌ [PitchDetector] Initialization error:', error);
+      // Convert to structured error
+      const pitchError = error instanceof PitchProError 
+        ? error 
+        : new AudioContextError(
+            'PitchDetector initialization failed',
+            {
+              originalError: error instanceof Error ? error.message : String(error),
+              audioContextState: this.audioManager.getStatus().audioContextState,
+              deviceSpecs: this.deviceSpecs
+            }
+          );
+          
+      console.error('❌ [PitchDetector] Initialization error:', pitchError.toJSON());
       this.componentState = 'error';
-      this.lastError = error as Error;
+      this.lastError = pitchError;
       this.isInitialized = false;
       
-      // Notify error
-      this.callbacks.onError?.(error as Error);
+      // Notify with structured error
+      this.callbacks.onError?.(pitchError);
       
       throw error;
     }
@@ -278,9 +294,39 @@ export class PitchDetector {
     this.currentVolume = this.stableVolume;
     this.rawVolume = rawVolumePercent;
     
-    // Pitch detection (using PitchDetector)
+    // Pitch detection (using PitchDetector) with error handling
     const sampleRate = 44100; // Fixed sample rate for now
-    const [pitch, clarity] = this.pitchDetector.findPitch(buffer, sampleRate);
+    let pitch = 0;
+    let clarity = 0;
+    
+    try {
+      const result = this.pitchDetector.findPitch(buffer, sampleRate);
+      pitch = result[0] || 0;
+      clarity = result[1] || 0;
+    } catch (error) {
+      // Handle pitch detection errors gracefully
+      const pitchError = new PitchDetectionError(
+        'Pitch detection algorithm failed',
+        {
+          bufferLength: buffer.length,
+          sampleRate,
+          volume: this.currentVolume,
+          originalError: error instanceof Error ? error.message : String(error)
+        }
+      );
+      
+      console.warn('⚠️ [PitchDetector] Pitch detection error (recoverable):', pitchError.toJSON());
+      
+      // For recoverable errors, continue with zero values
+      if (isRecoverableError(pitchError)) {
+        pitch = 0;
+        clarity = 0;
+      } else {
+        // For non-recoverable errors, notify callback
+        this.callbacks.onError?.(pitchError);
+        return;
+      }
+    }
     
     // デバッグログ: Pitchyライブラリの結果（常時出力）
     console.log(`[Debug] Pitchy結果: pitch=${pitch?.toFixed(1) || 'null'}, clarity=${clarity?.toFixed(3) || 'null'}, volume=${this.currentVolume?.toFixed(1)}%, sampleRate=${sampleRate.toString()}`);
@@ -512,12 +558,13 @@ export class PitchDetector {
   /**
    * Update visual elements (lower priority, can be throttled)
    */
-  private updateVisuals(result: PitchDetectionResult): void {
+  private updateVisuals(_result: PitchDetectionResult): void {
     // Visual updates can be throttled to 30 FPS
     // This is handled by the UI layer if needed
     
     // The callback can decide to throttle visual updates
     // For now, we pass through all updates
+    // Note: result parameter prefixed with _ to indicate intentional non-use
   }
   
   /**

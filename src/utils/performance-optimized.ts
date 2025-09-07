@@ -7,7 +7,6 @@ export class AdaptiveFrameRateLimiter {
   private lastFrameTime = 0;
   private targetFPS: number;
   private frameInterval: number;
-  private cpuLoad = 0;
   private frameDrops = 0;
   
   // 音楽用途に適した範囲
