@@ -100,7 +100,7 @@ npm install @pitchpro/audio-processing
 #### 📥 直接ダウンロード
 - **最新版**: [v1.1.1 リリース](https://github.com/kiyopi/pitchpro-audio-processing/releases/latest)
 - **UMDファイル**: [pitchpro.umd.js](https://github.com/kiyopi/pitchpro-audio-processing/releases/download/v1.1.1/pitchpro.umd.js)
-- **デモページ**: [完全動作デモ](https://kiyopi.github.io/pitchpro-audio-processing/)
+- **デモページ**: [ワンクリックダウンロード＋デモ](https://kiyopi.github.io/pitchpro-audio-processing/quickstart-demo.html)
 
 ### 基本的な使用方法
 

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PitchPro Audio Processing - 高精度音程検出ライブラリ</title>
+    <meta name="description" content="McLeod Pitch Method による5セント精度の音程検出。Issue #1修正済みv1.1.1で完全動作。">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .hero {
+            text-align: center;
+            padding: 60px 0;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255,255,255,0.2);
+            margin-bottom: 40px;
+        }
+        .hero h1 {
+            font-size: 3.5em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .version {
+            background: #4CAF50;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            display: inline-block;
+            margin: 20px 0;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .hero p {
+            font-size: 1.3em;
+            margin-bottom: 30px;
+            opacity: 0.95;
+        }
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+        .cta-button {
+            background: #2196F3;
+            color: white;
+            text-decoration: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1.1em;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .cta-button.primary {
+            background: #4CAF50;
+            font-size: 1.2em;
+            padding: 20px 40px;
+        }
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+        .feature-card {
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .feature-card h3 {
+            color: #FFC107;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+        }
+        .feature-list {
+            list-style: none;
+        }
+        .feature-list li {
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .feature-list li:before {
+            content: "✅ ";
+            margin-right: 10px;
+        }
+        .quick-links {
+            text-align: center;
+            margin: 40px 0;
+        }
+        .quick-links h2 {
+            margin-bottom: 20px;
+            color: #FFC107;
+        }
+        .links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .quick-link {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            color: white;
+            transition: all 0.3s;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .quick-link:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+        .code-example {
+            background: rgba(0,0,0,0.3);
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.5em; }
+            .cta-buttons { flex-direction: column; align-items: center; }
+            .container { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="hero">
+            <h1>🎵 PitchPro</h1>
+            <div class="version">v1.1.1 - Issue #1修正版</div>
+            <p>商用レベルの高精度音程検出・音響処理ライブラリ</p>
+            <p>McLeod Pitch Method による5セント精度 | クロスプラットフォーム対応</p>
+            
+            <div class="cta-buttons">
+                <a href="quickstart-demo.html" class="cta-button primary">
+                    🚀 ワンクリックダウンロード＋デモ
+                </a>
+                <a href="demos/index.html" class="cta-button">
+                    🎮 完全機能デモ
+                </a>
+                <a href="https://github.com/kiyopi/pitchpro-audio-processing" class="cta-button">
+                    📂 GitHub
+                </a>
+                <a href="https://www.npmjs.com/package/@pitchpro/audio-processing" class="cta-button">
+                    📦 NPM
+                </a>
+            </div>
+        </header>
+
+        <div class="features">
+            <div class="feature-card">
+                <h3>🚀 v1.1.1 新機能</h3>
+                <ul class="feature-list">
+                    <li>Issue #1修正: 統合エラー完全解決</li>
+                    <li>消音検出タイマー: バッテリー節約</li>
+                    <li>Safari macOS完全対応</li>
+                    <li>統合テスト復旧: 安定性向上</li>
+                </ul>
+            </div>
+            
+            <div class="feature-card">
+                <h3>🎯 高精度検出</h3>
+                <ul class="feature-list">
+                    <li>McLeod Pitch Method（5セント精度）</li>
+                    <li>リアルタイム処理（<30ms レイテンシー）</li>
+                    <li>動的倍音補正システム</li>
+                    <li>3段階ノイズフィルタリング</li>
+                </ul>
+            </div>
+            
+            <div class="feature-card">
+                <h3>📱 デバイス最適化</h3>
+                <ul class="feature-list">
+                    <li>iPhone: 3.0x感度（小型筐体対応）</li>
+                    <li>iPad: 7.0x感度（マイク特性補正）</li>
+                    <li>PC: 1.0x感度（標準設定）</li>
+                    <li>iPadOS 13+偽装検出対応</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="quick-links">
+            <h2>🔗 すぐに始める</h2>
+            
+            <div class="code-example">
+<!-- CDN利用（最速開始） -->
+&lt;script src="https://cdn.jsdelivr.net/npm/@pitchpro/audio-processing@latest/dist/pitchpro.umd.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  const { MicrophoneController, PitchDetector } = window.PitchPro;
+&lt;/script&gt;
+            </div>
+            
+            <div class="links-grid">
+                <a href="quickstart-demo.html" class="quick-link">
+                    🎤 ワンクリックダウンロード＋音程検出デモ
+                </a>
+                <a href="demos/silence-detection-test.html" class="quick-link">
+                    🔇 消音検出タイマーデモ（v1.1.1新機能）
+                </a>
+                <a href="integration-test-demo.html" class="quick-link">
+                    🔧 Issue #1修正確認デモ
+                </a>
+                <a href="demos/core-features-test.html" class="quick-link">
+                    ⚙️ コア機能テスト
+                </a>
+                <a href="demos/advanced-features-test.html" class="quick-link">
+                    🚀 高度機能テスト
+                </a>
+                <a href="mobile-test-links.html" class="quick-link">
+                    📱 モバイルテストリンク集
+                </a>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin: 40px 0; padding: 30px; background: rgba(0,0,0,0.3); border-radius: 15px;">
+            <h3>📊 検証済み環境</h3>
+            <p>✅ Chrome 88+ | ✅ Firefox 84+ | ✅ Safari 14+ | ✅ Edge 88+ | ✅ iOS Safari 14+</p>
+            <p style="margin-top: 15px; opacity: 0.8;">
+                🎯 Issue #1完全解決 | 🔇 消音検出機能 | 🎵 5セント精度音程検出
+            </p>
+        </div>
+    </div>
+</body>
+</html>
