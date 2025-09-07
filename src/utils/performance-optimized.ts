@@ -5,6 +5,7 @@
 
 export class AdaptiveFrameRateLimiter {
   private lastFrameTime = 0;
+  private nextFrameTime = 0;
   private targetFPS: number;
   private frameInterval: number;
   private frameDrops = 0;
@@ -21,16 +22,28 @@ export class AdaptiveFrameRateLimiter {
   
   shouldProcess(): boolean {
     const now = performance.now();
-    const elapsed = now - this.lastFrameTime;
     
-    if (elapsed >= this.frameInterval) {
-      // フレーム落ちを検出
-      if (elapsed > this.frameInterval * 1.5) {
+    // 初回実行時の初期化
+    if (this.nextFrameTime === 0) {
+      this.nextFrameTime = now + this.frameInterval;
+      this.lastFrameTime = now;
+      return true;
+    }
+    
+    // 次フレーム時刻に到達したかチェック
+    if (now >= this.nextFrameTime) {
+      const actualElapsed = now - this.lastFrameTime;
+      
+      // フレーム落ちを検出（期待間隔の1.5倍を超過）
+      if (actualElapsed > this.frameInterval * 1.5) {
         this.frameDrops++;
         this.adjustFrameRate();
       }
       
-      this.lastFrameTime = now - (elapsed % this.frameInterval);
+      // 次フレーム時刻を絶対時刻で設定（累積誤差を回避）
+      this.nextFrameTime = now + this.frameInterval;
+      this.lastFrameTime = now;
+      
       return true;
     }
     
@@ -44,6 +57,11 @@ export class AdaptiveFrameRateLimiter {
       this.targetFPS = Math.max(this.MIN_FPS, this.targetFPS - 5);
       this.frameInterval = 1000 / this.targetFPS;
       this.frameDrops = 0;
+      
+      // 次フレーム時刻を新しい間隔で再計算
+      const now = performance.now();
+      this.nextFrameTime = now + this.frameInterval;
+      
       console.log(`Adjusted FPS to ${this.targetFPS} due to high load`);
     }
   }
@@ -53,11 +71,16 @@ export class AdaptiveFrameRateLimiter {
     if (this.frameDrops === 0 && this.targetFPS < this.OPTIMAL_FPS) {
       this.targetFPS = Math.min(this.OPTIMAL_FPS, this.targetFPS + 5);
       this.frameInterval = 1000 / this.targetFPS;
+      
+      // 次フレーム時刻を新しい間隔で再計算
+      const now = performance.now();
+      this.nextFrameTime = now + this.frameInterval;
     }
   }
   
   reset(): void {
     this.lastFrameTime = 0;
+    this.nextFrameTime = 0;
     this.frameDrops = 0;
     this.targetFPS = this.OPTIMAL_FPS;
     this.frameInterval = 1000 / this.targetFPS;
