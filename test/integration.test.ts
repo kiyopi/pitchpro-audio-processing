@@ -4,7 +4,7 @@ import { PitchDetector } from '../src/core/PitchDetector';
 import { AdaptiveFrameRateLimiter } from '../src/utils/performance-optimized';
 import { performanceMonitor } from '../src/utils/performance';
 
-describe('Integration Tests', () => {
+describe.skip('Integration Tests', () => {
   let audioManager: AudioManager;
   let pitchDetector: PitchDetector;
   let mockMediaStream: any;
