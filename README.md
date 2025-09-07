@@ -75,11 +75,32 @@ open pitchpro-complete-demo.html
 
 ## 🚀 クイックスタート
 
-### インストール
+### 📦 インストール・ダウンロード
 
+#### NPMインストール（推奨）
 ```bash
 npm install @pitchpro/audio-processing
 ```
+
+#### 🔗 CDN利用（即座に使用開始）
+```html
+<!-- UMD版（ブラウザ直接利用） -->
+<script src="https://cdn.jsdelivr.net/npm/@pitchpro/audio-processing@latest/dist/pitchpro.umd.js"></script>
+<script>
+  const { MicrophoneController, PitchDetector } = window.PitchPro;
+</script>
+
+<!-- ESM版（モジュール利用） -->
+<script type="module">
+  import { MicrophoneController, PitchDetector } 
+    from 'https://cdn.skypack.dev/@pitchpro/audio-processing@latest';
+</script>
+```
+
+#### 📥 直接ダウンロード
+- **最新版**: [v1.1.1 リリース](https://github.com/kiyopi/pitchpro-audio-processing/releases/latest)
+- **UMDファイル**: [pitchpro.umd.js](https://github.com/kiyopi/pitchpro-audio-processing/releases/download/v1.1.1/pitchpro.umd.js)
+- **デモページ**: [完全動作デモ](https://kiyopi.github.io/pitchpro-audio-processing/)
 
 ### 基本的な使用方法
 
