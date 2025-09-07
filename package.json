@@ -36,8 +36,11 @@
     "build:types": "tsc --emitDeclarationOnly",
     "test": "vitest",
     "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "test:performance": "vitest run test/performance.test.ts",
     "lint": "eslint src/ --ext .ts,.js",
     "lint:fix": "eslint src/ --ext .ts,.js --fix",
+    "typecheck": "tsc --noEmit",
     "docs": "typedoc src/",
     "prepublishOnly": "npm run build && npm test",
     "preview": "vite preview"

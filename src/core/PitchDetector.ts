@@ -15,6 +15,7 @@ import type {
   DeviceSpecs
 } from '../types';
 import { AudioManager } from './AudioManager';
+import { AdaptiveFrameRateLimiter, AudioProcessingThrottle } from '../utils/performance-optimized';
 
 export class PitchDetector {
   // Core components
@@ -23,6 +24,10 @@ export class PitchDetector {
   private analyser: AnalyserNode | null = null;
   private rawAnalyser: AnalyserNode | null = null;
   private animationFrame: number | null = null;
+  
+  // Performance optimization
+  private frameRateLimiter: AdaptiveFrameRateLimiter;
+  private processingThrottle: AudioProcessingThrottle;
   
   // State management
   private componentState: 'uninitialized' | 'initializing' | 'ready' | 'detecting' | 'error' = 'uninitialized';
@@ -74,6 +79,10 @@ export class PitchDetector {
     };
     
     this.deviceSpecs = this.audioManager.getPlatformSpecs();
+    
+    // Initialize performance optimization
+    this.frameRateLimiter = new AdaptiveFrameRateLimiter(45); // 45FPS optimal for music
+    this.processingThrottle = new AudioProcessingThrottle();
   }
 
   /**
@@ -188,6 +197,9 @@ export class PitchDetector {
       this.animationFrame = null;
     }
     
+    // Reset frame rate limiter
+    this.frameRateLimiter.reset();
+    
     // Return state to ready (if initialized)
     if (this.componentState === 'detecting' && this.isInitialized) {
       this.componentState = 'ready';
@@ -196,9 +208,15 @@ export class PitchDetector {
   }
 
   /**
-   * Real-time pitch detection loop
+   * Real-time pitch detection loop with adaptive frame rate
    */
   private detectPitch(): void {
+    // Check if we should process this frame based on adaptive FPS
+    if (!this.frameRateLimiter.shouldProcess()) {
+      // Skip this frame but schedule next
+      this.animationFrame = requestAnimationFrame(() => this.detectPitch());
+      return;
+    }
     // デバッグログ: detectPitchメソッドの呼び出し確認
     console.log(`[Debug] detectPitch呼び出し: detecting=${this.isDetecting}, analyser=${!!this.analyser}, rawAnalyser=${!!this.rawAnalyser}, pitchDetector=${!!this.pitchDetector}`);
     
@@ -321,7 +339,15 @@ export class PitchDetector {
       cents: this.currentFrequency > 0 ? this.frequencyToCents(this.currentFrequency) : undefined
     };
     
-    this.callbacks.onPitchUpdate?.(result);
+    // Separate visual updates from audio processing
+    this.processAudioData(result);
+    this.updateVisuals(result);
+    
+    // Check performance and adjust frame rate if needed
+    const stats = this.frameRateLimiter.getStats();
+    if (stats.frameDrops === 0) {
+      this.frameRateLimiter.recoverPerformance();
+    }
     
     this.animationFrame = requestAnimationFrame(() => this.detectPitch());
   }
@@ -472,6 +498,39 @@ export class PitchDetector {
     };
   }
 
+  /**
+   * Process audio data (high priority, runs at full speed)
+   */
+  private processAudioData(result: PitchDetectionResult): void {
+    // Critical audio processing that needs low latency
+    // This runs at the full adaptive frame rate (30-60 FPS)
+    
+    // Callback for real-time audio processing
+    this.callbacks.onPitchUpdate?.(result);
+  }
+  
+  /**
+   * Update visual elements (lower priority, can be throttled)
+   */
+  private updateVisuals(result: PitchDetectionResult): void {
+    // Visual updates can be throttled to 30 FPS
+    // This is handled by the UI layer if needed
+    
+    // The callback can decide to throttle visual updates
+    // For now, we pass through all updates
+  }
+  
+  /**
+   * Get current performance statistics
+   */
+  getPerformanceStats(): {
+    currentFPS: number;
+    frameDrops: number;
+    latency: number;
+  } {
+    return this.frameRateLimiter.getStats();
+  }
+  
   /**
    * Reinitialize detector
    */
