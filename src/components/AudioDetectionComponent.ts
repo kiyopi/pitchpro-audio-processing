@@ -249,18 +249,20 @@ export class AudioDetectionComponent {
       this.debugLog('Starting initialization...');
 
       // Initialize MicrophoneController
-      this.micController = new MicrophoneController(
-        {
+      this.micController = new MicrophoneController({
+        audioManager: {
           sampleRate: 44100,
           echoCancellation: false,
           autoGainControl: false
         },
-        {
-          maxRetries: 3,
-          retryDelayMs: 1000
+        lifecycle: {
+          maxAutoRecoveryAttempts: 3,
+          healthCheckIntervalMs: 1000
         },
-        this.config.debug // Enable error notifications if debug is on
-      );
+        notifications: {
+          enabled: this.config.debug
+        }
+      });
 
       // Set up MicrophoneController callbacks
       this.micController.setCallbacks({

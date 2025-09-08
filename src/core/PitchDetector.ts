@@ -2,15 +2,45 @@
  * PitchDetector - Framework-agnostic High-precision Pitch Detection Engine
  * 
  * @description Provides real-time pitch detection using the McLeod Pitch Method (Pitchy library)
- * with advanced features including harmonic correction, adaptive frame rate control,
- * noise filtering, and device-specific optimization for consistent cross-platform performance.
+ * with advanced features including configurable harmonic correction, adaptive frame rate control,
+ * noise filtering, TypedArray-optimized volume history, and device-specific optimization for
+ * consistent cross-platform performance. Supports development-mode debug logging and comprehensive
+ * performance monitoring.
+ * 
+ * @features
+ * - **McLeod Pitch Method**: Industry-standard pitch detection algorithm
+ * - **Harmonic Correction**: Configurable octave jump detection and correction
+ * - **Adaptive Performance**: Dynamic frame rate adjustment (30-60 FPS)
+ * - **TypedArray Optimization**: High-performance buffer operations
+ * - **Device Optimization**: Platform-specific sensitivity adjustments
+ * - **Silence Detection**: Configurable timeout and warning system
+ * - **Development Debug**: Conditional debug logging for development builds
  * 
  * @example
  * ```typescript
+ * // Basic usage with default configuration
+ * const pitchDetector = new PitchDetector(audioManager);
+ * 
+ * // Advanced configuration with custom settings
  * const pitchDetector = new PitchDetector(audioManager, {
  *   fftSize: 4096,
  *   clarityThreshold: 0.4,
- *   minVolumeAbsolute: 0.003
+ *   minVolumeAbsolute: 0.003,
+ *   harmonicCorrection: {
+ *     enabled: true,
+ *     confidenceThreshold: 0.7,
+ *     historyWindow: 1000,
+ *     frequencyThreshold: 0.1
+ *   },
+ *   volumeHistory: {
+ *     historyLength: 5,
+ *     useTypedArray: true
+ *   },
+ *   silenceDetection: {
+ *     enabled: true,
+ *     warningThreshold: 15000,
+ *     timeoutThreshold: 30000
+ *   }
  * });
  * 
  * await pitchDetector.initialize();
@@ -18,6 +48,13 @@
  * pitchDetector.setCallbacks({
  *   onPitchUpdate: (result) => {
  *     console.log(`Detected: ${result.note} (${result.frequency.toFixed(1)}Hz)`);
+ *     console.log(`Clarity: ${(result.clarity * 100).toFixed(1)}%, Volume: ${result.volume.toFixed(1)}%`);
+ *   },
+ *   onError: (error) => {
+ *     console.error('Detection error:', error.message);
+ *   },
+ *   onStateChange: (state) => {
+ *     console.log('Detection state:', state);
  *   }
  * });
  * 
@@ -38,6 +75,32 @@ import type {
   DeviceSpecs,
   SilenceDetectionConfig
 } from '../types';
+
+/**
+ * Configuration for harmonic correction system
+ * @interface HarmonicCorrectionConfig
+ */
+export interface HarmonicCorrectionConfig {
+  /** @description Enable/disable harmonic correction (default: true) */
+  enabled?: boolean;
+  /** @description Confidence threshold for corrections (0-1, default: 0.7) */
+  confidenceThreshold?: number;
+  /** @description Time window for harmonic history in ms (default: 1000) */
+  historyWindow?: number;
+  /** @description Frequency difference threshold for octave detection (0-1, default: 0.1) */
+  frequencyThreshold?: number;
+}
+
+/**
+ * Configuration for volume history optimization
+ * @interface VolumeHistoryConfig
+ */
+export interface VolumeHistoryConfig {
+  /** @description Number of frames to keep in volume history (default: 5) */
+  historyLength?: number;
+  /** @description Use optimized TypedArray buffer (default: false) */
+  useTypedArray?: boolean;
+}
 import { AudioManager } from './AudioManager';
 import { AdaptiveFrameRateLimiter } from '../utils/performance-optimized';
 import { 
@@ -88,7 +151,7 @@ export class PitchDetector {
   /** @private Raw volume level before processing (0-100) */
   private rawVolume = 0;
   
-  /** @private Currently detected frequency in Hz */
+  /** @private Currently detected frequency in Hz (preserves decimal precision) */
   private currentFrequency = 0;
   
   /** @private Detected musical note name */
@@ -101,7 +164,7 @@ export class PitchDetector {
   private pitchClarity = 0;
   
   /** @private Circular buffer for volume stabilization */
-  private volumeHistory: number[] = [0, 0, 0, 0, 0];
+  private volumeHistory: number[] | Float32Array = [];
   
   /** @private Stabilized volume after filtering */
   private stableVolume = 0;
@@ -116,6 +179,12 @@ export class PitchDetector {
   private config: Required<Omit<PitchDetectorConfig, 'silenceDetection'>> & { 
     silenceDetection?: SilenceDetectionConfig 
   };
+  
+  /** @private Harmonic correction configuration */
+  private harmonicConfig: Required<HarmonicCorrectionConfig>;
+  
+  /** @private Volume history configuration */
+  private volumeHistoryConfig: Required<VolumeHistoryConfig>;
   
   /** @private Flag to disable harmonic correction */
   private disableHarmonicCorrection = false;
@@ -149,33 +218,80 @@ export class PitchDetector {
   private hasWarned = false;
 
   /**
-   * Creates a new PitchDetector instance with optimized configuration
+   * Creates a new PitchDetector instance with comprehensive configuration options
    * 
-   * @param audioManager - AudioManager instance for resource management
-   * @param config - Optional configuration to override defaults
-   * @param config.fftSize - FFT size for frequency analysis (default: 4096)
-   * @param config.smoothing - Smoothing factor for AnalyserNode (default: 0.1)
-   * @param config.clarityThreshold - Minimum clarity for valid detection (default: 0.4)
-   * @param config.minVolumeAbsolute - Minimum volume threshold (default: 0.003)
-   * @param config.silenceDetection - Optional silence detection configuration
+   * @description Initializes a high-performance pitch detection engine with configurable
+   * harmonic correction, optimized volume history buffers, and device-specific optimizations.
+   * The constructor applies sensible defaults while allowing fine-grained control over all
+   * detection parameters and performance characteristics.
+   * 
+   * @param audioManager - AudioManager instance for resource management and audio context access
+   * @param config - Optional configuration object to customize detection behavior
+   * @param config.fftSize - FFT size for frequency analysis (default: 4096, recommended: 2048-8192)
+   * @param config.smoothing - Smoothing factor for AnalyserNode (default: 0.1, range: 0-1)
+   * @param config.clarityThreshold - Minimum clarity for valid detection (default: 0.4, range: 0-1)
+   * @param config.minVolumeAbsolute - Minimum volume threshold (default: 0.003, range: 0.001-0.01)
+   * @param config.harmonicCorrection - Harmonic correction configuration
+   * @param config.harmonicCorrection.enabled - Enable octave jump correction (default: true)
+   * @param config.harmonicCorrection.confidenceThreshold - Confidence required for correction (default: 0.7)
+   * @param config.harmonicCorrection.historyWindow - Time window for harmonic analysis in ms (default: 1000)
+   * @param config.harmonicCorrection.frequencyThreshold - Frequency difference threshold (default: 0.1)
+   * @param config.volumeHistory - Volume history buffer configuration
+   * @param config.volumeHistory.historyLength - Number of frames to average (default: 5)
+   * @param config.volumeHistory.useTypedArray - Use TypedArray for better performance (default: true)
+   * @param config.silenceDetection - Silence detection and timeout configuration
+   * @param config.silenceDetection.enabled - Enable silence detection (default: false)
+   * @param config.silenceDetection.warningThreshold - Warning timeout in ms (default: 15000)
+   * @param config.silenceDetection.timeoutThreshold - Hard timeout in ms (default: 30000)
    * 
    * @example
    * ```typescript
-   * // Basic usage
+   * // Minimal configuration (uses optimized defaults)
    * const pitchDetector = new PitchDetector(audioManager);
    * 
-   * // Custom configuration
+   * // Performance-optimized configuration for music applications
    * const pitchDetector = new PitchDetector(audioManager, {
-   *   fftSize: 8192,
-   *   clarityThreshold: 0.6,
+   *   fftSize: 4096,           // Good balance of accuracy and performance
+   *   clarityThreshold: 0.5,   // Higher threshold for cleaner detection
+   *   minVolumeAbsolute: 0.002, // Sensitive to quiet sounds
+   *   harmonicCorrection: {
+   *     enabled: true,
+   *     confidenceThreshold: 0.8, // Conservative octave correction
+   *     historyWindow: 1500,       // Longer analysis window
+   *     frequencyThreshold: 0.08   // Tighter frequency matching
+   *   },
+   *   volumeHistory: {
+   *     historyLength: 7,      // More smoothing
+   *     useTypedArray: true    // Maximum performance
+   *   }
+   * });
+   * 
+   * // Educational/debugging configuration
+   * const pitchDetector = new PitchDetector(audioManager, {
+   *   fftSize: 8192,           // High resolution for analysis
+   *   clarityThreshold: 0.3,   // Lower threshold to see more detections
+   *   harmonicCorrection: {
+   *     enabled: false         // Disable to see raw algorithm output
+   *   },
+   *   volumeHistory: {
+   *     historyLength: 3,      // Less smoothing for immediate response
+   *     useTypedArray: false   // Standard arrays for easier debugging
+   *   },
    *   silenceDetection: {
    *     enabled: true,
-   *     warningThreshold: 10000
+   *     warningThreshold: 10000, // 10 second warning
+   *     timeoutThreshold: 20000  // 20 second timeout
    *   }
    * });
    * ```
    */
-  constructor(audioManager: AudioManager, config: PitchDetectorConfig = {}) {
+  constructor(
+    audioManager: AudioManager, 
+    config: PitchDetectorConfig & {
+      harmonicCorrection?: Partial<HarmonicCorrectionConfig>;
+      volumeHistory?: Partial<VolumeHistoryConfig>;
+    } = {}
+  ) {
     this.audioManager = audioManager;
     this.config = {
       fftSize: 4096,
@@ -184,6 +300,28 @@ export class PitchDetector {
       minVolumeAbsolute: 0.003, // 0.01から0.003に現実的な値に変更
       ...config
     };
+    
+    // Initialize harmonic correction configuration
+    this.harmonicConfig = {
+      enabled: true,
+      confidenceThreshold: 0.7,
+      historyWindow: 1000,
+      frequencyThreshold: 0.1,
+      ...config.harmonicCorrection
+    };
+    
+    // Initialize volume history configuration (prefer TypedArray for better performance)
+    this.volumeHistoryConfig = {
+      historyLength: 5,
+      useTypedArray: true, // Enable by default for better performance
+      ...config.volumeHistory
+    };
+    
+    // Initialize volume history buffer
+    this.initializeVolumeHistory();
+    
+    // Set disableHarmonicCorrection based on harmonic config
+    this.disableHarmonicCorrection = !this.harmonicConfig.enabled;
     
     // Initialize silence detection configuration
     this.silenceDetectionConfig = {
@@ -203,22 +341,55 @@ export class PitchDetector {
   /**
    * Sets callback functions for pitch detection events
    * 
+   * @description Configures event handlers for real-time pitch detection results,
+   * errors, and state changes. Callbacks are called at the adaptive frame rate
+   * (typically 30-60 FPS) during active detection.
+   * 
    * @param callbacks - Object containing callback functions
-   * @param callbacks.onPitchUpdate - Called when pitch is detected
-   * @param callbacks.onError - Called when errors occur
-   * @param callbacks.onStateChange - Called when component state changes
+   * @param callbacks.onPitchUpdate - Called when valid pitch is detected with frequency, note, clarity, and volume data
+   * @param callbacks.onError - Called when recoverable or non-recoverable errors occur during detection
+   * @param callbacks.onStateChange - Called when component transitions between states (uninitialized/ready/detecting/error)
    * 
    * @example
    * ```typescript
    * pitchDetector.setCallbacks({
    *   onPitchUpdate: (result) => {
-   *     console.log(`Pitch: ${result.frequency}Hz, Note: ${result.note}`);
+   *     // Real-time pitch data (30-60 times per second)
+   *     console.log(`Pitch: ${result.frequency.toFixed(2)}Hz`);
+   *     console.log(`Note: ${result.note}, Octave: ${result.octave}`);
+   *     console.log(`Clarity: ${(result.clarity * 100).toFixed(1)}%`);
+   *     console.log(`Volume: ${result.volume.toFixed(1)}%`);
+   *     
+   *     // Cents deviation from perfect tuning
+   *     if (result.cents !== undefined) {
+   *       console.log(`Tuning: ${result.cents > 0 ? '+' : ''}${result.cents} cents`);
+   *     }
    *   },
    *   onError: (error) => {
    *     console.error('Detection error:', error.message);
+   *     
+   *     // Handle specific error types
+   *     if (error instanceof PitchDetectionError) {
+   *       console.log('Pitch detection algorithm error - may be recoverable');
+   *     } else if (error instanceof AudioContextError) {
+   *       console.log('Audio system error - requires reinitialization');
+   *     }
    *   },
    *   onStateChange: (state) => {
-   *     console.log('State changed to:', state);
+   *     console.log('Detection state changed to:', state);
+   *     
+   *     // React to state changes
+   *     switch (state) {
+   *       case 'ready':
+   *         console.log('PitchDetector initialized and ready');
+   *         break;
+   *       case 'detecting':
+   *         console.log('Active pitch detection started');
+   *         break;
+   *       case 'error':
+   *         console.log('Error state - check error callback for details');
+   *         break;
+   *     }
    *   }
    * });
    * ```
@@ -294,8 +465,10 @@ export class PitchDetector {
       // Initialize PitchDetector
       this.pitchDetector = PitchyDetector.forFloat32Array(this.analyser.fftSize);
       
-      // デバッグログ: Pitchyインスタンス確認
-      console.log(`[Debug] Pitchyインスタンス作成: ${!!this.pitchDetector}, FFTサイズ: ${this.analyser.fftSize}`);
+      // Development-only Pitchy instance debug logging
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[Debug] Pitchyインスタンス作成: ${!!this.pitchDetector}, FFTサイズ: ${this.analyser.fftSize}`);
+      }
       
       // Initialization complete
       this.componentState = 'ready';
@@ -414,20 +587,27 @@ export class PitchDetector {
 
   /**
    * Real-time pitch detection loop with adaptive frame rate
+   * @private
+   * @description Main detection loop optimized for performance with minimal
+   * redundant calculations and efficient buffer operations
    */
   private detectPitch(): void {
+    // Batch timestamp retrieval for performance
+    const frameStartTime = performance.now();
+    
     // Check if we should process this frame based on adaptive FPS
     if (!this.frameRateLimiter.shouldProcess()) {
       // Skip this frame but schedule next
       this.animationFrame = requestAnimationFrame(() => this.detectPitch());
       return;
     }
-    // デバッグログ: detectPitchメソッドの呼び出し確認
-    console.log(`[Debug] detectPitch呼び出し: detecting=${this.isDetecting}, analyser=${!!this.analyser}, rawAnalyser=${!!this.rawAnalyser}, pitchDetector=${!!this.pitchDetector}`);
-    
-    // デバッグ: AudioManagerの状態確認
-    const audioManagerStatus = this.audioManager.getStatus();
-    console.log(`[Debug] AudioManager状態: context=${audioManagerStatus.audioContextState}, stream=${audioManagerStatus.mediaStreamActive}`);
+    // Development-only debug logging
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[Debug] detectPitch呼び出し: detecting=${this.isDetecting}, analyser=${!!this.analyser}, rawAnalyser=${!!this.rawAnalyser}, pitchDetector=${!!this.pitchDetector}`);
+      
+      const audioManagerStatus = this.audioManager.getStatus();
+      console.log(`[Debug] AudioManager状態: context=${audioManagerStatus.audioContextState}, stream=${audioManagerStatus.mediaStreamActive}`);
+    }
     
     if (!this.isDetecting || !this.analyser || !this.rawAnalyser || !this.pitchDetector || !this.deviceSpecs) return;
     
@@ -438,10 +618,12 @@ export class PitchDetector {
     this.analyser.getFloatTimeDomainData(buffer);
     this.rawAnalyser.getFloatTimeDomainData(rawBuffer);
     
-    // デバッグ: バッファーの内容を確認（常に出力）
-    const nonZeroCount = buffer.filter(val => Math.abs(val) > 0.0001).length;
-    const maxValue = Math.max(...buffer.map(val => Math.abs(val)));
-    console.log(`[Debug] バッファー分析: 非ゼロ値=${nonZeroCount}/${bufferLength}, 最大値=${maxValue.toFixed(6)}`);
+    // Development-only buffer analysis debug logging
+    if (process.env.NODE_ENV === 'development') {
+      const nonZeroCount = buffer.filter(val => Math.abs(val) > 0.0001).length;
+      const maxValue = Math.max(...buffer.map(val => Math.abs(val)));
+      console.log(`[Debug] バッファー分析: 非ゼロ値=${nonZeroCount}/${bufferLength}, 最大値=${maxValue.toFixed(6)}`);
+    }
     
     // Volume calculation (filtered)
     let sum = 0;
@@ -450,8 +632,10 @@ export class PitchDetector {
     }
     const rms = Math.sqrt(sum / bufferLength);
     
-    // デバッグ: RMS計算の詳細（常に出力）
-    console.log(`[Debug] RMS計算: sum=${sum.toFixed(6)}, rms=${rms.toFixed(6)}`);
+    // Development-only RMS calculation debug logging
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[Debug] RMS計算: sum=${sum.toFixed(6)}, rms=${rms.toFixed(6)}`);
+    }
     
     // Platform-specific volume calculation
     const platformSpecs = this.deviceSpecs;
@@ -460,9 +644,11 @@ export class PitchDetector {
       (adjustedRms * 100) / platformSpecs.divisor * 6 - platformSpecs.noiseThreshold
     ));
     
-    // デバッグ: 音量計算の詳細（常に出力）
-    console.log(`[Debug] 音量計算: rms=${rms.toFixed(6)}, adjustedRms=${adjustedRms.toFixed(6)}, volumePercent=${volumePercent.toFixed(2)}%`);
-    console.log(`[Debug] プラットフォーム設定: gain=${platformSpecs.gainCompensation}, divisor=${platformSpecs.divisor}, noise=${platformSpecs.noiseThreshold}`);
+    // Development-only volume calculation debug logging
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[Debug] 音量計算: rms=${rms.toFixed(6)}, adjustedRms=${adjustedRms.toFixed(6)}, volumePercent=${volumePercent.toFixed(2)}%`);
+      console.log(`[Debug] プラットフォーム設定: gain=${platformSpecs.gainCompensation}, divisor=${platformSpecs.divisor}, noise=${platformSpecs.noiseThreshold}`);
+    }
     
     // Raw volume calculation (pre-filter)
     let rawSum = 0;
@@ -474,12 +660,9 @@ export class PitchDetector {
       (rawRms * platformSpecs.gainCompensation * 100) / platformSpecs.divisor * 6 - platformSpecs.noiseThreshold
     ));
     
-    // Volume stabilization (5-frame moving average)
-    this.volumeHistory.push(volumePercent);
-    if (this.volumeHistory.length > 5) {
-      this.volumeHistory.shift();
-    }
-    this.stableVolume = this.volumeHistory.reduce((sum, v) => sum + v, 0) / this.volumeHistory.length;
+    // Volume stabilization with configurable history length
+    this.addToVolumeHistory(volumePercent);
+    this.stableVolume = this.calculateVolumeAverage();
     this.currentVolume = this.stableVolume;
     this.rawVolume = rawVolumePercent;
     
@@ -489,9 +672,9 @@ export class PitchDetector {
     let clarity = 0;
     
     try {
-      const result = this.pitchDetector.findPitch(buffer, sampleRate);
-      pitch = result[0] || 0;
-      clarity = result[1] || 0;
+      const pitchResult = this.pitchDetector.findPitch(buffer, sampleRate);
+      pitch = pitchResult[0] || 0;
+      clarity = pitchResult[1] || 0;
     } catch (error) {
       // Handle pitch detection errors gracefully
       const pitchError = new PitchDetectionError(
@@ -517,9 +700,11 @@ export class PitchDetector {
       }
     }
     
-    // デバッグログ: Pitchyライブラリの結果（常時出力）
-    console.log(`[Debug] Pitchy結果: pitch=${pitch?.toFixed(1) || 'null'}, clarity=${clarity?.toFixed(3) || 'null'}, volume=${this.currentVolume?.toFixed(1)}%, sampleRate=${sampleRate.toString()}`);
-    console.log(`[Debug] Pitchyバッファー: 最初5要素=${Array.from(buffer.slice(0, 5)).map(v => v.toFixed(6)).join(', ')}`);
+    // Development-only Pitchy results debug logging
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[Debug] Pitchy結果: pitch=${pitch?.toFixed(1) || 'null'}, clarity=${clarity?.toFixed(3) || 'null'}, volume=${this.currentVolume?.toFixed(1)}%, sampleRate=${sampleRate.toString()}`);
+      console.log(`[Debug] Pitchyバッファー: 最初5要素=${Array.from(buffer.slice(0, 5)).map(v => v.toFixed(6)).join(', ')}`);
+    }
     
     // Human vocal range filtering (practical adjustment)
     // Optimized for actual human voice range:
@@ -528,21 +713,23 @@ export class PitchDetector {
     // - Exclude extreme low frequency noise (G-1, etc.) reliably
     const isValidVocalRange = pitch >= 65 && pitch <= 1200;
     
-    // デバッグログ: 判定条件の詳細
-    console.log(`[Debug] 判定条件: pitch=${!!pitch}, clarity=${clarity?.toFixed(3)}>${this.config.clarityThreshold}, volume=${this.currentVolume?.toFixed(1)}>0.4, range=${isValidVocalRange}`);
+    // Development-only decision criteria debug logging
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[Debug] 判定条件: pitch=${!!pitch}, clarity=${clarity?.toFixed(3)}>${this.config.clarityThreshold}, volume=${this.currentVolume?.toFixed(1)}>0.4, range=${isValidVocalRange}`);
+    }
     
     if (pitch && clarity > this.config.clarityThreshold && this.currentVolume > 0.4 && isValidVocalRange) {
       let finalFreq = pitch;
       
-      // Harmonic correction control (for 230Hz stuck issue debugging)
+      // Harmonic correction control
       if (!this.disableHarmonicCorrection) {
         // Apply unified harmonic correction system (pass volume information)
         const normalizedVolume = Math.min(this.currentVolume / 100, 1.0); // Normalize to 0-1
         finalFreq = this.correctHarmonic(pitch, normalizedVolume);
       }
       
-      // Update frequency display
-      this.currentFrequency = Math.round(finalFreq);
+      // Update frequency display (preserve decimal precision)
+      this.currentFrequency = finalFreq;
       const noteInfo = this.frequencyToNoteAndOctave(this.currentFrequency);
       this.detectedNote = noteInfo.note;
       this.detectedOctave = noteInfo.octave;
@@ -581,25 +768,48 @@ export class PitchDetector {
     this.processAudioData(result);
     this.updateVisuals(result);
     
+    // Performance optimization: batch timing operations
+    const frameEndTime = performance.now();
+    const frameProcessTime = frameEndTime - frameStartTime;
+    
     // Check performance and adjust frame rate if needed
     const stats = this.frameRateLimiter.getStats();
     if (stats.frameDrops === 0) {
       this.frameRateLimiter.recoverPerformance();
     }
     
+    // Performance monitoring (development only)
+    if (process.env.NODE_ENV === 'development' && frameProcessTime > 16.67) { // > 60fps threshold
+      console.warn(`[PitchDetector] Frame processing took ${frameProcessTime.toFixed(2)}ms (>16.67ms threshold)`);
+    }
+    
     this.animationFrame = requestAnimationFrame(() => this.detectPitch());
   }
 
   /**
-   * Harmonic correction system
+   * Harmonic correction system with configurable parameters
+   * 
+   * @private
+   * @description Analyzes frequency history to detect and correct harmonic errors
+   * like octave jumping. Uses configurable confidence thresholds and time windows
+   * to balance correction accuracy with responsiveness.
+   * 
+   * @param frequency - The detected frequency to potentially correct
+   * @param volume - The current volume level for confidence calculation
+   * @returns The corrected frequency or original if no correction needed
    */
   private correctHarmonic(frequency: number, volume: number): number {
-    const now = Date.now();
-    const confidenceThreshold = 0.7;
-    const historyWindow = 1000; // 1 second
+    if (!this.harmonicConfig.enabled) {
+      this.previousFrequency = frequency;
+      return frequency;
+    }
     
-    // Clean old history
-    this.harmonicHistory = this.harmonicHistory.filter(h => now - h.timestamp < historyWindow);
+    const now = Date.now();
+    
+    // Clean old history based on configured window
+    this.harmonicHistory = this.harmonicHistory.filter(
+      h => now - h.timestamp < this.harmonicConfig.historyWindow
+    );
     
     // Calculate confidence based on volume and stability
     const volumeConfidence = Math.min(volume * 1.5, 1.0);
@@ -618,16 +828,22 @@ export class PitchDetector {
       
       // Check for 2x harmonic (octave up error)
       const halfFrequency = frequency / 2;
-      if (Math.abs(halfFrequency - avgFrequency) / avgFrequency < 0.1 && avgConfidence > confidenceThreshold) {
-        console.log(`🔧 [PitchDetector] Octave correction: ${frequency}Hz → ${halfFrequency}Hz`);
+      if (Math.abs(halfFrequency - avgFrequency) / avgFrequency < this.harmonicConfig.frequencyThreshold && 
+          avgConfidence > this.harmonicConfig.confidenceThreshold) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`🔧 [PitchDetector] Octave correction: ${frequency.toFixed(1)}Hz → ${halfFrequency.toFixed(1)}Hz`);
+        }
         this.previousFrequency = halfFrequency;
         return halfFrequency;
       }
       
       // Check for 1/2x harmonic (octave down error)
       const doubleFrequency = frequency * 2;
-      if (Math.abs(doubleFrequency - avgFrequency) / avgFrequency < 0.1 && avgConfidence > confidenceThreshold) {
-        console.log(`🔧 [PitchDetector] Octave up correction: ${frequency}Hz → ${doubleFrequency}Hz`);
+      if (Math.abs(doubleFrequency - avgFrequency) / avgFrequency < this.harmonicConfig.frequencyThreshold && 
+          avgConfidence > this.harmonicConfig.confidenceThreshold) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`🔧 [PitchDetector] Octave up correction: ${frequency.toFixed(1)}Hz → ${doubleFrequency.toFixed(1)}Hz`);
+        }
         this.previousFrequency = doubleFrequency;
         return doubleFrequency;
       }
@@ -638,7 +854,12 @@ export class PitchDetector {
   }
 
   /**
-   * Reset harmonic correction history
+   * Reset harmonic correction history and frequency tracking
+   * 
+   * @private
+   * @description Clears the frequency history buffer used for harmonic correction
+   * and resets the previous frequency reference. Called when signal quality is poor
+   * or when restarting detection to prevent incorrect corrections.
    */
   private resetHarmonicHistory(): void {
     this.harmonicHistory = [];
@@ -646,7 +867,21 @@ export class PitchDetector {
   }
 
   /**
-   * Convert frequency to note name and octave
+   * Convert frequency to musical note name and octave number
+   * 
+   * @private
+   * @description Converts a frequency in Hz to standard musical notation using
+   * equal temperament tuning (A4 = 440Hz). Calculates semitone distances
+   * and maps to chromatic scale positions.
+   * 
+   * @param frequency - Input frequency in Hz
+   * @returns Object containing note name (C, C#, D, etc.) and octave number
+   * 
+   * @example
+   * ```typescript
+   * frequencyToNoteAndOctave(440) // { note: 'A', octave: 4 }
+   * frequencyToNoteAndOctave(261.63) // { note: 'C', octave: 4 }
+   * ```
    */
   private frequencyToNoteAndOctave(frequency: number): { note: string; octave: number | null } {
     const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
@@ -663,7 +898,22 @@ export class PitchDetector {
   
 
   /**
-   * Convert frequency to cents deviation from nearest note
+   * Convert frequency to cents deviation from the nearest semitone
+   * 
+   * @private
+   * @description Calculates the pitch deviation in cents (1/100th of a semitone)
+   * from the nearest equal temperament note. Positive values indicate sharp,
+   * negative values indicate flat.
+   * 
+   * @param frequency - Input frequency in Hz
+   * @returns Cents deviation (-50 to +50 cents from nearest note)
+   * 
+   * @example
+   * ```typescript
+   * frequencyToCents(440) // 0 (exactly A4)
+   * frequencyToCents(446) // ~25 cents sharp
+   * frequencyToCents(435) // ~-20 cents flat
+   * ```
    */
   private frequencyToCents(frequency: number): number {
     const A4 = 440;
@@ -674,7 +924,14 @@ export class PitchDetector {
   }
 
   /**
-   * Process silence detection logic
+   * Process silence detection logic and manage timeout handlers
+   * 
+   * @private
+   * @description Monitors volume levels to detect periods of silence and triggers
+   * appropriate warnings and timeouts. Manages silence detection state and timers
+   * to provide automatic recovery from idle states.
+   * 
+   * @param currentVolume - Current volume level to evaluate for silence
    */
   private processSilenceDetection(currentVolume: number): void {
     if (!this.silenceDetectionConfig.enabled) {
@@ -788,7 +1045,7 @@ export class PitchDetector {
     this.stableVolume = 0;
     
     // Clear buffers
-    this.volumeHistory = [0, 0, 0, 0, 0];  // Reset with initial zeros
+    this.initializeVolumeHistory();
     
     // Reset harmonic correction
     this.resetHarmonicHistory();
@@ -880,7 +1137,14 @@ export class PitchDetector {
   }
 
   /**
-   * Process audio data (high priority, runs at full speed)
+   * Process audio data with high priority for real-time callback delivery
+   * 
+   * @private
+   * @description Handles critical audio processing that requires low latency.
+   * Runs at the full adaptive frame rate (30-60 FPS) to ensure responsive
+   * pitch detection callbacks for real-time applications.
+   * 
+   * @param result - Complete pitch detection result to process
    */
   private processAudioData(result: PitchDetectionResult): void {
     // Critical audio processing that needs low latency
@@ -891,7 +1155,14 @@ export class PitchDetector {
   }
   
   /**
-   * Update visual elements (lower priority, can be throttled)
+   * Update visual elements with lower priority rendering
+   * 
+   * @private
+   * @description Handles visual updates that can be throttled to maintain performance.
+   * Visual rendering can be limited to 30 FPS without affecting audio processing quality.
+   * The underscore prefix indicates intentional parameter non-use.
+   * 
+   * @param _result - Pitch detection result (unused, handled by UI layer)
    */
   private updateVisuals(_result: PitchDetectionResult): void {
     // Visual updates can be throttled to 30 FPS
@@ -957,7 +1228,7 @@ export class PitchDetector {
     this.pitchDetector = null;
     
     // Clear history
-    this.volumeHistory = [0, 0, 0, 0, 0];  // Reset with initial zeros
+    this.initializeVolumeHistory();
     this.resetHarmonicHistory();
     
     console.log('✅ [PitchDetector] Cleanup complete');
@@ -1044,7 +1315,95 @@ export class PitchDetector {
       lastError: this.lastError,
       frameRateStatus: this.frameRateLimiter?.getStats(),
       deviceSpecs: this.deviceSpecs,
-      hasRequiredComponents: !!(this.analyser && this.pitchDetector)
+      hasRequiredComponents: !!(this.analyser && this.pitchDetector),
+      harmonicConfig: this.harmonicConfig,
+      volumeHistoryConfig: this.volumeHistoryConfig
     };
+  }
+
+  /**
+   * Initialize volume history buffer based on configuration
+   * 
+   * @private
+   * @description Creates either a regular array or TypedArray buffer based on config
+   */
+  private initializeVolumeHistory(): void {
+    const length = this.volumeHistoryConfig.historyLength;
+    
+    if (this.volumeHistoryConfig.useTypedArray) {
+      this.volumeHistory = new Float32Array(length);
+    } else {
+      this.volumeHistory = new Array(length).fill(0);
+    }
+  }
+
+  /**
+   * Add new volume value to history buffer with efficient circular buffer operation
+   * 
+   * @private
+   * @param volume - Volume value to add to history
+   */
+  private addToVolumeHistory(volume: number): void {
+    if (this.volumeHistory instanceof Float32Array) {
+      // Efficient circular buffer for TypedArray
+      this.volumeHistory.copyWithin(0, 1);
+      this.volumeHistory[this.volumeHistory.length - 1] = volume;
+    } else {
+      // Traditional array operations
+      this.volumeHistory.push(volume);
+      if (this.volumeHistory.length > this.volumeHistoryConfig.historyLength) {
+        this.volumeHistory.shift();
+      }
+    }
+  }
+
+  /**
+   * Calculate average volume from history buffer
+   * 
+   * @private
+   * @returns Average volume value
+   */
+  private calculateVolumeAverage(): number {
+    if (this.volumeHistory instanceof Float32Array) {
+      let sum = 0;
+      for (let i = 0; i < this.volumeHistory.length; i++) {
+        sum += this.volumeHistory[i];
+      }
+      return sum / this.volumeHistory.length;
+    } else {
+      return this.volumeHistory.reduce((sum, v) => sum + v, 0) / this.volumeHistory.length;
+    }
+  }
+
+  /**
+   * Update harmonic correction configuration
+   * 
+   * @param config - Partial harmonic correction configuration to update
+   */
+  updateHarmonicConfig(config: Partial<HarmonicCorrectionConfig>): void {
+    this.harmonicConfig = { ...this.harmonicConfig, ...config };
+    
+    // Reset harmonic history when configuration changes
+    this.resetHarmonicHistory();
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔧 [PitchDetector] Harmonic correction config updated:', this.harmonicConfig);
+    }
+  }
+
+  /**
+   * Update volume history configuration
+   * 
+   * @param config - Partial volume history configuration to update
+   */
+  updateVolumeHistoryConfig(config: Partial<VolumeHistoryConfig>): void {
+    this.volumeHistoryConfig = { ...this.volumeHistoryConfig, ...config };
+    
+    // Reinitialize volume history with new configuration
+    this.initializeVolumeHistory();
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📊 [PitchDetector] Volume history config updated:', this.volumeHistoryConfig);
+    }
   }
 }

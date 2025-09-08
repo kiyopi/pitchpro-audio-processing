@@ -138,7 +138,7 @@ export class MicrophoneLifecycleManager {
       try {
         target.removeEventListener(eventName, listener);
       } catch (error) {
-        this.logger.warn('Failed to remove event listener', undefined, {
+        this.logger.warn('Failed to remove event listener', {
           eventName,
           key,
           error: (error as Error).message
@@ -268,16 +268,16 @@ export class MicrophoneLifecycleManager {
     window.addEventListener('blur', blurHandler);
     
     // Store references for cleanup
-    this.eventListeners.set('visibilitychange', visibilityChangeHandler);
-    this.eventListeners.set('mousemove', activityHandler);
-    this.eventListeners.set('keydown', activityHandler);
-    this.eventListeners.set('click', activityHandler);
-    this.eventListeners.set('scroll', activityHandler);
-    this.eventListeners.set('touchstart', activityHandler);
-    this.eventListeners.set('beforeunload', unloadHandler);
-    this.eventListeners.set('unload', unloadHandler);
-    this.eventListeners.set('focus', focusHandler);
-    this.eventListeners.set('blur', blurHandler);
+    this.eventListeners.set('visibilitychange', { target: document, listener: visibilityChangeHandler, eventName: 'visibilitychange' });
+    this.eventListeners.set('mousemove', { target: document, listener: activityHandler, eventName: 'mousemove' });
+    this.eventListeners.set('keydown', { target: document, listener: activityHandler, eventName: 'keydown' });
+    this.eventListeners.set('click', { target: document, listener: activityHandler, eventName: 'click' });
+    this.eventListeners.set('scroll', { target: document, listener: activityHandler, eventName: 'scroll' });
+    this.eventListeners.set('touchstart', { target: document, listener: activityHandler, eventName: 'touchstart' });
+    this.eventListeners.set('beforeunload', { target: window, listener: unloadHandler, eventName: 'beforeunload' });
+    this.eventListeners.set('unload', { target: window, listener: unloadHandler, eventName: 'unload' });
+    this.eventListeners.set('focus', { target: window, listener: focusHandler, eventName: 'focus' });
+    this.eventListeners.set('blur', { target: window, listener: blurHandler, eventName: 'blur' });
     
     console.log('👂 [MicrophoneLifecycleManager] Event listeners setup complete');
   }
@@ -380,13 +380,13 @@ export class MicrophoneLifecycleManager {
       this.lastHealthCheck = healthStatus;
       
       if (!healthStatus.healthy) {
-        this.logger.warn('Unhealthy microphone state detected', undefined, { healthStatus });
+        this.logger.warn('Unhealthy microphone state detected', { healthStatus });
         
         // Attempt automatic recovery
         if (this.autoRecoveryAttempts < this.config.maxAutoRecoveryAttempts) {
           this.autoRecoveryAttempts++;
           
-          this.logger.warn('Attempting automatic recovery', undefined, {
+          this.logger.warn('Attempting automatic recovery', {
             attempt: this.autoRecoveryAttempts,
             maxAttempts: this.config.maxAutoRecoveryAttempts,
             healthStatus
