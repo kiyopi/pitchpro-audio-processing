@@ -70,6 +70,10 @@
             background: linear-gradient(45deg, #f44336, #d32f2f);
             color: white;
         }
+        .btn-warning {
+            background: linear-gradient(45deg, #ff9800, #f57c00);
+            color: white;
+        }
 
         button:hover {
             transform: translateY(-2px);
@@ -327,6 +331,7 @@
             <button id="start-btn" class="btn-secondary" disabled>▶️ 検出開始</button>
             <button id="stop-btn" class="btn-secondary" disabled>⏸️ 検出停止</button>
             <button id="test-btn" class="btn-secondary" disabled>🧪 マイクテスト</button>
+            <button id="reset-btn" class="btn-warning" disabled>🔄 リセット</button>
             <button id="destroy-btn" class="btn-danger" disabled>🗑️ 破棄</button>
         </div>
 
@@ -427,6 +432,7 @@
             startBtn: document.getElementById('start-btn'),
             stopBtn: document.getElementById('stop-btn'),
             testBtn: document.getElementById('test-btn'),
+            resetBtn: document.getElementById('reset-btn'),
             destroyBtn: document.getElementById('destroy-btn'),
             
             clarityThreshold: document.getElementById('clarity-threshold'),
@@ -552,6 +558,7 @@
                         elements.startBtn.disabled = state !== 'ready' && state !== 'stopped';
                         elements.stopBtn.disabled = state !== 'detecting';
                         elements.testBtn.disabled = state === 'uninitialized';
+                        elements.resetBtn.disabled = state === 'uninitialized';
                         elements.destroyBtn.disabled = state === 'uninitialized';
                     },
                     onError: (error) => {
@@ -611,6 +618,20 @@
             }
         });
 
+        elements.resetBtn.addEventListener('click', () => {
+            try {
+                if (audioDetector) {
+                    audioDetector.resetRecoveryAttempts();
+                    addLog('リカバリー試行回数をリセットしました', 'success');
+                    addLog('マイクの監視が再開されました', 'info');
+                } else {
+                    addLog('AudioDetectionComponentが初期化されていません', 'error');
+                }
+            } catch (error) {
+                addLog(`リセットエラー: ${error.message}`, 'error');
+            }
+        });
+
         elements.destroyBtn.addEventListener('click', () => {
             try {
                 if (audioDetector) {
@@ -636,6 +657,7 @@
                     elements.startBtn.disabled = true;
                     elements.stopBtn.disabled = true;
                     elements.testBtn.disabled = true;
+                    elements.resetBtn.disabled = true;
                     elements.destroyBtn.disabled = true;
                 }
             } catch (error) {

@@ -496,6 +496,26 @@ export class AudioDetectionComponent {
    * audioDetector.destroy();
    * ```
    */
+  /**
+   * Reset recovery attempts and restart monitoring if needed
+   * This method can be used to recover from "Maximum recovery attempts reached" errors
+   */
+  resetRecoveryAttempts(): void {
+    this.debugLog('Resetting recovery attempts...');
+    
+    try {
+      if (this.micController) {
+        this.micController.resetRecoveryAttempts();
+        this.debugLog('Recovery attempts reset successfully');
+      } else {
+        this.debugLog('No microphone controller available to reset');
+      }
+    } catch (error) {
+      this.debugLog('Error resetting recovery attempts:', error);
+      throw error;
+    }
+  }
+
   destroy(): void {
     this.debugLog('Destroying AudioDetectionComponent...');
     

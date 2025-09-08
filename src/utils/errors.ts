@@ -56,6 +56,35 @@ export class MicrophoneAccessError extends PitchProError {
   }
 }
 
+export class MicrophoneHealthError extends PitchProError {
+  constructor(
+    message: string, 
+    healthStatus: any, 
+    recoveryAttempts: number,
+    context?: Record<string, any>
+  ) {
+    super(
+      message, 
+      ErrorCode.MICROPHONE_ACCESS_DENIED, 
+      { 
+        healthStatus, 
+        recoveryAttempts,
+        timestamp: Date.now(),
+        ...context 
+      }
+    );
+    this.name = 'MicrophoneHealthError';
+  }
+
+  getHealthStatus() {
+    return this.context?.healthStatus;
+  }
+
+  getRecoveryAttempts() {
+    return this.context?.recoveryAttempts;
+  }
+}
+
 export class PitchDetectionError extends PitchProError {
   constructor(message: string, context?: Record<string, any>) {
     super(message, ErrorCode.PITCH_DETECTION_ERROR, context);

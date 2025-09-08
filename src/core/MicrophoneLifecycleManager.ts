@@ -14,12 +14,25 @@ import type {
   ErrorCallback
 } from '../types';
 import { AudioManager } from './AudioManager';
+import { Logger, LogLevel } from '../utils/Logger';
+import { MicrophoneHealthError } from '../utils/errors';
+
+export interface LifecycleManagerConfig {
+  healthCheckIntervalMs?: number;
+  idleTimeoutMs?: number;
+  autoRecoveryDelayMs?: number;
+  maxIdleTimeBeforeRelease?: number;
+  maxAutoRecoveryAttempts?: number;
+  logLevel?: LogLevel;
+  enableDetailedLogging?: boolean;
+}
 
 export class MicrophoneLifecycleManager {
   private audioManager: AudioManager;
   private refCount = 0;
   private isActive = false;
   private lastHealthCheck: HealthStatus | null = null;
+  private logger: Logger;
   
   // Monitoring intervals
   private healthCheckInterval: number | null = null;
@@ -31,18 +44,12 @@ export class MicrophoneLifecycleManager {
   private isPageVisible = true;
   private isUserActive = true;
   private autoRecoveryAttempts = 0;
-  private maxAutoRecoveryAttempts = 3;
   
   // Event listeners storage for cleanup
-  private eventListeners = new Map<string, EventListener>();
+  private eventListeners = new Map<string, { target: EventTarget; listener: EventListener; eventName: string }>();
   
   // Configuration
-  private config = {
-    healthCheckIntervalMs: 5000,     // 5 seconds
-    idleTimeoutMs: 300000,           // 5 minutes
-    autoRecoveryDelayMs: 2000,       // 2 seconds
-    maxIdleTimeBeforeRelease: 600000 // 10 minutes
-  };
+  private config: Required<LifecycleManagerConfig>;
   
   // Callbacks
   private callbacks: {
@@ -50,15 +57,39 @@ export class MicrophoneLifecycleManager {
     onError?: ErrorCallback;
   } = {};
 
-  constructor(audioManager: AudioManager, config: Partial<typeof MicrophoneLifecycleManager.prototype.config> = {}) {
+  constructor(audioManager: AudioManager, userConfig: LifecycleManagerConfig = {}) {
     this.audioManager = audioManager;
-    this.config = { ...this.config, ...config };
+    
+    // Apply configuration with defaults
+    this.config = {
+      healthCheckIntervalMs: userConfig.healthCheckIntervalMs ?? 5000,     // 5 seconds
+      idleTimeoutMs: userConfig.idleTimeoutMs ?? 300000,                   // 5 minutes
+      autoRecoveryDelayMs: userConfig.autoRecoveryDelayMs ?? 2000,         // 2 seconds
+      maxIdleTimeBeforeRelease: userConfig.maxIdleTimeBeforeRelease ?? 600000, // 10 minutes
+      maxAutoRecoveryAttempts: userConfig.maxAutoRecoveryAttempts ?? 3,
+      logLevel: userConfig.logLevel ?? LogLevel.INFO,
+      enableDetailedLogging: userConfig.enableDetailedLogging ?? false
+    };
+
+    // Initialize logger
+    this.logger = new Logger(
+      this.config.logLevel,
+      'MicrophoneLifecycleManager',
+      {
+        component: 'MicrophoneLifecycleManager',
+        enableDetailedLogging: this.config.enableDetailedLogging
+      }
+    );
     
     // SSR compatibility check
     if (typeof window === 'undefined') {
-      console.log('🔇 [MicrophoneLifecycleManager] SSR environment detected - skipping initialization');
+      this.logger.info('SSR environment detected - skipping initialization');
       return;
     }
+    
+    this.logger.debug('Initializing MicrophoneLifecycleManager', {
+      config: this.config
+    });
     
     this.setupEventListeners();
   }
@@ -71,6 +102,52 @@ export class MicrophoneLifecycleManager {
     onError?: ErrorCallback;
   }): void {
     this.callbacks = { ...this.callbacks, ...callbacks };
+  }
+
+  /**
+   * Helper method to add event listener with automatic tracking for cleanup
+   * Currently not used but available for future event listener management improvements
+   */
+  /* private addTrackedEventListener(
+    target: EventTarget,
+    eventName: string, 
+    listener: EventListener,
+    options?: AddEventListenerOptions
+  ): void {
+    const key = `${eventName}-${Date.now()}-${Math.random()}`;
+    
+    target.addEventListener(eventName, listener, options);
+    this.eventListeners.set(key, { target, listener, eventName });
+    
+    this.logger.debug('Event listener added', {
+      eventName,
+      target: target.constructor.name,
+      totalListeners: this.eventListeners.size
+    });
+  } */
+
+  /**
+   * Helper method to remove all tracked event listeners
+   */
+  private removeAllTrackedEventListeners(): void {
+    this.logger.debug('Removing all tracked event listeners', {
+      count: this.eventListeners.size
+    });
+
+    this.eventListeners.forEach(({ target, listener, eventName }, key) => {
+      try {
+        target.removeEventListener(eventName, listener);
+      } catch (error) {
+        this.logger.warn('Failed to remove event listener', undefined, {
+          eventName,
+          key,
+          error: (error as Error).message
+        });
+      }
+    });
+    
+    this.eventListeners.clear();
+    this.logger.debug('All event listeners removed');
   }
 
   /**
@@ -303,24 +380,37 @@ export class MicrophoneLifecycleManager {
       this.lastHealthCheck = healthStatus;
       
       if (!healthStatus.healthy) {
-        console.warn('⚠️ [MicrophoneLifecycleManager] Unhealthy microphone state detected:', healthStatus);
+        this.logger.warn('Unhealthy microphone state detected', undefined, { healthStatus });
         
         // Attempt automatic recovery
-        if (this.autoRecoveryAttempts < this.maxAutoRecoveryAttempts) {
+        if (this.autoRecoveryAttempts < this.config.maxAutoRecoveryAttempts) {
           this.autoRecoveryAttempts++;
           
-          console.log(`🔧 [MicrophoneLifecycleManager] Attempting automatic recovery (${this.autoRecoveryAttempts}/${this.maxAutoRecoveryAttempts})`);
+          this.logger.warn('Attempting automatic recovery', undefined, {
+            attempt: this.autoRecoveryAttempts,
+            maxAttempts: this.config.maxAutoRecoveryAttempts,
+            healthStatus
+          });
           
           setTimeout(async () => {
             try {
               await this.audioManager.initialize(); // This will trigger re-initialization if needed
-              console.log('✅ [MicrophoneLifecycleManager] Automatic recovery successful');
+              this.logger.info('Automatic recovery successful', {
+                attempt: this.autoRecoveryAttempts,
+                totalAttempts: this.autoRecoveryAttempts
+              });
+              
+              // Reset recovery attempts on success
+              this.autoRecoveryAttempts = 0;
               
               // Dispatch success event
               this.dispatchCustomEvent('pitchpro:lifecycle:autoRecoverySuccess', {});
               
             } catch (error) {
-              console.error('❌ [MicrophoneLifecycleManager] Automatic recovery failed:', error);
+              this.logger.error('Automatic recovery failed', error as Error, {
+                attempt: this.autoRecoveryAttempts,
+                maxAttempts: this.config.maxAutoRecoveryAttempts
+              });
               this.callbacks.onError?.(error as Error);
               
               // Dispatch failure event
@@ -329,13 +419,58 @@ export class MicrophoneLifecycleManager {
           }, this.config.autoRecoveryDelayMs);
           
         } else {
-          console.error('❌ [MicrophoneLifecycleManager] Maximum recovery attempts reached - manual intervention required');
-          this.callbacks.onError?.(new Error('Microphone health check failed - maximum recovery attempts exceeded'));
+          // Create detailed error with health status context
+          const healthError = new MicrophoneHealthError(
+            `Microphone health check failed after ${this.autoRecoveryAttempts} recovery attempts. Monitoring stopped to prevent infinite error loop.`,
+            healthStatus,
+            this.autoRecoveryAttempts,
+            {
+              operation: 'performHealthCheck',
+              maxAttemptsReached: true,
+              monitoringStopped: true
+            }
+          );
+
+          this.logger.error('Maximum recovery attempts reached - stopping health checks', healthError, {
+            attempts: this.autoRecoveryAttempts,
+            maxAttempts: this.config.maxAutoRecoveryAttempts,
+            healthStatus
+          });
+          
+          // Stop all monitoring to prevent infinite error loop
+          // Reason: After maxAutoRecoveryAttempts, we assume the microphone is permanently unavailable
+          // and continued monitoring would only generate more errors without resolution
+          this.stopAllMonitoring();
+          
+          // Mark as inactive to prevent further health checks
+          // This ensures that the lifecycle manager stops consuming resources
+          this.isActive = false;
+          
+          this.callbacks.onError?.(healthError);
+          
+          // Dispatch final error event for external monitoring
+          this.dispatchCustomEvent('pitchpro:lifecycle:maxRecoveryAttemptsReached', { 
+            attempts: this.autoRecoveryAttempts,
+            lastHealthStatus: healthStatus 
+          });
+        }
+      } else {
+        // Reset recovery attempts on healthy status
+        if (this.autoRecoveryAttempts > 0) {
+          this.logger.info('Microphone health restored, resetting recovery attempts', {
+            previousAttempts: this.autoRecoveryAttempts,
+            healthStatus
+          });
+          this.autoRecoveryAttempts = 0;
         }
       }
       
     } catch (error) {
-      console.error('❌ [MicrophoneLifecycleManager] Health check failed:', error);
+      this.logger.error('Health check failed', error as Error, {
+        operation: 'performHealthCheck',
+        isActive: this.isActive,
+        attempts: this.autoRecoveryAttempts
+      });
       this.callbacks.onError?.(error as Error);
     }
   }
@@ -431,27 +566,67 @@ export class MicrophoneLifecycleManager {
   }
 
   /**
+   * Reset recovery attempts and restart monitoring if needed
+   * This method provides manual intervention capability for max recovery attempts errors
+   */
+  resetRecoveryAttempts(): void {
+    const previousAttempts = this.autoRecoveryAttempts;
+    this.autoRecoveryAttempts = 0;
+    
+    this.logger.info('Recovery attempts reset manually', {
+      previousAttempts,
+      refCount: this.refCount,
+      wasActive: this.isActive,
+      hasMonitoring: !!this.healthCheckInterval
+    });
+    
+    // If monitoring was stopped due to max attempts, restart it
+    // This only happens when refCount > 0 (someone still needs the microphone)
+    if (!this.healthCheckInterval && this.refCount > 0) {
+      this.logger.info('Restarting monitoring after manual reset', {
+        refCount: this.refCount,
+        reason: 'Manual recovery reset with active references'
+      });
+      
+      this.isActive = true;
+      this.startHealthMonitoring();
+      this.startIdleMonitoring();
+      this.startVisibilityMonitoring();
+      
+      // Dispatch event to notify listeners of monitoring restart
+      this.dispatchCustomEvent('pitchpro:lifecycle:monitoringRestarted', {
+        reason: 'Manual recovery reset',
+        refCount: this.refCount
+      });
+    }
+  }
+
+  /**
    * Cleanup and destroy
    */
   destroy(): void {
-    console.log('🗑️ [MicrophoneLifecycleManager] Destroying lifecycle manager');
+    this.logger.info('Destroying MicrophoneLifecycleManager', {
+      refCount: this.refCount,
+      isActive: this.isActive,
+      autoRecoveryAttempts: this.autoRecoveryAttempts,
+      listenerCount: this.eventListeners.size
+    });
     
     // Stop all monitoring
     this.stopAllMonitoring();
     
     // Force release resources
+    // This ensures all microphone streams are properly closed
     this.forceRelease();
     
-    // Remove event listeners
-    this.eventListeners.forEach((listener, eventName) => {
-      if (eventName.includes('window:')) {
-        window.removeEventListener(eventName.replace('window:', ''), listener);
-      } else {
-        document.removeEventListener(eventName, listener);
-      }
-    });
-    this.eventListeners.clear();
+    // Remove all tracked event listeners using the helper method
+    this.removeAllTrackedEventListeners();
     
-    console.log('✅ [MicrophoneLifecycleManager] Cleanup complete');
+    // Reset state
+    this.isActive = false;
+    this.refCount = 0;
+    this.autoRecoveryAttempts = 0;
+    
+    this.logger.info('MicrophoneLifecycleManager cleanup complete');
   }
 }

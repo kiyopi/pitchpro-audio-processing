@@ -12,8 +12,14 @@ export { AudioManager } from './core/AudioManager';
 export { PitchDetector } from './core/PitchDetector';
 export { NoiseFilter } from './core/NoiseFilter';
 export { MicrophoneLifecycleManager } from './core/MicrophoneLifecycleManager';
+export type { LifecycleManagerConfig } from './core/MicrophoneLifecycleManager';
 export { MicrophoneController } from './core/MicrophoneController';
+export type { MicrophoneControllerConfig } from './core/MicrophoneController';
 export { ErrorNotificationSystem } from './core/ErrorNotificationSystem';
+
+// Component exports
+export { AudioDetectionComponent } from './components/AudioDetectionComponent';
+export type { AudioDetectionConfig, AudioDetectionCallbacks } from './components/AudioDetectionComponent';
 
 // Advanced exports
 export { HarmonicCorrection } from './advanced/HarmonicCorrection';
@@ -24,6 +30,9 @@ export { CalibrationSystem } from './advanced/CalibrationSystem';
 export { FrequencyUtils } from './utils/FrequencyUtils';
 export { MusicTheory } from './utils/MusicTheory';
 export { DeviceDetection } from './utils/DeviceDetection';
+export { Logger, LogLevel, defaultLogger, debug, info, warn, error } from './utils/Logger';
+export type { LogContext, LogEntry } from './utils/Logger';
+export { MicrophoneHealthError } from './utils/errors';
 
 // Type exports
 export type {

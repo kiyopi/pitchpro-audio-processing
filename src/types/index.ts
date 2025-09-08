@@ -174,6 +174,8 @@ export interface LifecycleEvents {
   'pitchpro:lifecycle:trackUnmuted': CustomEvent<{ track: MediaStreamTrack }>;
   'pitchpro:lifecycle:autoRecoverySuccess': CustomEvent;
   'pitchpro:lifecycle:autoRecoveryFailed': CustomEvent<{ error: Error }>;
+  'pitchpro:lifecycle:maxRecoveryAttemptsReached': CustomEvent<{ attempts: number; lastHealthStatus: any }>;
+  'pitchpro:lifecycle:monitoringRestarted': CustomEvent<{ reason: string; refCount: number }>;
 }
 
 // Callback types

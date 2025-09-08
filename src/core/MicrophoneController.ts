@@ -43,6 +43,40 @@ import {
   ErrorCode,
   ErrorMessageBuilder
 } from '../utils/errors';
+import type { LifecycleManagerConfig } from './MicrophoneLifecycleManager';
+import { Logger, LogLevel } from '../utils/Logger';
+
+export interface MicrophoneControllerConfig {
+  /** Audio manager configuration */
+  audioManager?: {
+    sampleRate?: number;
+    echoCancellation?: boolean;
+    noiseSuppression?: boolean;
+    autoGainControl?: boolean;
+  };
+  
+  /** Lifecycle manager configuration */
+  lifecycle?: LifecycleManagerConfig;
+  
+  /** Audio constraint defaults for permission checks */
+  audioConstraints?: {
+    echoCancellation?: boolean;
+    noiseSuppression?: boolean; 
+    autoGainControl?: boolean;
+  };
+  
+  /** Error notification settings */
+  notifications?: {
+    enabled?: boolean;
+    position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
+  };
+  
+  /** Logging configuration */
+  logging?: {
+    level?: LogLevel;
+    prefix?: string;
+  };
+}
 
 export class MicrophoneController {
   /** @readonly AudioManager instance for low-level audio resource management */
@@ -53,6 +87,12 @@ export class MicrophoneController {
   
   /** @private Error notification system for user feedback */
   private errorSystem: ErrorNotificationSystem;
+  
+  /** @private Logger for structured logging */
+  private logger: Logger;
+  
+  /** @private Configuration object with defaults */
+  private config: Required<MicrophoneControllerConfig>;
   
   /** @private Current controller state */
   private currentState: 'uninitialized' | 'initializing' | 'ready' | 'active' | 'error' = 'uninitialized';
@@ -100,14 +140,46 @@ export class MicrophoneController {
    * );
    * ```
    */
-  constructor(
-    audioManagerConfig = {},
-    lifecycleConfig = {},
-    showErrorNotifications = true
-  ) {
-    this.audioManager = new AudioManager(audioManagerConfig);
-    this.lifecycleManager = new MicrophoneLifecycleManager(this.audioManager, lifecycleConfig);
-    this.errorSystem = showErrorNotifications ? new ErrorNotificationSystem() : null as any;
+  constructor(config: MicrophoneControllerConfig = {}) {
+    // Apply configuration with defaults
+    this.config = {
+      audioManager: {
+        sampleRate: config.audioManager?.sampleRate ?? 44100,
+        echoCancellation: config.audioManager?.echoCancellation ?? false,
+        noiseSuppression: config.audioManager?.noiseSuppression ?? false,
+        autoGainControl: config.audioManager?.autoGainControl ?? false
+      },
+      lifecycle: config.lifecycle ?? {},
+      audioConstraints: {
+        echoCancellation: config.audioConstraints?.echoCancellation ?? false,
+        noiseSuppression: config.audioConstraints?.noiseSuppression ?? false,
+        autoGainControl: config.audioConstraints?.autoGainControl ?? false
+      },
+      notifications: {
+        enabled: config.notifications?.enabled ?? true,
+        position: config.notifications?.position ?? 'top-right'
+      },
+      logging: {
+        level: config.logging?.level ?? LogLevel.INFO,
+        prefix: config.logging?.prefix ?? 'MicrophoneController'
+      }
+    };
+
+    // Initialize logger first
+    this.logger = new Logger(
+      this.config.logging.level,
+      this.config.logging.prefix,
+      { component: 'MicrophoneController' }
+    );
+
+    this.logger.debug('Initializing MicrophoneController', { config: this.config });
+
+    // Initialize components with proper configuration
+    this.audioManager = new AudioManager(this.config.audioManager);
+    this.lifecycleManager = new MicrophoneLifecycleManager(this.audioManager, this.config.lifecycle);
+    this.errorSystem = this.config.notifications.enabled 
+      ? new ErrorNotificationSystem() 
+      : null as any;
     
     this.setupEventHandlers();
     this.detectDevice();
@@ -146,6 +218,43 @@ export class MicrophoneController {
     onDeviceChange?: (specs: DeviceSpecs) => void;
   }): void {
     this.eventCallbacks = { ...this.eventCallbacks, ...callbacks };
+  }
+
+  /**
+   * Reset lifecycle manager recovery attempts
+   * Provides safe access to lifecycle recovery reset without exposing internal state
+   */
+  resetRecoveryAttempts(): void {
+    this.logger.info('Resetting recovery attempts via public API');
+    
+    try {
+      this.lifecycleManager.resetRecoveryAttempts();
+      this.logger.info('Recovery attempts reset successfully');
+    } catch (error) {
+      this.logger.error('Failed to reset recovery attempts', error as Error);
+      throw error;
+    }
+  }
+
+  /**
+   * Check if controller is in active state
+   */
+  isActive(): boolean {
+    return this.currentState === 'active';
+  }
+
+  /**
+   * Check if controller is ready for use
+   */
+  isReady(): boolean {
+    return this.currentState === 'ready' || this.currentState === 'active';
+  }
+
+  /**
+   * Check if controller is initialized
+   */
+  isInitialized(): boolean {
+    return this.currentState !== 'uninitialized';
   }
 
   /**
@@ -219,12 +328,15 @@ export class MicrophoneController {
       return resources;
 
     } catch (error) {
-      // Enhanced error logging with user-friendly information
-      const structuredError = this._createStructuredError(error as Error, 'initialization');
-      ErrorMessageBuilder.logError(structuredError, 'MicrophoneController initialization');
-      console.error('❌ [MicrophoneController] Initialization failed:', structuredError.toJSON());
+      this.logger.error('Initialization failed', error as Error, {
+        operation: 'initialize',
+        currentState: this.currentState
+      });
       
+      // Update internal state
       this.isPermissionGranted = false;
+      
+      // Handle error (this will update state, show notifications, and call callbacks)
       this.handleError(error as Error, 'initialization');
       
       // Notify permission denial
@@ -259,14 +371,10 @@ export class MicrophoneController {
       const result = await navigator.permissions.query({ name: 'microphone' as PermissionName });
       return result.state as 'granted' | 'denied' | 'prompt';
     } catch {
-      // Fallback: try to access microphone with minimal constraints
+      // Fallback: try to access microphone with configured constraints
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ 
-          audio: { 
-            echoCancellation: false,
-            noiseSuppression: false,
-            autoGainControl: false
-          } 
+          audio: this.config.audioConstraints
         });
         stream.getTracks().forEach(track => track.stop());
         return 'granted';
@@ -377,19 +485,6 @@ export class MicrophoneController {
     return this.currentState;
   }
 
-  /**
-   * Check if microphone is active
-   */
-  isActive(): boolean {
-    return this.currentState === 'active';
-  }
-
-  /**
-   * Check if microphone is ready (initialized but not active)
-   */
-  isReady(): boolean {
-    return this.currentState === 'ready';
-  }
 
   /**
    * Check if permission is granted
