@@ -45,8 +45,7 @@ import {
   AudioContextError, 
   PitchDetectionError, 
   isRecoverableError,
-  ErrorMessageBuilder,
-  ErrorCode
+  ErrorMessageBuilder
 } from '../utils/errors';
 
 export class PitchDetector {
@@ -962,5 +961,90 @@ export class PitchDetector {
     this.resetHarmonicHistory();
     
     console.log('✅ [PitchDetector] Cleanup complete');
+  }
+
+  /**
+   * Gets the latest pitch detection result without triggering new analysis
+   * 
+   * @description Returns the most recent detection result from the ongoing analysis.
+   * Useful for UI updates and external monitoring without affecting detection performance.
+   * 
+   * @returns Latest pitch detection result or null if no detection is active
+   * 
+   * @example
+   * ```typescript
+   * const result = pitchDetector.getLatestResult();
+   * if (result) {
+   *   console.log(`Latest: ${result.note} - ${result.frequency.toFixed(1)}Hz`);
+   *   console.log(`Volume: ${result.volume.toFixed(1)}%, Clarity: ${result.clarity.toFixed(2)}`);
+   * }
+   * ```
+   */
+  getLatestResult(): PitchDetectionResult | null {
+    if (!this.isDetecting || this.componentState !== 'detecting') {
+      return null;
+    }
+
+    return {
+      frequency: this.currentFrequency,
+      note: this.detectedNote,
+      octave: this.detectedOctave ?? 0,
+      volume: this.currentVolume,
+      rawVolume: this.rawVolume,
+      clarity: this.pitchClarity,
+      timestamp: Date.now()
+    };
+  }
+
+  /**
+   * Destroys the PitchDetector and cleans up all resources
+   * 
+   * @example
+   * ```typescript
+   * pitchDetector.destroy();
+   * console.log('PitchDetector destroyed and resources cleaned up');
+   * ```
+   */
+  destroy(): void {
+    this.stopDetection();
+    
+    // Notify AudioManager to release created Analysers
+    if (this.analyserIds.length > 0) {
+      this.audioManager.release(this.analyserIds);
+      console.log('📤 [PitchDetector] Notified AudioManager of Analyser release:', this.analyserIds);
+      this.analyserIds = [];
+    }
+    
+    // Reset state
+    this.componentState = 'uninitialized';
+    this.isInitialized = false;
+    this.lastError = null;
+    
+    // Clear references (actual resources managed by AudioManager)
+    this.analyser = null;
+  }
+
+  /**
+   * Gets current PitchDetector status for debugging and monitoring
+   * 
+   * @returns Status object with component state and performance metrics
+   */
+  getStatus() {
+    return {
+      componentState: this.componentState,
+      isInitialized: this.isInitialized,
+      isDetecting: this.isDetecting,
+      isRunning: this.isDetecting,
+      currentVolume: this.currentVolume,
+      rawVolume: this.rawVolume,
+      currentFrequency: this.currentFrequency,
+      detectedNote: this.detectedNote,
+      detectedOctave: this.detectedOctave,
+      currentClarity: this.pitchClarity,
+      lastError: this.lastError,
+      frameRateStatus: this.frameRateLimiter?.getStats(),
+      deviceSpecs: this.deviceSpecs,
+      hasRequiredComponents: !!(this.analyser && this.pitchDetector)
+    };
   }
 }

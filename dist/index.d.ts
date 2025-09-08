@@ -19,7 +19,7 @@ export { FrequencyUtils } from './utils/FrequencyUtils';
 export { MusicTheory } from './utils/MusicTheory';
 export { DeviceDetection } from './utils/DeviceDetection';
 export type { AudioManagerConfig, PitchDetectorConfig, PitchDetectionResult, NoiseFilterConfig, HarmonicCorrectionResult, NotificationConfig, MusicalNote, MusicalInterval, VoiceAnalysis, DeviceSpecs } from './types';
-export declare const VERSION = "1.1.1";
+export declare const VERSION = "1.1.3";
 export declare const BUILD_DATE: string;
 export declare const DEFAULT_CONFIG: {
     readonly pitchDetector: {

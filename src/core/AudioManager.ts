@@ -417,7 +417,7 @@ export class AudioManager {
         'AudioContextが利用できません。ブラウザでオーディオ機能が無効になっているか、デバイスがサポートされていません。',
         {
           operation: '_createFilterChain',
-          audioContextState: this.audioContext?.state || 'null'
+          audioContextState: 'null'
         }
       );
       

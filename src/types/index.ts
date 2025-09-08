@@ -38,7 +38,9 @@ export interface PitchDetectionResult {
   octave?: number;
   clarity: number;
   volume: number;
+  rawVolume?: number;
   cents?: number;
+  timestamp?: number;
 }
 
 // NoiseFilter types
