@@ -1,8 +1,31 @@
 /**
- * PitchDetector - Framework-agnostic High-precision Pitch Detection
+ * PitchDetector - Framework-agnostic High-precision Pitch Detection Engine
  * 
- * Based on Pitchy library with McLeod Pitch Method
- * Includes harmonic correction, noise filtering, and device-specific optimization
+ * @description Provides real-time pitch detection using the McLeod Pitch Method (Pitchy library)
+ * with advanced features including harmonic correction, adaptive frame rate control,
+ * noise filtering, and device-specific optimization for consistent cross-platform performance.
+ * 
+ * @example
+ * ```typescript
+ * const pitchDetector = new PitchDetector(audioManager, {
+ *   fftSize: 4096,
+ *   clarityThreshold: 0.4,
+ *   minVolumeAbsolute: 0.003
+ * });
+ * 
+ * await pitchDetector.initialize();
+ * 
+ * pitchDetector.setCallbacks({
+ *   onPitchUpdate: (result) => {
+ *     console.log(`Detected: ${result.note} (${result.frequency.toFixed(1)}Hz)`);
+ *   }
+ * });
+ * 
+ * pitchDetector.startDetection();
+ * ```
+ * 
+ * @version 1.1.3
+ * @since 1.0.0
  */
 
 import { PitchDetector as PitchyDetector } from 'pitchy';
@@ -25,65 +48,132 @@ import {
 } from '../utils/errors';
 
 export class PitchDetector {
-  // Core components
+  /** @private AudioManager instance for resource management */
   private audioManager: AudioManager;
+  
+  /** @private Pitchy library detector instance for McLeod Pitch Method */
   private pitchDetector: PitchyDetector<Float32Array> | null = null;
+  
+  /** @private AnalyserNode with noise filtering applied */
   private analyser: AnalyserNode | null = null;
+  
+  /** @private Raw AnalyserNode for unfiltered volume measurement */
   private rawAnalyser: AnalyserNode | null = null;
+  
+  /** @private RequestAnimationFrame ID for detection loop */
   private animationFrame: number | null = null;
   
-  // Performance optimization
+  /** @private Adaptive frame rate controller for optimal performance */
   private frameRateLimiter: AdaptiveFrameRateLimiter;
   
-  // State management
+  /** @private Current component state for lifecycle management */
   private componentState: 'uninitialized' | 'initializing' | 'ready' | 'detecting' | 'error' = 'uninitialized';
+  
+  /** @private Initialization completion flag */
   private isInitialized = false;
+  
+  /** @private Detection active flag */
   private isDetecting = false;
+  
+  /** @private Last error encountered during operations */
   private lastError: Error | null = null;
   
-  // Analyser management
+  /** @private Array of analyser IDs for cleanup management */
   private analyserIds: string[] = [];
   
-  // Detection data
+  /** @private Current processed volume level (0-100) */
   private currentVolume = 0;
+  
+  /** @private Raw volume level before processing (0-100) */
   private rawVolume = 0;
+  
+  /** @private Currently detected frequency in Hz */
   private currentFrequency = 0;
+  
+  /** @private Detected musical note name */
   private detectedNote = '--';
+  
+  /** @private Detected octave number */
   private detectedOctave: number | null = null;
+  
+  /** @private Pitch detection clarity/confidence (0-1) */
   private pitchClarity = 0;
   
-  // Stabilization buffers
-  private volumeHistory: number[] = [0, 0, 0, 0, 0];  // Initialize with zeros to prevent initial spike
+  /** @private Circular buffer for volume stabilization */
+  private volumeHistory: number[] = [0, 0, 0, 0, 0];
+  
+  /** @private Stabilized volume after filtering */
   private stableVolume = 0;
   
-  // Harmonic correction
+  /** @private Previous frequency for harmonic correction */
   private previousFrequency = 0;
+  
+  /** @private History buffer for harmonic analysis */
   private harmonicHistory: Array<{frequency: number, confidence: number, timestamp: number}> = [];
   
-  // Configuration
+  /** @private PitchDetector configuration with defaults applied */
   private config: Required<Omit<PitchDetectorConfig, 'silenceDetection'>> & { 
     silenceDetection?: SilenceDetectionConfig 
   };
+  
+  /** @private Flag to disable harmonic correction */
   private disableHarmonicCorrection = false;
   
-  // Callbacks
+  /** @private Callback functions for events */
   private callbacks: {
     onPitchUpdate?: PitchCallback;
     onError?: ErrorCallback;
     onStateChange?: StateChangeCallback;
   } = {};
   
-  // Device specifications
+  /** @private Device-specific optimization parameters */
   private deviceSpecs: DeviceSpecs | null = null;
   
-  // Silence detection
+  /** @private Silence detection configuration */
   private silenceDetectionConfig: SilenceDetectionConfig;
+  
+  /** @private Timestamp when silence started */
   private silenceStartTime: number | null = null;
+  
+  /** @private Timer ID for silence warning */
   private silenceWarningTimer: number | null = null;
+  
+  /** @private Timer ID for silence timeout */
   private silenceTimeoutTimer: number | null = null;
+  
+  /** @private Current silence state flag */
   private isSilent = false;
+  
+  /** @private Silence warning already issued flag */
   private hasWarned = false;
 
+  /**
+   * Creates a new PitchDetector instance with optimized configuration
+   * 
+   * @param audioManager - AudioManager instance for resource management
+   * @param config - Optional configuration to override defaults
+   * @param config.fftSize - FFT size for frequency analysis (default: 4096)
+   * @param config.smoothing - Smoothing factor for AnalyserNode (default: 0.1)
+   * @param config.clarityThreshold - Minimum clarity for valid detection (default: 0.4)
+   * @param config.minVolumeAbsolute - Minimum volume threshold (default: 0.003)
+   * @param config.silenceDetection - Optional silence detection configuration
+   * 
+   * @example
+   * ```typescript
+   * // Basic usage
+   * const pitchDetector = new PitchDetector(audioManager);
+   * 
+   * // Custom configuration
+   * const pitchDetector = new PitchDetector(audioManager, {
+   *   fftSize: 8192,
+   *   clarityThreshold: 0.6,
+   *   silenceDetection: {
+   *     enabled: true,
+   *     warningThreshold: 10000
+   *   }
+   * });
+   * ```
+   */
   constructor(audioManager: AudioManager, config: PitchDetectorConfig = {}) {
     this.audioManager = audioManager;
     this.config = {
@@ -110,7 +200,27 @@ export class PitchDetector {
   }
 
   /**
-   * Set callback functions
+   * Sets callback functions for pitch detection events
+   * 
+   * @param callbacks - Object containing callback functions
+   * @param callbacks.onPitchUpdate - Called when pitch is detected
+   * @param callbacks.onError - Called when errors occur
+   * @param callbacks.onStateChange - Called when component state changes
+   * 
+   * @example
+   * ```typescript
+   * pitchDetector.setCallbacks({
+   *   onPitchUpdate: (result) => {
+   *     console.log(`Pitch: ${result.frequency}Hz, Note: ${result.note}`);
+   *   },
+   *   onError: (error) => {
+   *     console.error('Detection error:', error.message);
+   *   },
+   *   onStateChange: (state) => {
+   *     console.log('State changed to:', state);
+   *   }
+   * });
+   * ```
    */
   setCallbacks(callbacks: {
     onPitchUpdate?: PitchCallback;
@@ -121,7 +231,24 @@ export class PitchDetector {
   }
 
   /**
-   * Initialize pitch detector with external AudioContext
+   * Initializes the pitch detector with audio resources and Pitchy engine
+   * 
+   * @description Sets up audio analysers, creates Pitchy detector instance, and initializes
+   * device-specific configurations. Must be called before starting detection.
+   * 
+   * @returns Promise that resolves when initialization is complete
+   * @throws {AudioContextError} If AudioManager initialization fails
+   * @throws {PitchDetectionError} If Pitchy detector creation fails
+   * 
+   * @example
+   * ```typescript
+   * try {
+   *   await pitchDetector.initialize();
+   *   console.log('Pitch detector ready');
+   * } catch (error) {
+   *   console.error('Initialization failed:', error);
+   * }
+   * ```
    */
   async initialize(): Promise<void> {
     try {
@@ -204,7 +331,21 @@ export class PitchDetector {
   }
 
   /**
-   * Start pitch detection
+   * Starts real-time pitch detection with adaptive frame rate control
+   * 
+   * @description Begins the pitch detection loop using requestAnimationFrame.
+   * Automatically manages performance optimization and device-specific adjustments.
+   * 
+   * @returns True if detection started successfully, false otherwise
+   * 
+   * @example
+   * ```typescript
+   * if (pitchDetector.startDetection()) {
+   *   console.log('Pitch detection started');
+   * } else {
+   *   console.error('Failed to start detection');
+   * }
+   * ```
    */
   startDetection(): boolean {
     if (this.componentState !== 'ready') {
@@ -228,7 +369,16 @@ export class PitchDetector {
   }
 
   /**
-   * Stop pitch detection
+   * Stops pitch detection and cleans up detection loop
+   * 
+   * @description Cancels the detection loop, resets frame rate limiter,
+   * and clears silence detection timers. Safe to call multiple times.
+   * 
+   * @example
+   * ```typescript
+   * pitchDetector.stopDetection();
+   * console.log('Pitch detection stopped');
+   * ```
    */
   stopDetection(): void {
     this.isDetecting = false;

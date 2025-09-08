@@ -1,10 +1,24 @@
 /**
  * AudioManager - Framework-agnostic Global Audio Resource Management System
  * 
- * Purpose: Solve multiple AudioContext issues
- * - Share single AudioContext across entire application
- * - Reuse single MediaStream across all components
- * - Safe resource management and cleanup
+ * @description Provides centralized management of Web Audio API resources with automatic
+ * device optimization, reference counting, and health monitoring. Solves common issues
+ * with AudioContext sharing and MediaStream lifecycle management.
+ * 
+ * @example
+ * ```typescript
+ * const audioManager = new AudioManager({
+ *   sampleRate: 44100,
+ *   echoCancellation: false,
+ *   autoGainControl: false
+ * });
+ * 
+ * const resources = await audioManager.initialize();
+ * const analyser = audioManager.createAnalyser('pitch-detection');
+ * ```
+ * 
+ * @version 1.1.3
+ * @since 1.0.0
  */
 
 import type { 
@@ -17,33 +31,69 @@ import type {
 import { DeviceDetection } from '../utils/DeviceDetection';
 
 export class AudioManager {
-  // Global shared resources
+  /** @private Global AudioContext instance shared across the application */
   private audioContext: AudioContext | null = null;
-  private mediaStream: MediaStream | null = null;
-  private sourceNode: MediaStreamAudioSourceNode | null = null;
-  private gainNode: GainNode | null = null; // For microphone sensitivity adjustment
   
-  // Analyser management
+  /** @private MediaStream from user's microphone */
+  private mediaStream: MediaStream | null = null;
+  
+  /** @private Source node for audio processing pipeline */
+  private sourceNode: MediaStreamAudioSourceNode | null = null;
+  
+  /** @private Gain node for microphone sensitivity adjustment */
+  private gainNode: GainNode | null = null;
+  
+  /** @private Map of analyser nodes by identifier for reuse */
   private analysers = new Map<string, AnalyserNode>();
+  
+  /** @private Map of filter chains for noise reduction */
   private filters = new Map<string, { highpass: BiquadFilterNode; lowpass: BiquadFilterNode; notch: BiquadFilterNode }>();
   
-  // Reference counting (for safe cleanup)
+  /** @private Reference count for safe resource sharing */
   private refCount = 0;
-  private initPromise: Promise<MediaStreamResources> | null = null; // Prevent duplicate initialization
   
-  // State management
+  /** @private Promise to prevent duplicate initialization */
+  private initPromise: Promise<MediaStreamResources> | null = null;
+  
+  /** @private Initialization state flag */
   private isInitialized = false;
+  
+  /** @private Last error encountered during operations */
   private lastError: Error | null = null;
   
-  // Sensitivity settings (iPad compatibility)
-  private currentSensitivity: number; // Device-dependent default sensitivity
+  /** @private Current microphone sensitivity multiplier */
+  private currentSensitivity: number;
   
-  // HOTFIX: Gain monitoring for level drop prevention
+  /** @private Interval ID for gain monitoring (hotfix v1.1.3) */
   private gainMonitorInterval: number | null = null;
   
-  // Configuration
+  /** @private AudioManager configuration */
   private config: AudioManagerConfig;
 
+  /**
+   * Creates a new AudioManager instance with device-optimized configuration
+   * 
+   * @param config - Optional configuration to override defaults
+   * @param config.sampleRate - Audio sample rate in Hz (default: 44100)
+   * @param config.channelCount - Number of audio channels (default: 1)
+   * @param config.echoCancellation - Enable echo cancellation (default: false)
+   * @param config.noiseSuppression - Enable noise suppression (default: false)
+   * @param config.autoGainControl - Enable auto gain control (default: false)
+   * @param config.latency - Target latency in seconds (default: 0.1)
+   * 
+   * @example
+   * ```typescript
+   * // Basic usage with defaults
+   * const audioManager = new AudioManager();
+   * 
+   * // Custom configuration
+   * const audioManager = new AudioManager({
+   *   sampleRate: 48000,
+   *   echoCancellation: true,
+   *   latency: 0.05
+   * });
+   * ```
+   */
   constructor(config: AudioManagerConfig = {}) {
     this.config = {
       sampleRate: 44100,
@@ -59,7 +109,10 @@ export class AudioManager {
   }
 
   /**
-   * Get device-dependent default sensitivity
+   * Gets device-specific default sensitivity multiplier
+   * 
+   * @private
+   * @returns Device-optimized sensitivity value (PC: 1.0x, iPhone: 3.0x, iPad: 7.0x)
    */
   private _getDefaultSensitivity(): number {
     const deviceSpecs = DeviceDetection.getDeviceSpecs();
@@ -69,8 +122,23 @@ export class AudioManager {
   }
 
   /**
-   * Initialize audio resources
-   * Safe to call multiple times (singleton-like behavior)
+   * Initializes audio resources including AudioContext and MediaStream
+   * 
+   * @description Safe to call multiple times - uses reference counting and health checks.
+   * Automatically handles browser-specific quirks and device optimization.
+   * 
+   * @returns Promise resolving to audio resources
+   * @throws {Error} If microphone permission is denied or AudioContext creation fails
+   * 
+   * @example
+   * ```typescript
+   * try {
+   *   const { audioContext, mediaStream, sourceNode } = await audioManager.initialize();
+   *   console.log('Audio initialized:', audioContext.state);
+   * } catch (error) {
+   *   console.error('Failed to initialize audio:', error.message);
+   * }
+   * ```
    */
   async initialize(): Promise<MediaStreamResources> {
     // If already initializing, wait for completion
@@ -130,7 +198,11 @@ export class AudioManager {
   }
 
   /**
-   * Actual initialization process
+   * Performs the actual initialization process
+   * 
+   * @private
+   * @returns Promise resolving to initialized audio resources
+   * @throws {Error} If any step of initialization fails
    */
   private async _doInitialize(): Promise<MediaStreamResources> {
     try {
@@ -340,7 +412,14 @@ export class AudioManager {
   }
 
   /**
-   * Remove specific analyser
+   * Removes a specific analyser and its associated filter chain
+   * 
+   * @param id - Unique identifier for the analyser to remove
+   * 
+   * @example
+   * ```typescript
+   * audioManager.removeAnalyser('pitch-detection');
+   * ```
    */
   removeAnalyser(id: string): void {
     if (this.analysers.has(id)) {
@@ -361,8 +440,23 @@ export class AudioManager {
   }
 
   /**
-   * Adjust microphone sensitivity
+   * Adjusts microphone sensitivity with automatic gain monitoring
+   * 
    * @param sensitivity - Sensitivity multiplier (0.1 ~ 10.0)
+   * - 0.1-1.0: Reduced sensitivity for loud environments
+   * - 1.0: Standard sensitivity (PC default)
+   * - 3.0: iPhone optimized sensitivity
+   * - 7.0: iPad optimized sensitivity
+   * - 10.0: Maximum sensitivity for quiet environments
+   * 
+   * @example
+   * ```typescript
+   * // Set sensitivity for iPad
+   * audioManager.setSensitivity(7.0);
+   * 
+   * // Reduce for loud environment
+   * audioManager.setSensitivity(0.5);
+   * ```
    */
   setSensitivity(sensitivity: number): void {
     // Range limit (extended to 10.0x for iPad real device support)
@@ -539,7 +633,16 @@ export class AudioManager {
   }
 
   /**
-   * Get current status (for debugging)
+   * Gets current AudioManager status for debugging and monitoring
+   * 
+   * @returns Status object containing initialization state, reference count, and resource states
+   * 
+   * @example
+   * ```typescript
+   * const status = audioManager.getStatus();
+   * console.log('AudioManager Status:', status);
+   * console.log('Active analysers:', status.activeAnalysers);
+   * ```
    */
   getStatus() {
     return {
@@ -555,7 +658,18 @@ export class AudioManager {
   }
 
   /**
-   * MediaStream health status check
+   * Performs comprehensive health check on MediaStream and tracks
+   * 
+   * @returns Health status object with detailed track information
+   * 
+   * @example
+   * ```typescript
+   * const health = audioManager.checkMediaStreamHealth();
+   * if (!health.healthy) {
+   *   console.warn('MediaStream health issue detected:', health);
+   *   // Perform recovery actions
+   * }
+   * ```
    */
   checkMediaStreamHealth(): HealthStatus {
     if (!this.mediaStream) {
