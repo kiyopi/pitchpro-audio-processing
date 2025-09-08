@@ -44,7 +44,9 @@ import {
   PitchProError, 
   AudioContextError, 
   PitchDetectionError, 
-  isRecoverableError 
+  isRecoverableError,
+  ErrorMessageBuilder,
+  ErrorCode
 } from '../utils/errors';
 
 export class PitchDetector {
@@ -355,7 +357,18 @@ export class PitchDetector {
     }
     
     if (!this.analyser || !this.pitchDetector) {
-      const error = new Error('Required components not available');
+      const error = new PitchDetectionError(
+        'ピッチ検出に必要なコンポーネントが初期化されていません。initialize()メソッドを先に呼び出してください。',
+        {
+          operation: 'startDetection',
+          hasAnalyser: !!this.analyser,
+          hasPitchDetector: !!this.pitchDetector,
+          componentState: this.componentState,
+          isInitialized: this.isInitialized
+        }
+      );
+      
+      ErrorMessageBuilder.logError(error, 'Pitch detection startup');
       this.componentState = 'error';
       this.callbacks.onError?.(error);
       return false;

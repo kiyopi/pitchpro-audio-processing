@@ -1,28 +1,95 @@
 /**
- * NoiseFilter - 3-stage Noise Reduction Filter Chain
+ * NoiseFilter - Advanced 3-Stage Noise Reduction Filter Chain
  * 
- * Implements sophisticated noise filtering for voice detection:
- * 1. Highpass filter - Remove low frequency noise (below 80Hz)
- * 2. Lowpass filter - Remove high frequency noise (above 800Hz) 
- * 3. Notch filter - Remove power line noise (60Hz)
+ * @description Implements sophisticated cascade filtering optimized for voice detection
+ * and pitch analysis. Removes environmental noise while preserving vocal frequencies
+ * essential for accurate pitch detection.
+ * 
+ * **Filter Stages:**
+ * 1. **Highpass Filter** (80Hz) - Removes low-frequency environmental noise, breathing sounds
+ * 2. **Lowpass Filter** (800Hz) - Removes high-frequency noise while preserving vocal harmonics  
+ * 3. **Notch Filter** (60Hz) - Eliminates electrical power line interference
+ * 
+ * @example
+ * ```typescript
+ * const noiseFilter = new NoiseFilter(audioContext, {
+ *   highpassFreq: 100,  // More aggressive low-cut
+ *   lowpassFreq: 1000,  // Extended high-frequency range
+ *   useFilters: true
+ * });
+ * 
+ * // Connect in audio chain
+ * sourceNode.connect(noiseFilter.connect(inputNode, analyserNode));
+ * ```
+ * 
+ * @version 1.1.3
+ * @since 1.0.0
  */
 
 import type { NoiseFilterConfig } from '../types';
+import { 
+  AudioContextError,
+  PitchProError,
+  ErrorCode,
+  ErrorMessageBuilder
+} from '../utils/errors';
 
 export class NoiseFilter {
+  /** @private AudioContext for creating filter nodes */
   private audioContext: AudioContext;
+  
+  /** @private Complete filter configuration with defaults applied */
   private config: Required<NoiseFilterConfig>;
   
-  // Filter nodes
+  /** @private Highpass filter node for low-frequency noise removal */
   private highpassFilter: BiquadFilterNode | null = null;
+  
+  /** @private Lowpass filter node for high-frequency noise removal */
   private lowpassFilter: BiquadFilterNode | null = null;
+  
+  /** @private Notch filter node for power line noise elimination */
   private notchFilter: BiquadFilterNode | null = null;
   
-  // Chain state
+  /** @private Filter chain connection state */
   private isConnected = false;
+  
+  /** @private Input node reference for disconnection */
   private inputNode: AudioNode | null = null;
+  
+  /** @private Output node reference for disconnection */
   private outputNode: AudioNode | null = null;
 
+  /**
+   * Creates a new NoiseFilter with configurable 3-stage filtering
+   * 
+   * @param audioContext - Web Audio API AudioContext instance
+   * @param config - Optional filter configuration to override defaults
+   * @param config.highpassFreq - Highpass cutoff frequency in Hz (default: 80)
+   * @param config.lowpassFreq - Lowpass cutoff frequency in Hz (default: 800)  
+   * @param config.notchFreq - Notch filter center frequency in Hz (default: 60)
+   * @param config.highpassQ - Highpass filter Q factor (default: 0.7)
+   * @param config.lowpassQ - Lowpass filter Q factor (default: 0.7)
+   * @param config.notchQ - Notch filter Q factor (default: 10.0)
+   * @param config.useFilters - Enable/disable entire filter chain (default: true)
+   * 
+   * @example
+   * ```typescript
+   * // Standard voice filtering
+   * const voiceFilter = new NoiseFilter(audioContext);
+   * 
+   * // Custom instrument filtering  
+   * const instrumentFilter = new NoiseFilter(audioContext, {
+   *   highpassFreq: 60,   // Allow deeper frequencies
+   *   lowpassFreq: 2000,  // Extended harmonic range
+   *   notchQ: 20.0        // Sharper power line rejection
+   * });
+   * 
+   * // Bypass filtering
+   * const bypassFilter = new NoiseFilter(audioContext, {
+   *   useFilters: false
+   * });
+   * ```
+   */
   constructor(audioContext: AudioContext, config: NoiseFilterConfig = {}) {
     this.audioContext = audioContext;
     this.config = {
@@ -74,13 +141,45 @@ export class NoiseFilter {
       });
 
     } catch (error) {
-      console.error('❌ [NoiseFilter] Failed to create filter chain:', error);
-      throw new Error(`NoiseFilter initialization failed: ${error}`);
+      const structuredError = new AudioContextError(
+        'ノイズフィルターチェーンの初期化に失敗しました。オーディオシステムのサポート状況を確認してください。',
+        {
+          operation: 'createFilterChain',
+          originalError: (error as Error).message,
+          filterConfig: this.config,
+          audioContextState: this.audioContext.state,
+          sampleRate: this.audioContext.sampleRate
+        }
+      );
+      
+      ErrorMessageBuilder.logError(structuredError, 'NoiseFilter initialization');
+      console.error('❌ [NoiseFilter] Failed to create filter chain:', structuredError.toJSON());
+      throw structuredError;
     }
   }
 
   /**
-   * Connect the filter chain between input and output nodes
+   * Connects the filter chain between input and output nodes in audio processing pipeline
+   * 
+   * @description Creates audio connections through the 3-stage filter chain or bypasses
+   * if filtering is disabled. Handles both inline filtering and return-node patterns.
+   * 
+   * @param inputNode - Source audio node (e.g., MediaStreamAudioSourceNode)
+   * @param outputNode - Optional destination node (e.g., AnalyserNode)
+   * @returns The final output node in the chain for further connections
+   * 
+   * @example
+   * ```typescript
+   * // Direct connection pattern
+   * sourceNode.connect(noiseFilter.connect(inputNode, analyserNode));
+   * 
+   * // Chain connection pattern
+   * const filteredNode = noiseFilter.connect(sourceNode);
+   * filteredNode.connect(analyserNode);
+   * 
+   * // Bypass mode (useFilters: false)
+   * const passthroughNode = noiseFilter.connect(sourceNode, analyserNode);
+   * ```
    */
   connect(inputNode: AudioNode, outputNode?: AudioNode): AudioNode {
     if (!this.config.useFilters) {
@@ -92,7 +191,20 @@ export class NoiseFilter {
     }
 
     if (!this.highpassFilter || !this.lowpassFilter || !this.notchFilter) {
-      throw new Error('NoiseFilter not properly initialized');
+      const error = new PitchProError(
+        'ノイズフィルターが正しく初期化されていません。コンストラクタでuseFilters: trueで初期化してください。',
+        ErrorCode.AUDIO_CONTEXT_ERROR,
+        {
+          operation: 'connect',
+          useFilters: this.config.useFilters,
+          hasHighpassFilter: !!this.highpassFilter,
+          hasLowpassFilter: !!this.lowpassFilter,
+          hasNotchFilter: !!this.notchFilter
+        }
+      );
+      
+      ErrorMessageBuilder.logError(error, 'NoiseFilter connection');
+      throw error;
     }
 
     try {
@@ -120,13 +232,36 @@ export class NoiseFilter {
       return this.notchFilter!;
 
     } catch (error) {
-      console.error('❌ [NoiseFilter] Connection failed:', error);
-      throw new Error(`NoiseFilter connection failed: ${error}`);
+      const connectionError = new AudioContextError(
+        'ノイズフィルターの接続に失敗しました。オーディオノードの接続状態を確認してください。',
+        {
+          operation: 'connect',
+          originalError: (error as Error).message,
+          hasInputNode: !!this.inputNode,
+          hasOutputNode: !!this.outputNode,
+          isConnected: this.isConnected,
+          filterConfig: this.config
+        }
+      );
+      
+      ErrorMessageBuilder.logError(connectionError, 'NoiseFilter audio connection');
+      console.error('❌ [NoiseFilter] Connection failed:', connectionError.toJSON());
+      throw connectionError;
     }
   }
 
   /**
-   * Disconnect the filter chain
+   * Disconnects all filter nodes and cleans up audio connections
+   * 
+   * @description Safely disconnects all filter nodes in the chain and resets
+   * connection state. Safe to call multiple times.
+   * 
+   * @example
+   * ```typescript
+   * // Clean up when finished
+   * noiseFilter.disconnect();
+   * console.log('Filter chain disconnected');
+   * ```
    */
   disconnect(): void {
     try {
@@ -152,7 +287,30 @@ export class NoiseFilter {
   }
 
   /**
-   * Update filter parameters dynamically
+   * Updates filter parameters dynamically during runtime
+   * 
+   * @param params - Object containing new filter parameters
+   * @param params.highpassFreq - New highpass cutoff frequency in Hz
+   * @param params.lowpassFreq - New lowpass cutoff frequency in Hz
+   * @param params.notchFreq - New notch filter center frequency in Hz
+   * @param params.highpassQ - New highpass filter Q factor
+   * @param params.lowpassQ - New lowpass filter Q factor  
+   * @param params.notchQ - New notch filter Q factor
+   * 
+   * @example
+   * ```typescript
+   * // Adapt filtering for different content
+   * noiseFilter.updateFrequencies({
+   *   highpassFreq: 100,  // More aggressive low-cut
+   *   lowpassFreq: 1200   // Extended high-frequency range
+   * });
+   * 
+   * // Adjust power line rejection
+   * noiseFilter.updateFrequencies({
+   *   notchFreq: 50,      // 50Hz power line (Europe)
+   *   notchQ: 15.0        // Sharper notch
+   * });
+   * ```
    */
   updateFrequencies(params: {
     highpassFreq?: number;
@@ -198,8 +356,21 @@ export class NoiseFilter {
       console.log('🔧 [NoiseFilter] Filter parameters updated:', params);
 
     } catch (error) {
-      console.error('❌ [NoiseFilter] Parameter update failed:', error);
-      throw new Error(`NoiseFilter parameter update failed: ${error}`);
+      const updateError = new PitchProError(
+        'フィルターパラメータの更新に失敗しました。指定した値が範囲外であるか、フィルターが無効になっている可能性があります。',
+        ErrorCode.INVALID_SAMPLE_RATE,
+        {
+          operation: 'updateFrequencies',
+          originalError: (error as Error).message,
+          requestedParams: params,
+          currentConfig: this.config,
+          audioContextTime: this.audioContext.currentTime
+        }
+      );
+      
+      ErrorMessageBuilder.logError(updateError, 'NoiseFilter parameter update');
+      console.error('❌ [NoiseFilter] Parameter update failed:', updateError.toJSON());
+      throw updateError;
     }
   }
 
@@ -264,7 +435,19 @@ export class NoiseFilter {
       };
 
     } catch (error) {
-      console.warn('⚠️ [NoiseFilter] Filter response calculation failed:', error);
+      const responseError = new PitchProError(
+        'フィルター応答の計算に失敗しました。デフォルト値を返します。',
+        ErrorCode.PROCESSING_TIMEOUT,
+        {
+          operation: 'getFilterResponse',
+          frequency,
+          originalError: (error as Error).message,
+          useFilters: this.config.useFilters
+        }
+      );
+      
+      ErrorMessageBuilder.logError(responseError, 'Filter response calculation');
+      console.warn('⚠️ [NoiseFilter] Filter response calculation failed:', responseError.toJSON());
       return { magnitude: 1.0, phase: 0.0 };
     }
   }

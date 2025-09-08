@@ -1,9 +1,29 @@
 /**
- * MicrophoneController - High-level Microphone Management Interface
+ * MicrophoneController - High-level Unified Microphone Management Interface
  * 
- * Combines AudioManager, LifecycleManager, and ErrorNotificationSystem
- * Provides a simple, unified API for microphone control with error handling
- * Includes device detection, sensitivity management, and automatic recovery
+ * @description Provides a comprehensive, easy-to-use API that combines AudioManager,
+ * MicrophoneLifecycleManager, and ErrorNotificationSystem into a single interface.
+ * Handles device detection, permission management, sensitivity adjustment, and
+ * automatic error recovery with user-friendly notifications.
+ * 
+ * @example
+ * ```typescript
+ * const micController = new MicrophoneController();
+ * 
+ * // Set up event callbacks
+ * micController.setCallbacks({
+ *   onStateChange: (state) => console.log('State:', state),
+ *   onError: (error) => console.error('Error:', error.message),
+ *   onDeviceChange: (specs) => console.log('Device:', specs.deviceType)
+ * });
+ * 
+ * // Initialize and start
+ * const resources = await micController.initialize();
+ * console.log('Microphone ready:', resources.mediaStream.active);
+ * ```
+ * 
+ * @version 1.1.3
+ * @since 1.0.0
  */
 
 import type { 
@@ -16,18 +36,34 @@ import type {
 import { AudioManager } from './AudioManager';
 import { MicrophoneLifecycleManager } from './MicrophoneLifecycleManager';
 import { ErrorNotificationSystem } from './ErrorNotificationSystem';
+import { 
+  MicrophoneAccessError,
+  AudioContextError,
+  PitchProError,
+  ErrorCode,
+  ErrorMessageBuilder
+} from '../utils/errors';
 
 export class MicrophoneController {
+  /** @readonly AudioManager instance for low-level audio resource management */
   public readonly audioManager: AudioManager;
+  
+  /** @private Lifecycle manager for safe resource handling */
   private lifecycleManager: MicrophoneLifecycleManager;
+  
+  /** @private Error notification system for user feedback */
   private errorSystem: ErrorNotificationSystem;
   
-  // State management
+  /** @private Current controller state */
   private currentState: 'uninitialized' | 'initializing' | 'ready' | 'active' | 'error' = 'uninitialized';
+  
+  /** @private Microphone permission granted flag */
   private isPermissionGranted = false;
+  
+  /** @private Last error encountered during operations */
   private lastError: Error | null = null;
   
-  // Event handling
+  /** @private Event callback functions */
   private eventCallbacks: {
     onStateChange?: StateChangeCallback;
     onError?: ErrorCallback;
@@ -36,9 +72,34 @@ export class MicrophoneController {
     onDeviceChange?: (specs: DeviceSpecs) => void;
   } = {};
   
-  // Device specifications
+  /** @private Device-specific optimization specifications */
   private deviceSpecs: DeviceSpecs | null = null;
 
+  /**
+   * Creates a new MicrophoneController with integrated management systems
+   * 
+   * @param audioManagerConfig - Configuration for AudioManager (optional)
+   * @param audioManagerConfig.sampleRate - Audio sample rate (default: 44100)
+   * @param audioManagerConfig.echoCancellation - Enable echo cancellation (default: false)
+   * @param audioManagerConfig.autoGainControl - Enable auto gain control (default: false)
+   * @param lifecycleConfig - Configuration for lifecycle management (optional)
+   * @param lifecycleConfig.maxRetries - Maximum retry attempts (default: 3)
+   * @param lifecycleConfig.retryDelayMs - Delay between retries (default: 1000)
+   * @param showErrorNotifications - Enable visual error notifications (default: true)
+   * 
+   * @example
+   * ```typescript
+   * // Basic usage with defaults
+   * const micController = new MicrophoneController();
+   * 
+   * // Custom configuration
+   * const micController = new MicrophoneController(
+   *   { sampleRate: 48000, echoCancellation: true },
+   *   { maxRetries: 5, retryDelayMs: 2000 },
+   *   false  // Disable error notifications
+   * );
+   * ```
+   */
   constructor(
     audioManagerConfig = {},
     lifecycleConfig = {},
@@ -53,7 +114,29 @@ export class MicrophoneController {
   }
 
   /**
-   * Set callback functions for events
+   * Sets callback functions for microphone controller events
+   * 
+   * @param callbacks - Object containing event callback functions
+   * @param callbacks.onStateChange - Called when controller state changes
+   * @param callbacks.onError - Called when errors occur
+   * @param callbacks.onPermissionChange - Called when microphone permission changes
+   * @param callbacks.onSensitivityChange - Called when sensitivity is adjusted
+   * @param callbacks.onDeviceChange - Called when device specifications are detected
+   * 
+   * @example
+   * ```typescript
+   * micController.setCallbacks({
+   *   onStateChange: (state) => {
+   *     console.log('Controller state:', state);
+   *   },
+   *   onError: (error) => {
+   *     console.error('Microphone error:', error.message);
+   *   },
+   *   onDeviceChange: (specs) => {
+   *     console.log(`Device: ${specs.deviceType}, Sensitivity: ${specs.sensitivity}x`);
+   *   }
+   * });
+   * ```
    */
   setCallbacks(callbacks: {
     onStateChange?: StateChangeCallback;
@@ -95,7 +178,25 @@ export class MicrophoneController {
   }
 
   /**
-   * Initialize microphone access and permissions
+   * Initializes microphone access with automatic device detection and permissions
+   * 
+   * @description Handles the complete initialization flow including device detection,
+   * permission requests, resource acquisition, and error recovery. Automatically
+   * applies device-specific optimizations and sets up monitoring systems.
+   * 
+   * @returns Promise resolving to audio resources (AudioContext, MediaStream, SourceNode)
+   * @throws {Error} If microphone permission is denied or initialization fails
+   * 
+   * @example
+   * ```typescript
+   * try {
+   *   const resources = await micController.initialize();
+   *   console.log('Microphone ready:', resources.mediaStream.active);
+   *   console.log('AudioContext state:', resources.audioContext.state);
+   * } catch (error) {
+   *   console.error('Failed to initialize microphone:', error.message);
+   * }
+   * ```
    */
   async initialize(): Promise<MediaStreamResources> {
     try {
@@ -118,7 +219,10 @@ export class MicrophoneController {
       return resources;
 
     } catch (error) {
-      console.error('❌ [MicrophoneController] Initialization failed:', error);
+      // Enhanced error logging with user-friendly information
+      const structuredError = this._createStructuredError(error as Error, 'initialization');
+      ErrorMessageBuilder.logError(structuredError, 'MicrophoneController initialization');
+      console.error('❌ [MicrophoneController] Initialization failed:', structuredError.toJSON());
       
       this.isPermissionGranted = false;
       this.handleError(error as Error, 'initialization');
@@ -188,7 +292,18 @@ export class MicrophoneController {
   }
 
   /**
-   * Force stop with complete cleanup
+   * Forcefully stops microphone with complete resource cleanup
+   * 
+   * @description Performs immediate and complete cleanup of all microphone resources,
+   * resets permission state, and returns controller to uninitialized state.
+   * Use when normal stop() is not sufficient or emergency cleanup is needed.
+   * 
+   * @example
+   * ```typescript
+   * // Emergency cleanup
+   * micController.forceStop();
+   * console.log('All microphone resources cleaned up');
+   * ```
    */
   forceStop(): void {
     console.log('🚨 [MicrophoneController] Force stopping microphone');
@@ -201,7 +316,23 @@ export class MicrophoneController {
   }
 
   /**
-   * Set microphone sensitivity
+   * Sets microphone sensitivity with automatic validation and event notification
+   * 
+   * @param sensitivity - Sensitivity multiplier (0.1 ~ 10.0)
+   * - 0.1-1.0: Reduced sensitivity for loud environments
+   * - 1.0: Standard PC sensitivity
+   * - 3.0: iPhone optimized
+   * - 7.0: iPad optimized  
+   * - 10.0: Maximum sensitivity for quiet environments
+   * 
+   * @example
+   * ```typescript
+   * // Set device-optimized sensitivity
+   * micController.setSensitivity(7.0);  // iPad optimization
+   * 
+   * // Adjust for environment
+   * micController.setSensitivity(0.5);  // Reduce for loud room
+   * ```
    */
   setSensitivity(sensitivity: number): void {
     const oldSensitivity = this.audioManager.getSensitivity();
@@ -218,7 +349,15 @@ export class MicrophoneController {
   }
 
   /**
-   * Get current microphone sensitivity
+   * Gets current microphone sensitivity multiplier
+   * 
+   * @returns Current sensitivity value (0.1 ~ 10.0)
+   * 
+   * @example
+   * ```typescript
+   * const currentSensitivity = micController.getSensitivity();
+   * console.log(`Current sensitivity: ${currentSensitivity}x`);
+   * ```
    */
   getSensitivity(): number {
     return this.audioManager.getSensitivity();
@@ -376,7 +515,9 @@ export class MicrophoneController {
       
     } catch (error) {
       const duration = Date.now() - startTime;
-      console.error('❌ [MicrophoneController] Microphone test failed:', error);
+      const testError = this._createStructuredError(error as Error, 'microphone_test');
+      ErrorMessageBuilder.logError(testError, 'Microphone functionality test');
+      console.error('❌ [MicrophoneController] Microphone test failed:', testError.toJSON());
       
       return {
         success: false,
@@ -407,7 +548,9 @@ export class MicrophoneController {
    * Handle errors with notification system
    */
   private handleError(error: Error, context: string): void {
-    console.error(`❌ [MicrophoneController] Error in ${context}:`, error);
+    const structuredError = error instanceof PitchProError ? error : this._createStructuredError(error, context);
+    ErrorMessageBuilder.logError(structuredError, `MicrophoneController ${context}`);
+    console.error(`❌ [MicrophoneController] Error in ${context}:`, structuredError.toJSON());
     
     this.lastError = error;
     this.updateState('error');
@@ -486,5 +629,67 @@ export class MicrophoneController {
     this.deviceSpecs = null;
     
     console.log('✅ [MicrophoneController] Cleanup complete');
+  }
+
+  /**
+   * Creates structured error with enhanced context information
+   * 
+   * @private
+   * @param error - Original error
+   * @param operation - Operation that failed
+   * @returns Structured PitchProError with context
+   */
+  private _createStructuredError(error: Error, operation: string): PitchProError {
+    // Determine error type based on error message patterns
+    if (error.message.includes('Permission denied') || 
+        error.message.includes('NotAllowedError') ||
+        error.message.includes('permission') ||
+        error.message.includes('denied')) {
+      return new MicrophoneAccessError(
+        'マイクへのアクセス許可が拒否されました。ブラウザの設定でマイクアクセスを許可してください。',
+        {
+          operation,
+          originalError: error.message,
+          deviceSpecs: this.deviceSpecs,
+          permissionState: this.isPermissionGranted,
+          controllerState: this.currentState,
+          userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown'
+        }
+      );
+    }
+    
+    if (error.message.includes('AudioContext') || 
+        error.message.includes('audio') ||
+        error.message.includes('context') ||
+        error.message.includes('initialization')) {
+      return new AudioContextError(
+        'オーディオシステムの初期化に失敗しました。デバイスの音響設定を確認するか、ブラウザを再起動してください。',
+        {
+          operation,
+          originalError: error.message,
+          controllerState: this.currentState,
+          audioManagerStatus: this.audioManager.getStatus(),
+          deviceSpecs: this.deviceSpecs
+        }
+      );
+    }
+    
+    // Default to generic PitchPro error
+    return new PitchProError(
+      `${operation}中に予期しないエラーが発生しました: ${error.message}`,
+      ErrorCode.MICROPHONE_ACCESS_DENIED,
+      {
+        operation,
+        originalError: error.message,
+        stack: error.stack,
+        currentState: {
+          controllerState: this.currentState,
+          isPermissionGranted: this.isPermissionGranted,
+          isActive: this.isActive(),
+          isReady: this.isReady(),
+          deviceSpecs: this.deviceSpecs
+        }
+      }
+    );
   }
 }

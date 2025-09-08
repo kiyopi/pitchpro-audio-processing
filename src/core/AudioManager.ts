@@ -29,6 +29,13 @@ import type {
   DeviceSpecs
 } from '../types';
 import { DeviceDetection } from '../utils/DeviceDetection';
+import { 
+  AudioContextError, 
+  MicrophoneAccessError, 
+  PitchProError, 
+  ErrorCode,
+  ErrorMessageBuilder
+} from '../utils/errors';
 
 export class AudioManager {
   /** @private Global AudioContext instance shared across the application */
@@ -308,14 +315,19 @@ export class AudioManager {
       };
 
     } catch (error) {
-      console.error('❌ [AudioManager] Initialization error:', error);
-      this.lastError = error as Error;
+      // Convert to structured error with context
+      const structuredError = this._createStructuredError(error as Error, 'initialization');
+      
+      // Enhanced error logging with user-friendly information
+      ErrorMessageBuilder.logError(structuredError, 'AudioManager initialization');
+      
+      this.lastError = structuredError;
       this.isInitialized = false;
       
       // Cleanup on error
       this._cleanup();
       
-      throw error;
+      throw structuredError;
     }
   }
 
@@ -332,7 +344,21 @@ export class AudioManager {
     useFilters?: boolean;
   } = {}): AnalyserNode {
     if (!this.isInitialized || !this.audioContext || !this.sourceNode) {
-      throw new Error('AudioManager not initialized. Call initialize() first.');
+      const error = new AudioContextError(
+        'AudioManagerが初期化されていません。initialize()メソッドを最初に呼び出してください。',
+        {
+          operation: 'createAnalyser',
+          analyserId: id,
+          currentState: {
+            isInitialized: this.isInitialized,
+            hasAudioContext: !!this.audioContext,
+            hasSourceNode: !!this.sourceNode
+          }
+        }
+      );
+      
+      ErrorMessageBuilder.logError(error, 'Analyser creation');
+      throw error;
     }
 
     // Remove existing analyser if present
@@ -387,7 +413,16 @@ export class AudioManager {
    */
   private _createFilterChain() {
     if (!this.audioContext) {
-      throw new Error('AudioContext not available');
+      const error = new AudioContextError(
+        'AudioContextが利用できません。ブラウザでオーディオ機能が無効になっているか、デバイスがサポートされていません。',
+        {
+          operation: '_createFilterChain',
+          audioContextState: this.audioContext?.state || 'null'
+        }
+      );
+      
+      ErrorMessageBuilder.logError(error, 'Filter chain creation');
+      throw error;
     }
 
     // 1. Highpass filter (remove low frequency noise: cut below 80Hz)
@@ -470,7 +505,18 @@ export class AudioManager {
       // Verify the gain was actually set
       setTimeout(() => {
         if (this.gainNode && Math.abs(this.gainNode.gain.value - clampedSensitivity) > 0.1) {
-          console.warn(`⚠️ [AudioManager] Gain value drift detected! Expected: ${clampedSensitivity}, Actual: ${this.gainNode.gain.value}`);
+          const driftError = new PitchProError(
+            `ゲイン値のドリフトが検出されました。期待値: ${clampedSensitivity}, 実際値: ${this.gainNode.gain.value}`,
+            ErrorCode.AUDIO_CONTEXT_ERROR,
+            {
+              operation: 'setSensitivity_verification',
+              expectedGain: clampedSensitivity,
+              actualGain: this.gainNode.gain.value,
+              driftAmount: Math.abs(this.gainNode.gain.value - clampedSensitivity)
+            }
+          );
+          
+          ErrorMessageBuilder.logError(driftError, 'Gain drift detection');
           this.gainNode.gain.setValueAtTime(clampedSensitivity, this.audioContext?.currentTime || 0);
         }
       }, 100);
@@ -505,7 +551,18 @@ export class AudioManager {
         
         // Check for significant drift (more than 10% difference)
         if (Math.abs(currentGainValue - expectedGain) > expectedGain * 0.1) {
-          console.warn(`🚨 [AudioManager] Gain drift detected! Expected: ${expectedGain}, Current: ${currentGainValue}`);
+          const monitorError = new PitchProError(
+            `ゲインモニタリングでドリフト検出: 期待値 ${expectedGain}, 現在値 ${currentGainValue}`,
+            ErrorCode.AUDIO_CONTEXT_ERROR,
+            {
+              operation: 'gainMonitoring',
+              expectedGain,
+              currentGain: currentGainValue,
+              driftPercentage: ((Math.abs(currentGainValue - expectedGain) / expectedGain) * 100).toFixed(1)
+            }
+          );
+          
+          ErrorMessageBuilder.logError(monitorError, 'Automatic gain monitoring');
           
           // Force reset to expected value
           this.gainNode.gain.setValueAtTime(expectedGain, this.audioContext.currentTime);
@@ -593,7 +650,18 @@ export class AudioManager {
             console.log(`⚠️ [AudioManager] Track ${index} already ended`);
           }
         } catch (error) {
-          console.warn(`⚠️ [AudioManager] Track ${index} stop error:`, error);
+          const trackError = new PitchProError(
+            `メディアトラック ${index} の停止中にエラーが発生しました: ${(error as Error).message}`,
+            ErrorCode.AUDIO_CONTEXT_ERROR,
+            {
+              operation: 'track_cleanup',
+              trackIndex: index,
+              originalError: (error as Error).message,
+              trackState: track.readyState
+            }
+          );
+          
+          ErrorMessageBuilder.logError(trackError, 'Media track cleanup');
         }
       });
       
@@ -606,7 +674,16 @@ export class AudioManager {
         this.audioContext.close();
         console.log('🛑 [AudioManager] AudioContext close complete');
       } catch (error) {
-        console.warn('⚠️ [AudioManager] AudioContext close error:', error);
+        const contextError = new AudioContextError(
+          `AudioContextの終了中にエラーが発生しました: ${(error as Error).message}`,
+          {
+            operation: 'audioContext_cleanup',
+            contextState: this.audioContext?.state,
+            originalError: (error as Error).message
+          }
+        );
+        
+        ErrorMessageBuilder.logError(contextError, 'AudioContext cleanup');
       }
       this.audioContext = null;
     }
@@ -630,6 +707,62 @@ export class AudioManager {
     this.currentSensitivity = this._getDefaultSensitivity(); // Reset to device-dependent default sensitivity
 
     console.log('✅ [AudioManager] Cleanup complete');
+  }
+
+  /**
+   * Creates structured error with enhanced context information
+   * 
+   * @private
+   * @param error - Original error
+   * @param operation - Operation that failed
+   * @returns Structured PitchProError with context
+   */
+  private _createStructuredError(error: Error, operation: string): PitchProError {
+    // Determine error type based on error message patterns
+    if (error.message.includes('Permission denied') || 
+        error.message.includes('NotAllowedError') ||
+        error.message.includes('permission')) {
+      return new MicrophoneAccessError(
+        'マイクへのアクセス許可が拒否されました。ブラウザの設定でマイクアクセスを許可してください。',
+        {
+          operation,
+          originalError: error.message,
+          deviceSpecs: this.getPlatformSpecs(),
+          userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown'
+        }
+      );
+    }
+    
+    if (error.message.includes('AudioContext') || 
+        error.message.includes('audio') ||
+        error.message.includes('context')) {
+      return new AudioContextError(
+        'オーディオシステムの初期化に失敗しました。デバイスの音響設定を確認するか、ブラウザを再起動してください。',
+        {
+          operation,
+          originalError: error.message,
+          audioContextState: this.audioContext?.state || 'none',
+          sampleRate: this.audioContext?.sampleRate || 'unknown',
+          deviceSpecs: this.getPlatformSpecs()
+        }
+      );
+    }
+    
+    // Default to generic PitchPro error
+    return new PitchProError(
+      `${operation}中に予期しないエラーが発生しました: ${error.message}`,
+      ErrorCode.AUDIO_CONTEXT_ERROR,
+      {
+        operation,
+        originalError: error.message,
+        stack: error.stack,
+        currentState: {
+          isInitialized: this.isInitialized,
+          refCount: this.refCount,
+          hasResources: !!(this.audioContext && this.mediaStream && this.sourceNode)
+        }
+      }
+    );
   }
 
   /**
