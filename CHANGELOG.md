@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.5] - 2025-09-09
+
+### ✨ Added
+- **updateSelectors()にUIリセット機能追加**: 音量バー切り替え時の表示残留バグを完全解決
+  - `resetAllUIElements()`メソッドを新規実装
+  - 音量バー、音量テキスト、周波数、音符表示の自動初期化機能
+  - progress要素とdivスタイル両方に対応した包括的リセット
+- **デモページ最適化**: ライブラリ側処理への統合によりコードの重複を解消
+- **UIの同期管理強化**: モード切り替え時の一貫したユーザー体験を実現
+
+### 🐛 Fixed  
+- **音量バー切り替え問題の修正**: 前のモードの音量バーが0にならずに他バーに切り替わる問題を解決
+- **UI要素間の同期不整合**: updateSelectors()呼び出し時の自動リセットにより解消
+
+### 🔧 Technical Changes
+- AudioDetectionComponent.ts: resetAllUIElements()メソッド追加
+- updateSelectors()メソッドにリセット処理統合
+- 全セレクター(volume-bar/text, frequency, note)を網羅的にサポート
+- updateSelectors-demo.html: 新機能の実用的なデモページ追加
+
 ## [1.1.4] - 2025-09-09
 
 ### 🔧 Fixed
