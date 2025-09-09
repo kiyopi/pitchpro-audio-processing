@@ -117,7 +117,7 @@ export class DeviceDetection {
           noiseGate: 0.01,         // Low noise gate
           divisor: 4.0,            // Volume calculation divisor
           gainCompensation: 1.5,   // Gain compensation for low-frequency cut
-          noiseThreshold: 12,      // Noise threshold for silence detection
+          noiseThreshold: 1.0,     // Fixed: Much lower noise threshold for proper volume calculation
           smoothingFactor: 0.2     // Smoothing factor
         };
         
@@ -127,7 +127,7 @@ export class DeviceDetection {
           noiseGate: 0.018,        // Slightly higher noise gate
           divisor: 4.0,            // Keep original divisor
           gainCompensation: 1.5,   // Keep original gain compensation
-          noiseThreshold: 12,      // Keep original noise threshold
+          noiseThreshold: 1.0,     // Fixed: Much lower noise threshold for proper volume calculation
           smoothingFactor: 0.2     // Keep original smoothing factor
         };
         
@@ -138,7 +138,7 @@ export class DeviceDetection {
           noiseGate: 0.02,         // Higher noise gate for PC microphones
           divisor: 6.0,            // Different volume calculation for PC
           gainCompensation: 1.0,   // No additional gain compensation needed
-          noiseThreshold: 5,       // Adjusted noise threshold
+          noiseThreshold: 5.0,     // Standard noise threshold for PC
           smoothingFactor: 0.2     // Standard smoothing
         };
     }

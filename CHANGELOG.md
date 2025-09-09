@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.4] - 2025-09-09
+
+### 🔧 Fixed
+- **音量50%制限問題の解決**: 音量グラフが50%を超えない問題を修正
+  - スケーリング係数とnoiseThresholdの最適化により適切な音量表示を実現
+  - PC環境で通常音声時20-50%、大声時50-80%の適切な音量レンジを確保
+  - 無音時の正常な0-2%表示を確保
+
+### ✅ Improved
+- **音量計算の安定性向上**: デバイス固有のパラメータ調整により安定した音量検出
+- **テスト環境の充実**: 音量調整専用のテストページとガイドドキュメントを追加
+- **設定値の文書化**: `VOLUME_CALIBRATION_GUIDE.md`による今後の設定変更防止
+
+### 🛠️ Technical Changes
+- Restored optimal scaling factor (25) and noiseThreshold (5.0 for PC, 1.0 for mobile)
+- Enhanced volume calculation accuracy across different input levels
+- Added comprehensive volume calibration testing methodology
+
 ## [1.1.3] - 2025-09-07
 
 ### 🚨 CRITICAL HOTFIX
