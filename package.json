@@ -44,7 +44,7 @@
     "lint:fix": "eslint src/ --ext .ts,.js --fix",
     "typecheck": "tsc --noEmit",
     "docs": "typedoc src/",
-    "prepublishOnly": "npm run build && npm test",
+    "prepublishOnly": "npm run build && npm test -- --run",
     "preview": "vite preview"
   },
   "keywords": [

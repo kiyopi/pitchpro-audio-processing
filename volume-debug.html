@@ -496,12 +496,12 @@
             elements.streamGainValue.textContent = value.toFixed(1);
             
             if (audioManager) {
-                audioManager.setGain(value);
+                audioManager.setSensitivity(value);
                 addDebugLine(`🎚️ 音声ストリームゲイン変更: ${value.toFixed(1)}x`);
                 
                 // リアルタイムでゲイン値を確認
                 setTimeout(() => {
-                    const actualGain = audioManager.getGain();
+                    const actualGain = audioManager.getSensitivity();
                     addDebugLine(`✅ 実際のゲイン: ${actualGain.toFixed(1)}x`);
                 }, 100);
             }

@@ -79,10 +79,10 @@ jobs:
               }
             });
             
-            // ページリクエストエラーをキャプチャ  
+            // ページリクエストエラーをキャプチャ (304 Not Modifiedは除外)
             const networkErrors = [];
             page.on('response', response => {
-              if (!response.ok() && response.url().includes('.js')) {
+              if (!response.ok() && response.status() !== 304 && response.url().includes('.js')) {
                 networkErrors.push(`${response.status()}: ${response.url()}`);
               }
             });
