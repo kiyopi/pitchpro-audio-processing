@@ -466,7 +466,7 @@ export class PitchDetector {
       this.pitchDetector = PitchyDetector.forFloat32Array(this.analyser.fftSize);
       
       // Development-only Pitchy instance debug logging
-      if (process.env.NODE_ENV === 'development') {
+      if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
         console.log(`[Debug] Pitchyインスタンス作成: ${!!this.pitchDetector}, FFTサイズ: ${this.analyser.fftSize}`);
       }
       
@@ -602,7 +602,7 @@ export class PitchDetector {
       return;
     }
     // Development-only debug logging
-    if (process.env.NODE_ENV === 'development') {
+    if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
       console.log(`[Debug] detectPitch呼び出し: detecting=${this.isDetecting}, analyser=${!!this.analyser}, rawAnalyser=${!!this.rawAnalyser}, pitchDetector=${!!this.pitchDetector}`);
       
       const audioManagerStatus = this.audioManager.getStatus();
@@ -619,7 +619,7 @@ export class PitchDetector {
     this.rawAnalyser.getFloatTimeDomainData(rawBuffer);
     
     // Development-only buffer analysis debug logging
-    if (process.env.NODE_ENV === 'development') {
+    if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
       const nonZeroCount = buffer.filter(val => Math.abs(val) > 0.0001).length;
       const maxValue = Math.max(...buffer.map(val => Math.abs(val)));
       console.log(`[Debug] バッファー分析: 非ゼロ値=${nonZeroCount}/${bufferLength}, 最大値=${maxValue.toFixed(6)}`);
@@ -633,7 +633,7 @@ export class PitchDetector {
     const rms = Math.sqrt(sum / bufferLength);
     
     // Development-only RMS calculation debug logging
-    if (process.env.NODE_ENV === 'development') {
+    if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
       console.log(`[Debug] RMS計算: sum=${sum.toFixed(6)}, rms=${rms.toFixed(6)}`);
     }
     
@@ -641,11 +641,11 @@ export class PitchDetector {
     const platformSpecs = this.deviceSpecs;
     const adjustedRms = rms * platformSpecs.gainCompensation;
     const volumePercent = Math.max(0, Math.min(100, 
-      (adjustedRms * 100) / platformSpecs.divisor * 6 - platformSpecs.noiseThreshold
+      (adjustedRms * 100) / platformSpecs.divisor * 25 - platformSpecs.noiseThreshold
     ));
     
     // Development-only volume calculation debug logging
-    if (process.env.NODE_ENV === 'development') {
+    if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
       console.log(`[Debug] 音量計算: rms=${rms.toFixed(6)}, adjustedRms=${adjustedRms.toFixed(6)}, volumePercent=${volumePercent.toFixed(2)}%`);
       console.log(`[Debug] プラットフォーム設定: gain=${platformSpecs.gainCompensation}, divisor=${platformSpecs.divisor}, noise=${platformSpecs.noiseThreshold}`);
     }
@@ -657,7 +657,7 @@ export class PitchDetector {
     }
     const rawRms = Math.sqrt(rawSum / rawBuffer.length);
     const rawVolumePercent = Math.max(0, Math.min(100, 
-      (rawRms * platformSpecs.gainCompensation * 100) / platformSpecs.divisor * 6 - platformSpecs.noiseThreshold
+      (rawRms * platformSpecs.gainCompensation * 100) / platformSpecs.divisor * 25 - platformSpecs.noiseThreshold
     ));
     
     // Volume stabilization with configurable history length
@@ -701,7 +701,7 @@ export class PitchDetector {
     }
     
     // Development-only Pitchy results debug logging
-    if (process.env.NODE_ENV === 'development') {
+    if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
       console.log(`[Debug] Pitchy結果: pitch=${pitch?.toFixed(1) || 'null'}, clarity=${clarity?.toFixed(3) || 'null'}, volume=${this.currentVolume?.toFixed(1)}%, sampleRate=${sampleRate.toString()}`);
       console.log(`[Debug] Pitchyバッファー: 最初5要素=${Array.from(buffer.slice(0, 5)).map(v => v.toFixed(6)).join(', ')}`);
     }
@@ -714,7 +714,7 @@ export class PitchDetector {
     const isValidVocalRange = pitch >= 65 && pitch <= 1200;
     
     // Development-only decision criteria debug logging
-    if (process.env.NODE_ENV === 'development') {
+    if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
       console.log(`[Debug] 判定条件: pitch=${!!pitch}, clarity=${clarity?.toFixed(3)}>${this.config.clarityThreshold}, volume=${this.currentVolume?.toFixed(1)}>0.4, range=${isValidVocalRange}`);
     }
     
@@ -779,7 +779,7 @@ export class PitchDetector {
     }
     
     // Performance monitoring (development only)
-    if (process.env.NODE_ENV === 'development' && frameProcessTime > 16.67) { // > 60fps threshold
+    if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development' && frameProcessTime > 16.67) { // > 60fps threshold
       console.warn(`[PitchDetector] Frame processing took ${frameProcessTime.toFixed(2)}ms (>16.67ms threshold)`);
     }
     
@@ -830,7 +830,7 @@ export class PitchDetector {
       const halfFrequency = frequency / 2;
       if (Math.abs(halfFrequency - avgFrequency) / avgFrequency < this.harmonicConfig.frequencyThreshold && 
           avgConfidence > this.harmonicConfig.confidenceThreshold) {
-        if (process.env.NODE_ENV === 'development') {
+        if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
           console.log(`🔧 [PitchDetector] Octave correction: ${frequency.toFixed(1)}Hz → ${halfFrequency.toFixed(1)}Hz`);
         }
         this.previousFrequency = halfFrequency;
@@ -841,7 +841,7 @@ export class PitchDetector {
       const doubleFrequency = frequency * 2;
       if (Math.abs(doubleFrequency - avgFrequency) / avgFrequency < this.harmonicConfig.frequencyThreshold && 
           avgConfidence > this.harmonicConfig.confidenceThreshold) {
-        if (process.env.NODE_ENV === 'development') {
+        if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
           console.log(`🔧 [PitchDetector] Octave up correction: ${frequency.toFixed(1)}Hz → ${doubleFrequency.toFixed(1)}Hz`);
         }
         this.previousFrequency = doubleFrequency;
@@ -1386,7 +1386,7 @@ export class PitchDetector {
     // Reset harmonic history when configuration changes
     this.resetHarmonicHistory();
     
-    if (process.env.NODE_ENV === 'development') {
+    if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
       console.log('🔧 [PitchDetector] Harmonic correction config updated:', this.harmonicConfig);
     }
   }
@@ -1402,7 +1402,7 @@ export class PitchDetector {
     // Reinitialize volume history with new configuration
     this.initializeVolumeHistory();
     
-    if (process.env.NODE_ENV === 'development') {
+    if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
       console.log('📊 [PitchDetector] Volume history config updated:', this.volumeHistoryConfig);
     }
   }

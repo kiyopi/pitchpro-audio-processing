@@ -102,6 +102,9 @@ export class AudioManager {
    * ```
    */
   constructor(config: AudioManagerConfig = {}) {
+    // DIAGNOSTIC: Track configuration flow
+    console.log('🔍 [DIAGNOSTIC] AudioManager constructor - input config:', config);
+    
     this.config = {
       sampleRate: 44100,
       channelCount: 1,
@@ -111,6 +114,10 @@ export class AudioManager {
       latency: 0.1,
       ...config
     };
+    
+    // DIAGNOSTIC: Verify final configuration
+    console.log('🔍 [DIAGNOSTIC] AudioManager constructor - final config:', this.config);
+    console.log('🔍 [DIAGNOSTIC] autoGainControl value after merge:', this.config.autoGainControl);
     
     this.currentSensitivity = this._getDefaultSensitivity();
   }
@@ -234,6 +241,10 @@ export class AudioManager {
         console.log(`🔍 [AudioManager] Device detection: ${deviceSpecs.deviceType}`, navigator.userAgent);
         console.log(`🔍 [AudioManager] Touch support: ${'ontouchend' in document}`);
         
+        // DIAGNOSTIC: Check if DeviceDetection affects autoGainControl
+        console.log('🔍 [DIAGNOSTIC] Device specs from getPlatformSpecs():', deviceSpecs);
+        console.log('🔍 [DIAGNOSTIC] Current this.config before constraints creation:', this.config);
+        
         // Safari WebKit compatibility: Maximum compatibility audio settings
         const audioConstraints: MediaStreamConstraints = {
           audio: {
@@ -271,6 +282,31 @@ export class AudioManager {
         console.log('🎤 [AudioManager] Getting MediaStream with Safari-compatible settings:', audioConstraints);
         this.mediaStream = await navigator.mediaDevices.getUserMedia(audioConstraints);
         console.log('✅ [AudioManager] MediaStream acquisition complete');
+        
+        // DIAGNOSTIC: Check actual constraints applied by browser (production only)
+        const audioTrack = this.mediaStream.getAudioTracks()[0];
+        if (audioTrack && typeof audioTrack.getConstraints === 'function' && typeof audioTrack.getSettings === 'function') {
+          try {
+            const actualConstraints = audioTrack.getConstraints();
+            const actualSettings = audioTrack.getSettings();
+            
+            console.log('🔍 [DIAGNOSTIC] Requested autoGainControl:', audioConstraints.audio && (audioConstraints.audio as any).autoGainControl);
+            console.log('🔍 [DIAGNOSTIC] Actually applied constraints:', actualConstraints);
+            console.log('🔍 [DIAGNOSTIC] Actual MediaStream settings:', actualSettings);
+            
+            // Critical check: Verify autoGainControl was actually disabled
+            if (actualSettings.autoGainControl === true) {
+              console.warn('⚠️ [DIAGNOSTIC] CRITICAL: Browser ignored autoGainControl: false setting!');
+              console.warn('⚠️ [DIAGNOSTIC] This explains the gain drift issues - browser is automatically adjusting gain');
+            } else {
+              console.log('✅ [DIAGNOSTIC] autoGainControl successfully disabled by browser');
+            }
+          } catch (error) {
+            console.log('ℹ️ [DIAGNOSTIC] MediaTrack constraint inspection not available in this environment');
+          }
+        } else {
+          console.log('ℹ️ [DIAGNOSTIC] MediaTrack constraint inspection not supported in this environment');
+        }
       }
 
       // Create SourceNode (single instance)
@@ -298,8 +334,9 @@ export class AudioManager {
         this.sourceNode.connect(this.gainNode);
         console.log(`✅ [AudioManager] GainNode creation complete (sensitivity: ${this.currentSensitivity}x)`);
         
-        // HOTFIX: Start gain monitoring to prevent level drops
-        this.startGainMonitoring();
+        // HOTFIX: Temporarily disabled gain monitoring due to persistent drift issues
+        // Will be re-enabled in future version with proper browser compatibility
+        // this.startGainMonitoring();
       }
 
       this.isInitialized = true;
@@ -498,28 +535,41 @@ export class AudioManager {
     const clampedSensitivity = Math.max(0.1, Math.min(10.0, sensitivity));
     
     if (this.gainNode) {
-      // HOTFIX: Ensure gain value is properly set and monitored
+      // ENHANCED: Robust gain setting with immediate verification
       this.gainNode.gain.setValueAtTime(clampedSensitivity, this.audioContext?.currentTime || 0);
       this.currentSensitivity = clampedSensitivity;
       
-      // Verify the gain was actually set
+      // Immediate verification of gain setting success
       setTimeout(() => {
-        if (this.gainNode && Math.abs(this.gainNode.gain.value - clampedSensitivity) > 0.1) {
-          const driftError = new PitchProError(
-            `ゲイン値のドリフトが検出されました。期待値: ${clampedSensitivity}, 実際値: ${this.gainNode.gain.value}`,
+        if (!this.gainNode) return; // Safety check
+        
+        const actualGain = this.gainNode.gain.value;
+        const tolerance = 0.1;
+        
+        if (Math.abs(actualGain - clampedSensitivity) > tolerance) {
+          // Critical: Gain setting failed - throw fatal error to prevent infinite loops
+          const gainSettingError = new PitchProError(
+            `期待ゲイン(${clampedSensitivity}x)が設定できませんでした。ブラウザのautoGainControlが有効になっている可能性があります。実際値: ${actualGain}`,
             ErrorCode.AUDIO_CONTEXT_ERROR,
             {
-              operation: 'setSensitivity_verification',
+              operation: 'setSensitivity_verification_critical',
               expectedGain: clampedSensitivity,
-              actualGain: this.gainNode.gain.value,
-              driftAmount: Math.abs(this.gainNode.gain.value - clampedSensitivity)
+              actualGain: actualGain,
+              driftAmount: Math.abs(actualGain - clampedSensitivity),
+              tolerance: tolerance,
+              isCriticalFailure: true,
+              suggestion: 'ブラウザ設定でautoGainControlを無効にするか、デバイス設定を確認してください'
             }
           );
           
-          ErrorMessageBuilder.logError(driftError, 'Gain drift detection');
-          this.gainNode.gain.setValueAtTime(clampedSensitivity, this.audioContext?.currentTime || 0);
+          ErrorMessageBuilder.logError(gainSettingError, 'Critical gain setting failure');
+          
+          // Do not attempt to reset - this indicates a fundamental browser/device issue
+          throw gainSettingError;
+        } else {
+          console.log(`✅ [AudioManager] Gain setting verified: ${actualGain.toFixed(1)}x (expected: ${clampedSensitivity.toFixed(1)}x)`);
         }
-      }, 100);
+      }, 50); // Reduced timeout for faster detection
       
       console.log(`🎤 [AudioManager] Microphone sensitivity updated: ${clampedSensitivity.toFixed(1)}x`);
     } else {
@@ -538,8 +588,13 @@ export class AudioManager {
 
   /**
    * HOTFIX: Start gain monitoring to prevent level drops
+   * @deprecated Temporarily disabled in v1.1.4 due to browser compatibility issues
+   * 
+   * This method is preserved for future re-implementation with proper browser compatibility.
+   * The gain monitoring caused 60% drift errors every 2 seconds in some environments.
+   * Will be re-enabled once a more robust solution is developed.
    */
-  private startGainMonitoring(): void {
+  /* private startGainMonitoring(): void {
     if (this.gainMonitorInterval) {
       clearInterval(this.gainMonitorInterval);
     }
@@ -549,8 +604,8 @@ export class AudioManager {
         const currentGainValue = this.gainNode.gain.value;
         const expectedGain = this.currentSensitivity;
         
-        // Check for significant drift (more than 10% difference)
-        if (Math.abs(currentGainValue - expectedGain) > expectedGain * 0.1) {
+        // Check for significant drift (more than 50% difference) - relaxed threshold
+        if (Math.abs(currentGainValue - expectedGain) > expectedGain * 0.5) {
           const monitorError = new PitchProError(
             `ゲインモニタリングでドリフト検出: 期待値 ${expectedGain}, 現在値 ${currentGainValue}`,
             ErrorCode.AUDIO_CONTEXT_ERROR,
@@ -570,7 +625,7 @@ export class AudioManager {
         }
       }
     }, 2000); // Check every 2 seconds
-  }
+  } */
 
   /**
    * HOTFIX: Stop gain monitoring
