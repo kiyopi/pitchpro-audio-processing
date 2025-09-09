@@ -237,6 +237,210 @@ console.log('🔧 カスタム音響処理パイプライン構築完了');
 
 ## 📚 コアモジュール詳解
 
+### 🎵 AudioDetectionComponent - 統合音声検出UI連携（推奨）
+
+**機能**: PitchDetector + UI自動更新 + デバイス最適化を統合した高レベルコンポーネント
+
+AudioDetectionComponentは、音声検出とUI更新を自動化する最も簡単な実装方法です。**特に音量バーの切り替え**や複数UI要素の同期管理に最適です。
+
+```typescript
+import { AudioDetectionComponent } from '@pitchpro/audio-processing/components';
+
+// 基本的な設定
+const audioDetector = new AudioDetectionComponent({
+  volumeBarSelector: '#volume-bar',
+  volumeTextSelector: '#volume-text',
+  frequencySelector: '#frequency-display',
+  noteSelector: '#note-display',
+  
+  // 高精度設定
+  clarityThreshold: 0.4,
+  minVolumeAbsolute: 0.003,
+  deviceOptimization: true,
+  debug: true
+});
+
+// 初期化
+await audioDetector.initialize();
+
+// コールバック設定
+audioDetector.setCallbacks({
+  onPitchUpdate: (result) => {
+    console.log(`🎵 ${result.note} - ${result.frequency.toFixed(1)}Hz`);
+  },
+  onError: (error) => {
+    console.error('検出エラー:', error.message);
+  }
+});
+
+// 検出開始
+audioDetector.startDetection();
+```
+
+#### 📋 **利用可能メソッド完全リスト**
+
+| メソッド | 機能 | 使用例 |
+|----------|------|--------|
+| ✅ `initialize()` | コンポーネント初期化 | `await audioDetector.initialize()` |
+| ✅ `startDetection()` | 音声検出開始 | `audioDetector.startDetection()` |
+| ✅ `stopDetection()` | 音声検出停止 | `audioDetector.stopDetection()` |
+| ✅ `destroy()` | リソース完全破棄 | `audioDetector.destroy()` |
+| ✅ `updateSelectors()` | **UI要素セレクター変更** | `audioDetector.updateSelectors({...})` |
+| ✅ `setCallbacks()` | イベントコールバック設定 | `audioDetector.setCallbacks({...})` |
+| ✅ `updateUI()` | 手動UI更新 | `audioDetector.updateUI(result)` |
+| ✅ `getStatus()` | 現在状態取得 | `const status = audioDetector.getStatus()` |
+| ✅ `resetRecoveryAttempts()` | エラー回復処理リセット | `audioDetector.resetRecoveryAttempts()` |
+
+#### 🔄 **音量バー切り替えの解決方法**
+
+**問題**: 音量バーを切り替える際、前の音量バーが動き続ける
+
+**解決方法**: `updateSelectors()`メソッドを使用
+
+```typescript
+// 例: マイクテストから音域テストへの切り替え
+const audioDetector = new AudioDetectionComponent({
+  volumeBarSelector: '#mic-test-volume-bar',
+  frequencySelector: '#mic-test-frequency'
+});
+
+await audioDetector.initialize();
+audioDetector.startDetection();
+
+// 音域テストモードに切り替え
+audioDetector.updateSelectors({
+  volumeBarSelector: '#range-test-volume-bar',    // ✅ 新しい音量バー
+  volumeTextSelector: '#range-test-volume-text',  // ✅ 新しい音量テキスト  
+  frequencySelector: '#range-test-frequency-value' // ✅ 新しい周波数表示
+});
+
+// これで前の音量バーは停止し、新しい音量バーのみが動作
+console.log('✅ 音量バー切り替え完了');
+```
+
+#### 🎯 **実用的な使用例**
+
+**1. モード切り替えアプリケーション**
+```typescript
+class VoiceTrainingApp {
+  private audioDetector: AudioDetectionComponent;
+  private currentMode: 'mic-test' | 'range-test' | 'pitch-practice';
+
+  constructor() {
+    this.audioDetector = new AudioDetectionComponent({
+      volumeBarSelector: '#default-volume-bar',
+      debug: true
+    });
+  }
+
+  async switchMode(mode: string) {
+    const selectors = {
+      'mic-test': {
+        volumeBarSelector: '#mic-volume-bar',
+        volumeTextSelector: '#mic-volume-text',
+        frequencySelector: '#mic-frequency'
+      },
+      'range-test': {
+        volumeBarSelector: '#range-test-volume-bar',
+        volumeTextSelector: '#range-test-volume-text', 
+        frequencySelector: '#range-test-frequency-value'
+      },
+      'pitch-practice': {
+        volumeBarSelector: '#practice-volume-bar',
+        frequencySelector: '#practice-frequency',
+        noteSelector: '#practice-note'
+      }
+    };
+
+    // 🔄 UIセレクター更新（前のUI要素への更新を自動停止）
+    this.audioDetector.updateSelectors(selectors[mode]);
+    this.currentMode = mode;
+    
+    console.log(`✅ ${mode}モードに切り替えました`);
+  }
+}
+```
+
+**2. 動的UI要素生成**
+```typescript
+// 動的に作成したUI要素への対応
+const createNewVolumeBar = () => {
+  const container = document.getElementById('dynamic-container');
+  container.innerHTML = `
+    <div class="new-volume-bar" id="dynamic-volume-bar"></div>
+    <span class="new-volume-text" id="dynamic-volume-text">0%</span>
+  `;
+  
+  // 新しい要素に切り替え
+  audioDetector.updateSelectors({
+    volumeBarSelector: '#dynamic-volume-bar',
+    volumeTextSelector: '#dynamic-volume-text'
+  });
+};
+```
+
+**3. エラー処理とデバッグ**
+```typescript
+audioDetector.setCallbacks({
+  onError: (error) => {
+    console.error('AudioDetectionComponent エラー:', error);
+    
+    if (error.message.includes('element not found')) {
+      console.log('💡 解決方法: updateSelectors()で正しいセレクターを設定してください');
+    }
+  },
+  onStateChange: (state) => {
+    console.log(`🔄 状態変更: ${state}`);
+    
+    if (state === 'error') {
+      // エラー回復を試行
+      audioDetector.resetRecoveryAttempts();
+    }
+  }
+});
+
+// 詳細状態確認
+const status = audioDetector.getStatus();
+console.log('📊 AudioDetectionComponent状態:', {
+  状態: status.state,
+  初期化済み: status.isInitialized,
+  デバイス: status.deviceSpecs?.deviceType,
+  キャッシュ済みUI要素: Object.keys(status.config).filter(k => k.includes('Selector'))
+});
+```
+
+#### ⚠️ **よくある間違いと対処法**
+
+❌ **間違い**: 複数のAudioDetectionComponentを作成
+```typescript
+// ❌ これは避ける - リソース競合の原因
+const detector1 = new AudioDetectionComponent({volumeBarSelector: '#bar1'});
+const detector2 = new AudioDetectionComponent({volumeBarSelector: '#bar2'});
+```
+
+✅ **正解**: 1つのインスタンスでセレクターを切り替え
+```typescript  
+// ✅ 推奨 - 1つのインスタンスを再利用
+const detector = new AudioDetectionComponent({volumeBarSelector: '#bar1'});
+detector.updateSelectors({volumeBarSelector: '#bar2'}); // セレクターを変更
+```
+
+❌ **間違い**: DOM操作で直接UI要素を変更
+```typescript
+// ❌ これでは前のUI要素が動き続ける
+document.getElementById('old-bar').style.display = 'none';
+document.getElementById('new-bar').style.display = 'block';
+```
+
+✅ **正解**: updateSelectors()を使用
+```typescript
+// ✅ AudioDetectionComponentが自動的に切り替え処理
+audioDetector.updateSelectors({
+  volumeBarSelector: '#new-bar',
+  volumeTextSelector: '#new-text'  
+});
+```
+
 ### AudioManager - 統合オーディオリソース管理
 
 **機能**: グローバルAudioContextとMediaStreamの統一管理、参照カウント方式によるリソース保護

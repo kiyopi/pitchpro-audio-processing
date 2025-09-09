@@ -490,6 +490,53 @@ export class AudioDetectionComponent {
   }
 
   /**
+   * Updates UI element selectors and re-caches DOM elements
+   * 
+   * @param selectors - Object containing new selector strings
+   * @param selectors.volumeBarSelector - New selector for volume bar element
+   * @param selectors.volumeTextSelector - New selector for volume text element
+   * @param selectors.frequencySelector - New selector for frequency display element
+   * @param selectors.noteSelector - New selector for note display element
+   * 
+   * @example
+   * ```typescript
+   * // Switch volume bar to different element (e.g., range test mode)
+   * audioDetector.updateSelectors({
+   *   volumeBarSelector: '#range-test-volume-bar',
+   *   volumeTextSelector: '#range-test-volume-text',
+   *   frequencySelector: '#range-test-frequency-value'
+   * });
+   * ```
+   */
+  updateSelectors(selectors: Partial<Pick<AudioDetectionConfig, 
+    'volumeBarSelector' | 'volumeTextSelector' | 'frequencySelector' | 'noteSelector'>>): void {
+    
+    this.debugLog('Updating selectors:', selectors);
+    
+    // Reset all existing UI elements to initial state before switching
+    this.resetAllUIElements();
+    
+    // Update configuration with new selectors
+    if (selectors.volumeBarSelector !== undefined) {
+      this.config.volumeBarSelector = selectors.volumeBarSelector;
+    }
+    if (selectors.volumeTextSelector !== undefined) {
+      this.config.volumeTextSelector = selectors.volumeTextSelector;
+    }
+    if (selectors.frequencySelector !== undefined) {
+      this.config.frequencySelector = selectors.frequencySelector;
+    }
+    if (selectors.noteSelector !== undefined) {
+      this.config.noteSelector = selectors.noteSelector;
+    }
+    
+    // Re-cache UI elements with new selectors
+    this.cacheUIElements();
+    
+    this.debugLog('Selectors updated, old elements reset, and UI elements re-cached:', Object.keys(this.uiElements));
+  }
+
+  /**
    * Destroys the component and cleans up all resources
    * 
    * @example
@@ -498,6 +545,7 @@ export class AudioDetectionComponent {
    * audioDetector.destroy();
    * ```
    */
+  
   /**
    * Reset recovery attempts and restart monitoring if needed
    * This method can be used to recover from "Maximum recovery attempts reached" errors
@@ -628,6 +676,55 @@ export class AudioDetectionComponent {
     }
 
     this.debugLog('UI elements cached:', Object.keys(this.uiElements));
+  }
+
+  /**
+   * Resets all UI elements to their initial state (0 values)
+   * @private
+   */
+  private resetAllUIElements(): void {
+    try {
+      // Reset all possible UI elements by querying all selectors that might exist
+      const allPossibleSelectors = [
+        '#mic-volume-bar', '#mic-volume-text', '#mic-frequency',
+        '#range-volume-bar', '#range-volume-text', '#range-frequency-value',
+        '#practice-volume-bar', '#practice-volume-text', '#practice-frequency', '#practice-note',
+        // Also reset current configuration selectors
+        this.config.volumeBarSelector,
+        this.config.volumeTextSelector,
+        this.config.frequencySelector,
+        this.config.noteSelector
+      ];
+
+      allPossibleSelectors.forEach(selector => {
+        if (selector) {
+          const element = document.querySelector(selector);
+          if (element) {
+            if (selector.includes('volume-bar')) {
+              // Reset volume bar (width style or progress value)
+              if (element instanceof HTMLProgressElement) {
+                element.value = 0;
+              } else {
+                (element as HTMLElement).style.width = '0%';
+              }
+            } else if (selector.includes('volume-text')) {
+              // Reset volume text
+              element.textContent = '0.0%';
+            } else if (selector.includes('frequency')) {
+              // Reset frequency display
+              element.textContent = '0.0 Hz';
+            } else if (selector.includes('note')) {
+              // Reset note display
+              element.textContent = '-';
+            }
+          }
+        }
+      });
+
+      this.debugLog('All UI elements reset to initial state');
+    } catch (error) {
+      this.debugLog('Error resetting UI elements:', error);
+    }
   }
 
   /**
