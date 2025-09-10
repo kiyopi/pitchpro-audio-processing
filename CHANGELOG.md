@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.6] - 2025-09-10
+
+### ✨ Added
+- **🔄 モード切り替え時の周波数表示リセット機能**: 非アクティブモードが0.0 Hzに正しくリセットされる機能を実装
+  - `isUpdatingSelectors`フラグによる精密なUI更新制御
+  - タイミング制御システム（50ms, 200ms段階調整）
+  - 動的セレクター検索機能（freq-1, freq-2, freq-3等の自動検出）
+  - 強制リフロー処理による確実な視覚更新
+- **📋 包括的なテストページ追加**: `frequency-reset-test.html`で3モード同時表示テスト環境
+- **🔧 updateSelectors()メソッド大幅改善**: 複数段階でのリセット処理と同期管理
+
+### 🐛 Fixed
+- **周波数表示の不正な持続問題**: モード切り替え時に前のモードの周波数が残り続ける問題を完全解決
+- **UI更新タイミングの競合**: `isUpdatingSelectors`フラグで切り替え中のUI更新衝突を防止
+- **ゼロ周波数表示の改善**: `frequency <= 0`の場合に確実に"0.0 Hz"表示
+
+### 🔧 Technical Changes
+- **AudioDetectionComponent.ts**: 
+  - `updateSelectors()`の完全リファクタリング（複雑なタイミング制御実装）
+  - `resetAllUIElements()`の拡張（freq-1〜5, frequency-1〜3, pitch-1〜3対応）
+  - `updateUI()`でのゼロ値適切な処理追加
+- **強化された動的検索**: `querySelectorAll`による頻度関連要素の自動検出
+- **リフロー最適化**: `style.opacity`による非破壊的な視覚更新強制
+
+### 📝 Testing & Validation
+- **ログベース検証**: 詳細なタイムスタンプ付きログによる動作確認
+- **3モード同時テスト**: リアルタイム状態変化の可視化
+- **タイミング精度確認**: 50ms/200ms遅延での確実なリセット実行
+
 ## [1.1.5] - 2025-09-09
 
 ### ✨ Added

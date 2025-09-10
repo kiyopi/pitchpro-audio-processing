@@ -45,18 +45,25 @@ Web音楽アプリケーション開発のための包括的な音響処理ツ�
 - **完全TypeScript対応**：strictモード対応、厳密な型定義とIntelliSense支援
 - **ES/CommonJS対応**：モダンバンドラーと従来環境の両対応
 
-## 🚨 重要：v1.1.3 ホットフィックス
+## 🚨 重要：v1.1.6 新機能リリース
+
+**モード切り替え時の周波数表示リセット機能**：UI要素の切り替え時に非アクティブモードが正しく0.0 Hzにリセットされる機能を実装
+- updateSelectors()メソッドでのタイミング制御
+- isUpdatingSelectorsフラグによるUI更新の精密制御
+- 動的セレクター検索とリセット処理の改善
+
+**対象ユーザー**：AudioDetectionComponentを使用してモード切り替えを実装している場合
+```bash
+# 最新版へのアップデート  
+npm install @pitchpro/audio-processing@1.1.6
+```
+
+## 🔄 v1.1.3 マイクレベル修正（継続中）
 
 **マイクレベル低下バグ修正**：5秒後にマイクレベルが徐々に下がる問題を修正
 - GainNode値の自動監視・復旧機能を追加
 - ブラウザのAutoGainControl無効化を強化
 - 2秒間隔での自動ゲイン補正システム
-
-**対象ユーザー**：v1.1.1以前で音量低下が発生していた場合
-```bash
-# 最新版へのアップデート
-npm install @pitchpro/audio-processing@1.1.3
-```
 
 ## ⚠️ 重要：v1.1.2 破壊的変更
 
@@ -76,7 +83,13 @@ import PitchPro from './dist/index.esm.js';
 
 NPM/CDNを利用している場合は変更不要です。
 
-### 🚀 新機能（v1.1.3）
+### 🚀 新機能（v1.1.6）
+- **🔄 モード切り替えリセット**：非アクティブモードが0.0 Hzに正しくリセット
+- **⏰ タイミング制御**：50ms, 200ms段階でのUI更新制御
+- **🎯 動的セレクター検索**：freq-1, freq-2, freq-3等の自動検出・リセット
+- **🔧 精密フラグ制御**：isUpdatingSelectorsによる更新衝突防止
+
+### 🚀 継続機能（v1.1.3）
 - **🚨 マイクレベル自動復旧**：ゲイン値ドリフト検出と自動修正
 - **🛡️ AGC完全無効化**：Chrome/Firefox/Safari対応
 - **📊 リアルタイム監視**：2秒間隔でのヘルス監視
@@ -134,8 +147,8 @@ npm install @pitchpro/audio-processing
 ```
 
 #### 📥 直接ダウンロード
-- **最新版**: [v1.1.3 リリース](https://github.com/kiyopi/pitchpro-audio-processing/releases/latest)
-- **UMDファイル**: [pitchpro.umd.js](https://github.com/kiyopi/pitchpro-audio-processing/releases/download/v1.1.3/pitchpro.umd.js)
+- **最新版**: [v1.1.6 リリース](https://github.com/kiyopi/pitchpro-audio-processing/releases/latest)
+- **UMDファイル**: [pitchpro.umd.js](https://github.com/kiyopi/pitchpro-audio-processing/releases/download/v1.1.6/pitchpro.umd.js)
 - **デモページ**: [ワンクリックダウンロード＋デモ](https://kiyopi.github.io/pitchpro-audio-processing/quickstart-demo.html)
 
 ### 基本的な使用方法
@@ -291,11 +304,11 @@ audioDetector.startDetection();
 | ✅ `getStatus()` | 現在状態取得 | `const status = audioDetector.getStatus()` |
 | ✅ `resetRecoveryAttempts()` | エラー回復処理リセット | `audioDetector.resetRecoveryAttempts()` |
 
-#### 🔄 **音量バー切り替えの解決方法**
+#### 🔄 **音量バー切り替えの解決方法（v1.1.6で改善）**
 
 **問題**: 音量バーを切り替える際、前の音量バーが動き続ける
 
-**解決方法**: `updateSelectors()`メソッドを使用
+**解決方法**: `updateSelectors()`メソッドを使用（v1.1.6で大幅に改善）
 
 ```typescript
 // 例: マイクテストから音域テストへの切り替え
