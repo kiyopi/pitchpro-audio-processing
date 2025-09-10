@@ -2,11 +2,14 @@
 
 /**
  * 後方互換性のためのビルド後処理スクリプト
- * 旧ファイル名へのシンボリックリンクを作成
+ * 旧ファイル名への互換性ファイルを作成
  * 
  * v1.1.2: ファイル名変更に伴う後方互換性対応
  * - pitchpro.esm.js -> index.esm.js
  * - pitchpro.cjs.js -> index.js
+ * 
+ * v1.1.5: GitHub Pages対応
+ * - シンボリックリンクから実ファイルコピーに変更
  */
 
 const fs = require('fs');
@@ -26,7 +29,7 @@ const symlinks = [
   }
 ];
 
-console.log('🔗 [post-build] 後方互換性シンボリックリンク作成中...');
+console.log('🔗 [post-build] 後方互換性ファイル作成中...');
 
 symlinks.forEach(({ target, link }) => {
   const targetPath = path.join(distDir, target);
@@ -45,11 +48,11 @@ symlinks.forEach(({ target, link }) => {
   }
   
   try {
-    // 相対パスでシンボリックリンク作成
-    fs.symlinkSync(target, linkPath);
-    console.log(`✅ [post-build] シンボリックリンク作成: ${link} -> ${target}`);
+    // GitHub Pages対応: シンボリックリンクではなく実ファイルをコピー
+    fs.copyFileSync(targetPath, linkPath);
+    console.log(`✅ [post-build] ファイルコピー作成: ${link} <- ${target}`);
   } catch (error) {
-    console.error(`❌ [post-build] シンボリックリンク作成失敗: ${link}`, error.message);
+    console.error(`❌ [post-build] ファイルコピー作成失敗: ${link}`, error.message);
   }
 });
 
