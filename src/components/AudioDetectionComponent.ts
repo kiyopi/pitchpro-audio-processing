@@ -123,6 +123,9 @@ export class AudioDetectionComponent {
   /** @private UI update interval ID */
   private uiUpdateTimer: number | null = null;
   
+  /** @private Flag to prevent UI updates during selector changes */
+  private isUpdatingSelectors: boolean = false;
+  
   /** @private UI elements cache */
   private uiElements: {
     volumeBar?: HTMLElement;
@@ -456,6 +459,11 @@ export class AudioDetectionComponent {
    * ```
    */
   updateUI(result: PitchDetectionResult): void {
+    // Skip UI updates if selectors are being updated
+    if (this.isUpdatingSelectors) {
+      return;
+    }
+    
     try {
       // Update volume bar
       if (this.uiElements.volumeBar) {
@@ -476,13 +484,23 @@ export class AudioDetectionComponent {
 
       // Update frequency display
       if (this.uiElements.frequency) {
-        this.uiElements.frequency.textContent = FrequencyUtils.formatFrequency(result.frequency);
+        if (result.frequency && result.frequency > 0) {
+          this.uiElements.frequency.textContent = FrequencyUtils.formatFrequency(result.frequency);
+        } else {
+          // Reset frequency display when no pitch is detected
+          this.uiElements.frequency.textContent = '0.0 Hz';
+        }
       }
 
       // Update note display
       if (this.uiElements.note) {
-        const noteInfo = FrequencyUtils.frequencyToNote(result.frequency);
-        this.uiElements.note.textContent = noteInfo.name;
+        if (result.frequency && result.frequency > 0) {
+          const noteInfo = FrequencyUtils.frequencyToNote(result.frequency);
+          this.uiElements.note.textContent = noteInfo.name;
+        } else {
+          // Reset note display when no pitch is detected
+          this.uiElements.note.textContent = '-';
+        }
       }
     } catch (error) {
       this.debugLog('UI update error:', error);
@@ -513,27 +531,54 @@ export class AudioDetectionComponent {
     
     this.debugLog('Updating selectors:', selectors);
     
-    // Reset all existing UI elements to initial state before switching
-    this.resetAllUIElements();
+    // Set flag to prevent UI updates during selector changes
+    this.isUpdatingSelectors = true;
     
-    // Update configuration with new selectors
-    if (selectors.volumeBarSelector !== undefined) {
-      this.config.volumeBarSelector = selectors.volumeBarSelector;
-    }
-    if (selectors.volumeTextSelector !== undefined) {
-      this.config.volumeTextSelector = selectors.volumeTextSelector;
-    }
-    if (selectors.frequencySelector !== undefined) {
-      this.config.frequencySelector = selectors.frequencySelector;
-    }
-    if (selectors.noteSelector !== undefined) {
-      this.config.noteSelector = selectors.noteSelector;
+    // Temporarily stop UI updates to prevent overwriting reset values
+    const wasUIUpdating = this.uiUpdateTimer !== null;
+    if (wasUIUpdating) {
+      this.stopUIUpdates();
     }
     
-    // Re-cache UI elements with new selectors
-    this.cacheUIElements();
-    
-    this.debugLog('Selectors updated, old elements reset, and UI elements re-cached:', Object.keys(this.uiElements));
+    // Wait a moment to ensure any pending UI updates are processed
+    setTimeout(() => {
+      // Reset all existing UI elements to initial state before switching
+      this.resetAllUIElements();
+      
+      // Update configuration with new selectors
+      if (selectors.volumeBarSelector !== undefined) {
+        this.config.volumeBarSelector = selectors.volumeBarSelector;
+      }
+      if (selectors.volumeTextSelector !== undefined) {
+        this.config.volumeTextSelector = selectors.volumeTextSelector;
+      }
+      if (selectors.frequencySelector !== undefined) {
+        this.config.frequencySelector = selectors.frequencySelector;
+      }
+      if (selectors.noteSelector !== undefined) {
+        this.config.noteSelector = selectors.noteSelector;
+      }
+      
+      // Re-cache UI elements with new selectors
+      this.cacheUIElements();
+      
+      // Reset the new UI elements as well to ensure they start clean
+      setTimeout(() => {
+        this.resetAllUIElements();
+        
+        // Clear the flag and resume UI updates if they were running
+        this.isUpdatingSelectors = false;
+        
+        if (wasUIUpdating) {
+          // Add longer delay to ensure reset values are visible
+          setTimeout(() => {
+            this.startUIUpdates();
+          }, 200);
+        }
+        
+        this.debugLog('Selectors updated, all elements reset, and UI elements re-cached:', Object.keys(this.uiElements));
+      }, 50);
+    }, 50);
   }
 
   /**
@@ -689,12 +734,30 @@ export class AudioDetectionComponent {
         '#mic-volume-bar', '#mic-volume-text', '#mic-frequency',
         '#range-volume-bar', '#range-volume-text', '#range-frequency-value',
         '#practice-volume-bar', '#practice-volume-text', '#practice-frequency', '#practice-note',
+        // Add common frequency display patterns
+        '#freq-1', '#freq-2', '#freq-3', '#freq-4', '#freq-5',
+        '#frequency-1', '#frequency-2', '#frequency-3',
+        '#pitch-1', '#pitch-2', '#pitch-3',
         // Also reset current configuration selectors
         this.config.volumeBarSelector,
         this.config.volumeTextSelector,
         this.config.frequencySelector,
         this.config.noteSelector
       ];
+      
+      // Additionally, try to find all elements with frequency-related IDs or classes
+      // But be more selective to avoid breaking UI elements
+      const frequencyElements = document.querySelectorAll('[id*="freq"]:not(.frequency-group):not(.frequency-box), [id*="frequency"]:not(.frequency-group):not(.frequency-box), [id*="pitch"]:not(.frequency-group):not(.frequency-box)');
+      frequencyElements.forEach(element => {
+        // Only reset if it looks like a frequency display (contains Hz or is a known pattern)
+        const text = element.textContent || '';
+        if (text.includes('Hz') || text.match(/^\d+\.?\d*$/)) {
+          // Only update text content, don't change any other properties
+          if (element.classList.contains('frequency-display') || element.id.includes('freq-')) {
+            element.textContent = '0.0 Hz';
+          }
+        }
+      });
 
       allPossibleSelectors.forEach(selector => {
         if (selector) {
@@ -711,8 +774,18 @@ export class AudioDetectionComponent {
               // Reset volume text
               element.textContent = '0.0%';
             } else if (selector.includes('frequency')) {
-              // Reset frequency display
+              // Reset frequency display - use multiple approaches for reliability
               element.textContent = '0.0 Hz';
+              (element as HTMLElement).innerHTML = '0.0 Hz';
+              (element as HTMLElement).setAttribute('data-frequency', '0');
+              // Force style refresh to ensure visual update (without breaking display property)
+              const originalDisplay = (element as HTMLElement).style.display;
+              if (originalDisplay !== 'none') {
+                // Only force reflow, don't change display property
+                (element as HTMLElement).style.opacity = '0.99';
+                (element as HTMLElement).offsetHeight; // Force reflow
+                (element as HTMLElement).style.opacity = '';
+              }
             } else if (selector.includes('note')) {
               // Reset note display
               element.textContent = '-';
@@ -756,6 +829,15 @@ export class AudioDetectionComponent {
         const result = this.pitchDetector.getLatestResult();
         if (result) {
           this.updateUI(result);
+        } else {
+          // When no result, ensure UI shows reset state
+          this.updateUI({
+            frequency: 0,
+            note: '-',
+            octave: 0,
+            volume: 0,
+            clarity: 0
+          });
         }
       }
     }, this.config.uiUpdateInterval);
