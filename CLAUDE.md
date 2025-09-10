@@ -211,6 +211,137 @@ npm run build
 npm run build && npm test -- --run
 ```
 
+## リリース後検証チェックリスト
+
+**必須**: 各リリース後に必ず実行し、ファイルの取得可能性と完全性を確認する
+
+### 1. ファイル取得可能性テスト
+
+#### GitHub Raw URL検証
+```bash
+# v1.1.5の例
+curl -I https://raw.githubusercontent.com/username/pitchpro-audio-processing/v1.1.5/dist/index.esm.js
+curl -I https://raw.githubusercontent.com/username/pitchpro-audio-processing/v1.1.5/dist/index.js
+curl -I https://raw.githubusercontent.com/username/pitchpro-audio-processing/v1.1.5/dist/pitchpro.umd.js
+curl -I https://raw.githubusercontent.com/username/pitchpro-audio-processing/v1.1.5/dist/index.d.ts
+
+# 期待結果: HTTP/2 200 OK
+```
+
+#### パッケージダウンロード検証
+```bash
+# ZIP形式
+curl -L -o test-release.zip https://github.com/username/pitchpro-audio-processing/archive/refs/tags/v1.1.5.zip
+unzip -t test-release.zip
+
+# TAR.GZ形式
+curl -L -o test-release.tar.gz https://github.com/username/pitchpro-audio-processing/archive/refs/tags/v1.1.5.tar.gz
+tar -tzf test-release.tar.gz | head -20
+```
+
+#### GitHub Pages URL検証
+```bash
+# デモページの確認
+curl -I https://username.github.io/pitchpro-audio-processing/
+curl -I https://username.github.io/pitchpro-audio-processing/updateSelectors-demo.html
+```
+
+### 2. ファイル完全性チェック
+
+#### ハッシュ値検証
+```bash
+# リリース時のハッシュ値を記録・比較
+sha256sum dist/index.esm.js dist/index.js dist/pitchpro.umd.js dist/index.d.ts > release-checksums.txt
+
+# ダウンロード後の検証
+curl -s https://raw.githubusercontent.com/username/pitchpro-audio-processing/v1.1.5/dist/index.esm.js | sha256sum
+```
+
+#### ファイルサイズ検証
+```bash
+# 期待サイズ範囲の確認
+ls -la dist/
+# index.esm.js: 50KB-150KB想定
+# index.js: 50KB-150KB想定  
+# pitchpro.umd.js: 60KB-200KB想定
+# index.d.ts: 5KB-20KB想定
+```
+
+#### 内容検証
+```bash
+# ファイル先頭と末尾の確認（破損チェック）
+head -5 dist/index.esm.js  # ESMエクスポートの確認
+tail -5 dist/index.esm.js  # 完結性の確認
+
+# UMDビルドの構造確認
+grep -o "typeof exports" dist/pitchpro.umd.js | wc -l  # UMD構造の確認
+```
+
+### 3. 機能テスト
+
+#### インポートテスト
+```javascript
+// ESM
+import PitchDetector from 'https://raw.githubusercontent.com/username/pitchpro-audio-processing/v1.1.5/dist/index.esm.js';
+console.log(typeof PitchDetector); // 'function'
+
+// UMD (HTML)
+<script src="https://raw.githubusercontent.com/username/pitchpro-audio-processing/v1.1.5/dist/pitchpro.umd.js"></script>
+<script>console.log(typeof window.PitchDetector);</script>
+```
+
+#### 基本機能テスト
+```javascript
+// PitchDetectorの基本動作確認
+const detector = new PitchDetector();
+console.log(detector.constructor.name); // 'PitchDetector'
+console.log(typeof detector.detect); // 'function'
+```
+
+### 4. ドキュメント確認
+
+- [ ] README.mdのインストール手順が最新版に対応
+- [ ] CHANGELOG.mdに新バージョンが記載
+- [ ] package.jsonのバージョンが正しい
+- [ ] GitHubリリースページの作成とアセット添付
+
+### 5. 問題発生時の対応
+
+#### 404エラーの場合
+1. GitHubのファイル履歴を確認
+2. .gitignoreの設定確認
+3. `git add -f dist/` でファイルを強制追加
+4. 再プッシュとタグ作成
+
+#### ファイル破損の場合
+1. ローカルビルドの再実行
+2. `npm run build` の出力確認
+3. 破損ファイルの削除と再作成
+4. ハッシュ値の再計算と記録
+
+#### CI/CD失敗の場合
+1. GitHub Actionsログの確認
+2. ワークフロー設定の検証
+3. 必要に応じて手動デプロイ実行
+
+### 6. チェックリスト記録
+
+```bash
+# 検証ログの作成
+echo "=== PitchPro v1.1.5 リリース検証 ===" > release-verification.log
+echo "実行日時: $(date)" >> release-verification.log
+echo "実行者: [担当者名]" >> release-verification.log
+echo "" >> release-verification.log
+
+# 各項目の結果を記録
+echo "✅ GitHub Raw URL: OK" >> release-verification.log
+echo "✅ パッケージダウンロード: OK" >> release-verification.log
+echo "✅ ハッシュ値検証: OK" >> release-verification.log
+echo "✅ 機能テスト: OK" >> release-verification.log
+```
+
+**重要**: このチェックリストは必須であり、すべての項目をクリアしたことを確認してからリリース完了とする。
+
 ## 重要な実装原則
 
 ### メモリ効率
