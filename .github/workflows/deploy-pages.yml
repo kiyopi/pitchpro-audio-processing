@@ -5,6 +5,15 @@ on:
     branches:
       - main
       - demo/original-parameters
+    # デモページやビルド関連のファイルが変更された時のみ実行
+    paths:
+      - 'demos/**'
+      - 'dist/**'
+      - 'dist-umd/**'
+      - 'src/**'
+      - 'package.json'
+      - 'vite.config.js'
+      - '*.html'
   workflow_dispatch:
 
 permissions:
