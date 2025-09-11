@@ -297,12 +297,13 @@ export class AudioDetectionComponent {
       // Initialize microphone
       await this.micController.initialize();
 
-      // Initialize PitchDetector
+      // Initialize PitchDetector with DeviceDetection optimized settings
       this.pitchDetector = new PitchDetector(this.audioManager, {
         clarityThreshold: this.config.clarityThreshold,
         minVolumeAbsolute: this.config.minVolumeAbsolute,
         fftSize: this.config.fftSize,
-        smoothing: this.config.smoothing
+        smoothing: this.deviceSpecs?.smoothingFactor ?? this.config.smoothing,  // v1.1.8: Use DeviceDetection smoothing
+        deviceOptimization: this.config.deviceOptimization
       });
 
       // Set up PitchDetector callbacks
@@ -734,28 +735,28 @@ export class AudioDetectionComponent {
   private detectAndOptimizeDevice(): void {
     this.deviceSpecs = DeviceDetection.getDeviceSpecs();
     
-    // Define device-specific settings
+    // v1.1.8: Use DeviceDetection optimized values instead of hardcoded settings
     const deviceSettingsMap: Record<string, DeviceSettings> = {
       PC: {
         volumeMultiplier: 3.0,
         sensitivityMultiplier: 2.5,
-        minVolumeAbsolute: 0.003
+        minVolumeAbsolute: this.deviceSpecs.noiseGate * 0.25  // Based on DeviceDetection noiseGate
       },
       iPhone: {
         volumeMultiplier: 4.5,
         sensitivityMultiplier: 3.5,
-        minVolumeAbsolute: 0.002
+        minVolumeAbsolute: this.deviceSpecs.noiseGate * 0.27  // Based on DeviceDetection noiseGate
       },
       iPad: {
         volumeMultiplier: 7.0,
         sensitivityMultiplier: 5.0,
-        minVolumeAbsolute: 0.001
+        minVolumeAbsolute: this.deviceSpecs.noiseGate * 0.28  // Based on DeviceDetection noiseGate
       }
     };
 
     this.deviceSettings = deviceSettingsMap[this.deviceSpecs.deviceType] || deviceSettingsMap.PC;
     
-    // Apply device-specific volume threshold
+    // v1.1.8: Apply DeviceDetection optimized volume threshold
     this.config.minVolumeAbsolute = this.deviceSettings.minVolumeAbsolute;
     
     this.debugLog('Device optimization applied:', {

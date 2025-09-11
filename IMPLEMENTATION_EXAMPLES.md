@@ -1,6 +1,9 @@
 # 🎵 PitchPro 実装例とベストプラクティス
 
-PitchProライブラリの各機能の具体的な実装例とベストプラクティスをご紹介します。
+**バージョン**: 1.1.8対応  
+**更新日**: 2025年9月11日
+
+PitchPro Audio Processingライブラリ v1.1.8の各機能の具体的な実装例とベストプラクティスをご紹介します。
 
 ## 📋 目次
 
@@ -27,7 +30,7 @@ PitchProライブラリの各機能の具体的な実装例とベストプラク
 <html>
 <head>
     <title>基本音程検出アプリ</title>
-    <script src="path/to/pitchpro.umd.js"></script>
+    <script src="dist/pitchpro.umd.js"></script>
 </head>
 <body>
     <div id="app">
@@ -130,9 +133,9 @@ PitchProライブラリの各機能の具体的な実装例とベストプラク
 ```javascript
 class BasicPitchApp {
     constructor() {
-        // PitchProインスタンス
-        this.audioManager = new PitchPro.AudioManager();
-        this.pitchDetector = new PitchPro.PitchDetector(this.audioManager);
+        // PitchPro v1.1.8統合インスタンス（推奨）
+        this.microphoneController = new PitchPro.MicrophoneController();
+        this.pitchDetector = null; // 初期化後に設定
         
         // DOM要素
         this.elements = {
@@ -173,21 +176,19 @@ class BasicPitchApp {
         this.elements.sensitivitySlider.addEventListener('input', (e) => {
             const value = parseFloat(e.target.value);
             this.elements.sensitivityValue.textContent = value.toFixed(1);
-            this.audioManager.setSensitivity(value);
+            // v1.1.8では統合コントローラーで感度調整
+            if (this.microphoneController) {
+                this.microphoneController.setSensitivity(value);
+            }
         });
     }
     
     setupCallbacks() {
-        this.pitchDetector.setCallbacks({
-            onPitchUpdate: (result) => {
-                this.updateDisplay(result);
-            },
-            onError: (error) => {
-                this.handleError(error);
-            },
-            onStateChange: (state) => {
-                this.updateStatus(`状態: ${state}`);
-            }
+        // v1.1.8 統合インターフェース設定
+        this.microphoneController.setCallbacks({
+            onError: (error) => this.handleError(error),
+            onStateChange: (state) => this.updateStatus(`状態: ${state}`),
+            onDeviceChange: (specs) => console.log('デバイス最適化:', specs)
         });
     }
     
@@ -196,8 +197,24 @@ class BasicPitchApp {
             this.updateStatus('初期化中...');
             this.elements.startBtn.disabled = true;
             
-            // 初期化
+            // v1.1.8 統合初期化
+            const resources = await this.microphoneController.initialize();
+            
+            // PitchDetector作成（v1.1.8最適化設定）
+            this.pitchDetector = new PitchPro.PitchDetector(this.microphoneController.audioManager, {
+                fftSize: 4096,
+                clarityThreshold: 0.4,        // v1.1.8最適化値
+                minVolumeAbsolute: 0.003,     // v1.1.8最適化値
+                smoothing: 0.1
+            });
+            
             await this.pitchDetector.initialize();
+            
+            // ピッチ検出コールバック
+            this.pitchDetector.setCallbacks({
+                onPitchUpdate: (result) => this.updateDisplay(result),
+                onError: (error) => this.handleError(error)
+            });
             
             // 検出開始
             const success = this.pitchDetector.startDetection();
@@ -235,11 +252,11 @@ class BasicPitchApp {
             this.elements.octave.textContent = result.octave || '';
             this.elements.frequencyText.textContent = `${result.frequency.toFixed(1)} Hz`;
             
-            // セント表示
-            if (result.cents !== undefined) {
-                const sign = result.cents > 0 ? '+' : '';
-                this.elements.centsText.textContent = `${sign}${result.cents}¢`;
-                this.elements.centsText.className = this.getCentsColorClass(result.cents);
+            // セント表示（v1.1.8新機能）
+            if (result.centsFromExpected !== undefined) {
+                const sign = result.centsFromExpected > 0 ? '+' : '';
+                this.elements.centsText.textContent = `${sign}${result.centsFromExpected}¢`;
+                this.elements.centsText.className = this.getCentsColorClass(result.centsFromExpected);
             }
         } else {
             this.elements.noteText.textContent = '--';
@@ -249,8 +266,8 @@ class BasicPitchApp {
             this.elements.centsText.className = '';
         }
         
-        // 音量表示
-        const volumePercent = Math.min(100, Math.max(0, result.volume * 5));
+        // 音量表示（v1.1.8では0-100範囲で返される）
+        const volumePercent = Math.min(100, Math.max(0, result.volume));
         this.elements.volumeBar.style.width = `${volumePercent}%`;
         this.elements.volumeText.textContent = `${Math.round(volumePercent)}%`;
         

@@ -114,32 +114,32 @@ export class DeviceDetection {
       case 'iPad':
         return {
           sensitivity: 7.0,        // High sensitivity for iPad microphones
-          noiseGate: 0.01,         // Low noise gate
+          noiseGate: 0.025,        // v1.1.8: Increased noise gate for better noise rejection
           divisor: 4.0,            // Volume calculation divisor
           gainCompensation: 1.5,   // Gain compensation for low-frequency cut
-          noiseThreshold: 1.0,     // Fixed: Much lower noise threshold for proper volume calculation
-          smoothingFactor: 0.2     // Smoothing factor
+          noiseThreshold: 8.0,     // v1.1.8: Increased noise threshold to prevent ambient noise pickup
+          smoothingFactor: 0.3     // v1.1.8: Increased smoothing to reduce noise fluctuations
         };
         
       case 'iPhone':
         return {
           sensitivity: 2.0,        // Lower sensitivity for cleaner signal
-          noiseGate: 0.018,        // Slightly higher noise gate
+          noiseGate: 0.03,         // v1.1.8: Increased noise gate to filter out background noise
           divisor: 4.0,            // Keep original divisor
           gainCompensation: 1.5,   // Keep original gain compensation
-          noiseThreshold: 1.0,     // Fixed: Much lower noise threshold for proper volume calculation
-          smoothingFactor: 0.2     // Keep original smoothing factor
+          noiseThreshold: 6.0,     // v1.1.8: Increased noise threshold for better noise rejection
+          smoothingFactor: 0.25    // v1.1.8: Increased smoothing to reduce noise spikes
         };
         
       case 'PC':
       default:
         return {
           sensitivity: 1.0,        // Standard sensitivity for PC
-          noiseGate: 0.02,         // Higher noise gate for PC microphones
+          noiseGate: 0.035,        // v1.1.8: Increased noise gate for better ambient noise filtering
           divisor: 6.0,            // Different volume calculation for PC
           gainCompensation: 1.0,   // No additional gain compensation needed
-          noiseThreshold: 5.0,     // Standard noise threshold for PC
-          smoothingFactor: 0.2     // Standard smoothing
+          noiseThreshold: 7.0,     // v1.1.8: Increased noise threshold for cleaner detection
+          smoothingFactor: 0.25    // v1.1.8: Increased smoothing for more stable readings
         };
     }
   }
@@ -152,11 +152,11 @@ export class DeviceDetection {
       deviceType: 'PC',
       isIOS: false,
       sensitivity: 1.0,
-      noiseGate: 0.02,
+      noiseGate: 0.035,        // v1.1.8: Improved default noise gate
       divisor: 6.0,
       gainCompensation: 1.0,
-      noiseThreshold: 5,
-      smoothingFactor: 0.2
+      noiseThreshold: 7.0,     // v1.1.8: Improved default noise threshold
+      smoothingFactor: 0.25    // v1.1.8: Improved default smoothing
     };
   }
 

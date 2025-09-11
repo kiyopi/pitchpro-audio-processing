@@ -290,7 +290,7 @@
 <body>
     <div class="container">
         <h1>🎵 AudioDetectionComponent</h1>
-        <p class="subtitle">単体テスト・デモ - PitchPro v1.1.3統合</p>
+        <p class="subtitle">単体テスト・デモ - PitchPro v1.1.8統合</p>
 
         <!-- デバイス情報 -->
         <div class="device-info">
@@ -300,16 +300,18 @@
 
         <!-- 設定パネル -->
         <div class="config-panel">
-            <h4>⚙️ 設定</h4>
+            <h4>⚙️ 設定 (v1.1.8最適化値)</h4>
             <div class="config-row">
                 <label>Clarity Threshold:</label>
                 <input type="range" id="clarity-threshold" min="0.1" max="0.9" step="0.1" value="0.4">
                 <span id="clarity-value">0.4</span>
+                <small style="margin-left: 10px; opacity: 0.7;">(v1.1.8推奨: 0.4)</small>
             </div>
             <div class="config-row">
                 <label>Min Volume:</label>
-                <input type="range" id="min-volume" min="0.001" max="0.01" step="0.001" value="0.003">
+                <input type="range" id="min-volume" min="0.001" max="0.015" step="0.001" value="0.003">
                 <span id="min-volume-value">0.003</span>
+                <small style="margin-left: 10px; opacity: 0.7;">(デフォルト: 0.003, 雑音対策: 0.008+)</small>
             </div>
             <div class="config-row">
                 <label>UI Update Rate:</label>
@@ -322,6 +324,13 @@
             <div class="config-row">
                 <label>Debug Mode:</label>
                 <input type="checkbox" id="debug-mode" checked>
+            </div>
+            <div class="config-row">
+                <label>雑音対策プリセット:</label>
+                <button id="noise-preset-low" class="btn-secondary" style="padding: 5px 15px; margin: 2px;">低</button>
+                <button id="noise-preset-medium" class="btn-secondary" style="padding: 5px 15px; margin: 2px;">中</button>
+                <button id="noise-preset-high" class="btn-secondary" style="padding: 5px 15px; margin: 2px;">高</button>
+                <button id="noise-preset-default" class="btn-warning" style="padding: 5px 15px; margin: 2px;">デフォルト</button>
             </div>
         </div>
 
@@ -414,9 +423,9 @@
         </div>
     </div>
 
-    <!-- PitchPro モジュール読み込み -->
-    <script type="module">
-        import { AudioDetectionComponent } from './dist/index.esm.js';
+    <!-- PitchPro v1.1.8 UMDモジュール読み込み -->
+    <script src="dist/pitchpro.umd.js"></script>
+    <script>
 
         // グローバル変数
         let audioDetector = null;
@@ -521,6 +530,31 @@
             elements.minVolumeValue.textContent = e.target.value;
         });
 
+        // 雑音対策プリセットボタン
+        function applyNoisePreset(clarityThreshold, minVolume, label) {
+            elements.clarityThreshold.value = clarityThreshold;
+            elements.clarityValue.textContent = clarityThreshold;
+            elements.minVolume.value = minVolume;
+            elements.minVolumeValue.textContent = minVolume;
+            addLog(`🔧 雑音対策プリセット「${label}」を適用`, 'info');
+        }
+
+        document.getElementById('noise-preset-default').addEventListener('click', () => {
+            applyNoisePreset('0.4', '0.003', 'デフォルト');
+        });
+
+        document.getElementById('noise-preset-low').addEventListener('click', () => {
+            applyNoisePreset('0.5', '0.006', '低レベル雑音対策');
+        });
+
+        document.getElementById('noise-preset-medium').addEventListener('click', () => {
+            applyNoisePreset('0.6', '0.008', '中レベル雑音対策');
+        });
+
+        document.getElementById('noise-preset-high').addEventListener('click', () => {
+            applyNoisePreset('0.7', '0.012', '高レベル雑音対策');
+        });
+
         // ボタンイベント
         elements.initBtn.addEventListener('click', async () => {
             try {
@@ -534,10 +568,13 @@
                     clarityThreshold: parseFloat(elements.clarityThreshold.value),
                     minVolumeAbsolute: parseFloat(elements.minVolume.value),
                     uiUpdateInterval: parseInt(elements.updateRate.value),
-                    debug: elements.debugMode.checked
+                    debug: elements.debugMode.checked,
+                    deviceOptimization: true,  // v1.1.8 デバイス最適化
+                    autoUpdateUI: true        // v1.1.8 UI自動更新
                 };
 
-                audioDetector = new AudioDetectionComponent(config);
+                // PitchPro v1.1.8 統合インターフェース使用
+                audioDetector = new PitchPro.AudioDetectionComponent(config);
 
                 // コールバック設定
                 audioDetector.setCallbacks({
@@ -546,9 +583,7 @@
                         updateCount++;
                         updateMetrics();
                     },
-                    onVolumeUpdate: (volume) => {
-                        // 音量更新時の追加処理
-                    },
+                    // v1.1.8ではonVolumeUpdateは廃止、onPitchUpdateで統合処理
                     onStateChange: (state) => {
                         addLog(`状態変更: ${state}`, 'info');
                         updateStatus();
@@ -611,8 +646,23 @@
         elements.testBtn.addEventListener('click', async () => {
             try {
                 addLog('マイクテスト開始...', 'info');
-                // マイクテスト機能は今後実装
-                addLog('マイクテスト機能は準備中です', 'info');
+                
+                // v1.1.8 updateSelectorsメソッドテスト
+                if (audioDetector && audioDetector.updateSelectors) {
+                    addLog('🔄 updateSelectors()メソッドテスト中...', 'info');
+                    
+                    // セレクターを再設定してクロスモード干渉防止をテスト
+                    audioDetector.updateSelectors({
+                        volumeBarSelector: '#volume-bar',
+                        volumeTextSelector: '#volume-text',
+                        frequencySelector: '#frequency-display',
+                        noteSelector: '#note-display'
+                    });
+                    
+                    addLog('✅ updateSelectors()テスト完了 - クロスモード干渉防止機能確認', 'success');
+                } else {
+                    addLog('⚠️ updateSelectors()メソッドが利用できません', 'error');
+                }
             } catch (error) {
                 addLog(`テストエラー: ${error.message}`, 'error');
             }
@@ -621,9 +671,26 @@
         elements.resetBtn.addEventListener('click', () => {
             try {
                 if (audioDetector) {
-                    audioDetector.resetRecoveryAttempts();
-                    addLog('リカバリー試行回数をリセットしました', 'success');
-                    addLog('マイクの監視が再開されました', 'info');
+                    // v1.1.8 手動UIリセットテスト
+                    addLog('🔄 UI要素手動リセットテスト...', 'info');
+                    
+                    // 手動でUIをリセット
+                    if (audioDetector.updateUI) {
+                        audioDetector.updateUI({
+                            frequency: 0,
+                            note: '',
+                            octave: 0,
+                            volume: 0,
+                            clarity: 0
+                        });
+                        addLog('✅ 手動UIリセット完了', 'success');
+                    }
+                    
+                    // リカバリー試行リセット（既存機能）
+                    if (audioDetector.resetRecoveryAttempts) {
+                        audioDetector.resetRecoveryAttempts();
+                        addLog('✅ リカバリー試行回数リセット', 'success');
+                    }
                 } else {
                     addLog('AudioDetectionComponentが初期化されていません', 'error');
                 }
@@ -666,7 +733,9 @@
         });
 
         // 初期化時のログ
-        addLog('AudioDetectionComponent テストページ準備完了', 'success');
+        addLog('AudioDetectionComponent v1.1.8 テストページ準備完了', 'success');
+        addLog('🆕 v1.1.8新機能: クロスモードUI干渉防止, 自動noteSelector管理', 'info');
+        addLog('🔧 雑音対策: デフォルト設定で開始、雑音が多い場合はプリセットボタンを使用', 'info');
         addLog('「初期化」ボタンをクリックしてマイクアクセスを許可してください', 'info');
 
         // パフォーマンス監視

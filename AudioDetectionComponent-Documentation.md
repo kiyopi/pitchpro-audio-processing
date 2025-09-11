@@ -89,12 +89,12 @@ audioDetector.setCallbacks({
 ```javascript
 const options = {
     // 音響設定
-    sampleRate: 44100,           // サンプリングレート
-    channelCount: 1,             // チャンネル数
     fftSize: 4096,              // FFTサイズ
-    smoothing: 0.1,             // スムージング係数
-    clarityThreshold: 0.6,      // 明瞭度閾値
-    minVolumeAbsolute: 0.001,   // 最小音量閾値
+    clarityThreshold: 0.4,      // 明瞭度閾値（v1.1.8最適化値）
+    minVolumeAbsolute: 0.003,   // 最小音量閾値（v1.1.8最適化値）
+    debug: true,                // デバッグモード
+    autoUpdateUI: true,         // UI自動更新
+    uiUpdateInterval: 33,       // UI更新間隔(ms)
     
     // マイク設定
     echoCancellation: false,     // エコーキャンセレーション
@@ -105,7 +105,7 @@ const options = {
     frequencySelector: '#freq',  // 周波数表示要素
     noteSelector: '#note',       // 音名表示要素
     volumeBarSelector: '#vol-bar', // 音量バー要素
-    volumePercentSelector: '#vol-percent' // 音量パーセント表示要素
+    volumeTextSelector: '#vol-text' // 音量テキスト表示要素
 };
 
 const audioDetector = new AudioDetectionComponent(options);

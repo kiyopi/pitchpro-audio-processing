@@ -297,7 +297,9 @@ export class PitchDetector {
       fftSize: 4096,
       smoothing: 0.1,
       clarityThreshold: 0.4,    // 0.8から0.4に現実的な値に変更
-      minVolumeAbsolute: 0.003, // 0.01から0.003に現実的な値に変更
+      minVolumeAbsolute: 0.008, // v1.1.8: 雑音対策強化のため閾値上昇 (0.003→0.008)
+      noiseGate: 0.02,          // v1.1.8: デフォルトnoiseGate値
+      deviceOptimization: true, // v1.1.8: デバイス最適化デフォルト有効
       ...config
     };
     

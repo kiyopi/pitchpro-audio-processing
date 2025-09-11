@@ -54,47 +54,47 @@ const b = class b {
         return {
           sensitivity: 7,
           // High sensitivity for iPad microphones
-          noiseGate: 0.01,
-          // Low noise gate
+          noiseGate: 0.025,
+          // v1.1.8: Increased noise gate for better noise rejection
           divisor: 4,
           // Volume calculation divisor
           gainCompensation: 1.5,
           // Gain compensation for low-frequency cut
-          noiseThreshold: 1,
-          // Fixed: Much lower noise threshold for proper volume calculation
-          smoothingFactor: 0.2
-          // Smoothing factor
+          noiseThreshold: 8,
+          // v1.1.8: Increased noise threshold to prevent ambient noise pickup
+          smoothingFactor: 0.3
+          // v1.1.8: Increased smoothing to reduce noise fluctuations
         };
       case "iPhone":
         return {
           sensitivity: 2,
           // Lower sensitivity for cleaner signal
-          noiseGate: 0.018,
-          // Slightly higher noise gate
+          noiseGate: 0.03,
+          // v1.1.8: Increased noise gate to filter out background noise
           divisor: 4,
           // Keep original divisor
           gainCompensation: 1.5,
           // Keep original gain compensation
-          noiseThreshold: 1,
-          // Fixed: Much lower noise threshold for proper volume calculation
-          smoothingFactor: 0.2
-          // Keep original smoothing factor
+          noiseThreshold: 6,
+          // v1.1.8: Increased noise threshold for better noise rejection
+          smoothingFactor: 0.25
+          // v1.1.8: Increased smoothing to reduce noise spikes
         };
       case "PC":
       default:
         return {
           sensitivity: 1,
           // Standard sensitivity for PC
-          noiseGate: 0.02,
-          // Higher noise gate for PC microphones
+          noiseGate: 0.035,
+          // v1.1.8: Increased noise gate for better ambient noise filtering
           divisor: 6,
           // Different volume calculation for PC
           gainCompensation: 1,
           // No additional gain compensation needed
-          noiseThreshold: 5,
-          // Standard noise threshold for PC
-          smoothingFactor: 0.2
-          // Standard smoothing
+          noiseThreshold: 7,
+          // v1.1.8: Increased noise threshold for cleaner detection
+          smoothingFactor: 0.25
+          // v1.1.8: Increased smoothing for more stable readings
         };
     }
   }
@@ -106,11 +106,14 @@ const b = class b {
       deviceType: "PC",
       isIOS: !1,
       sensitivity: 1,
-      noiseGate: 0.02,
+      noiseGate: 0.035,
+      // v1.1.8: Improved default noise gate
       divisor: 6,
       gainCompensation: 1,
-      noiseThreshold: 5,
-      smoothingFactor: 0.2
+      noiseThreshold: 7,
+      // v1.1.8: Improved default noise threshold
+      smoothingFactor: 0.25
+      // v1.1.8: Improved default smoothing
     };
   }
   /**
@@ -1571,8 +1574,12 @@ class Ke {
       smoothing: 0.1,
       clarityThreshold: 0.4,
       // 0.8から0.4に現実的な値に変更
-      minVolumeAbsolute: 3e-3,
-      // 0.01から0.003に現実的な値に変更
+      minVolumeAbsolute: 8e-3,
+      // v1.1.8: 雑音対策強化のため閾値上昇 (0.003→0.008)
+      noiseGate: 0.02,
+      // v1.1.8: デフォルトnoiseGate値
+      deviceOptimization: !0,
+      // v1.1.8: デバイス最適化デフォルト有効
       ...t
     }, this.harmonicConfig = {
       enabled: !0,
@@ -4435,6 +4442,7 @@ const G = class G {
    * ```
    */
   async initialize() {
+    var e;
     if (this.isInitialized) {
       this.debugLog("Already initialized");
       return;
@@ -4454,35 +4462,37 @@ const G = class G {
           enabled: this.config.debug
         }
       }), this.micController.setCallbacks({
-        onStateChange: (e) => {
-          this.debugLog("MicrophoneController state:", e);
+        onStateChange: (t) => {
+          this.debugLog("MicrophoneController state:", t);
         },
-        onError: (e) => {
-          this.handleError(e, "microphone_controller");
+        onError: (t) => {
+          this.handleError(t, "microphone_controller");
         },
-        onDeviceChange: (e) => {
-          var t, i;
-          this.deviceSpecs = e, (i = (t = this.callbacks).onDeviceDetected) == null || i.call(t, e);
+        onDeviceChange: (t) => {
+          var i, s;
+          this.deviceSpecs = t, (s = (i = this.callbacks).onDeviceDetected) == null || s.call(i, t);
         }
       }), await this.micController.initialize(), this.pitchDetector = new Ke(this.audioManager, {
         clarityThreshold: this.config.clarityThreshold,
         minVolumeAbsolute: this.config.minVolumeAbsolute,
         fftSize: this.config.fftSize,
-        smoothing: this.config.smoothing
+        smoothing: ((e = this.deviceSpecs) == null ? void 0 : e.smoothingFactor) ?? this.config.smoothing,
+        // v1.1.8: Use DeviceDetection smoothing
+        deviceOptimization: this.config.deviceOptimization
       }), this.pitchDetector.setCallbacks({
-        onPitchUpdate: (e) => {
-          this.handlePitchUpdate(e);
+        onPitchUpdate: (t) => {
+          this.handlePitchUpdate(t);
         },
-        onError: (e) => {
-          this.handleError(e, "pitch_detector");
+        onError: (t) => {
+          this.handleError(t, "pitch_detector");
         },
-        onStateChange: (e) => {
-          this.debugLog("PitchDetector state:", e);
+        onStateChange: (t) => {
+          this.debugLog("PitchDetector state:", t);
         }
       }), await this.pitchDetector.initialize(), this.cacheUIElements(), this.deviceSettings && this.micController && (this.micController.setSensitivity(this.deviceSettings.sensitivityMultiplier), this.debugLog("Applied device-specific sensitivity:", this.deviceSettings.sensitivityMultiplier)), this.isInitialized = !0, this.updateState("ready"), this.debugLog("Initialization complete");
-    } catch (e) {
-      const t = this.createStructuredError(e, "initialization");
-      throw T.logError(t, "AudioDetectionComponent initialization"), this.lastError = t, this.updateState("error"), t;
+    } catch (t) {
+      const i = this.createStructuredError(t, "initialization");
+      throw T.logError(i, "AudioDetectionComponent initialization"), this.lastError = i, this.updateState("error"), i;
     }
   }
   /**
@@ -4709,17 +4719,20 @@ const G = class G {
       PC: {
         volumeMultiplier: 3,
         sensitivityMultiplier: 2.5,
-        minVolumeAbsolute: 3e-3
+        minVolumeAbsolute: this.deviceSpecs.noiseGate * 0.25
+        // Based on DeviceDetection noiseGate
       },
       iPhone: {
         volumeMultiplier: 4.5,
         sensitivityMultiplier: 3.5,
-        minVolumeAbsolute: 2e-3
+        minVolumeAbsolute: this.deviceSpecs.noiseGate * 0.27
+        // Based on DeviceDetection noiseGate
       },
       iPad: {
         volumeMultiplier: 7,
         sensitivityMultiplier: 5,
-        minVolumeAbsolute: 1e-3
+        minVolumeAbsolute: this.deviceSpecs.noiseGate * 0.28
+        // Based on DeviceDetection noiseGate
       }
     };
     this.deviceSettings = e[this.deviceSpecs.deviceType] || e.PC, this.config.minVolumeAbsolute = this.deviceSettings.minVolumeAbsolute, this.debugLog("Device optimization applied:", {
