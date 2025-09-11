@@ -731,8 +731,11 @@ export class AudioDetectionComponent {
     try {
       // Reset all possible UI elements by querying all selectors that might exist
       const allPossibleSelectors = [
-        '#mic-volume-bar', '#mic-volume-text', '#mic-frequency',
-        '#range-volume-bar', '#range-volume-text', '#range-frequency-value',
+        // Mic mode selectors (all possible variations)
+        '#mic-volume-bar', '#mic-volume-text', '#mic-frequency', '#mic-frequency-display',
+        // Range mode selectors (all possible variations)
+        '#range-volume-bar', '#range-volume-text', '#range-frequency', '#range-frequency-value', '#range-frequency-display',
+        // Practice mode selectors (always reset note display when switching modes)
         '#practice-volume-bar', '#practice-volume-text', '#practice-frequency', '#practice-note',
         // Add common frequency display patterns
         '#freq-1', '#freq-2', '#freq-3', '#freq-4', '#freq-5',
@@ -763,6 +766,7 @@ export class AudioDetectionComponent {
         if (selector) {
           const element = document.querySelector(selector);
           if (element) {
+            this.debugLog(`Processing selector: ${selector}, element found: ${!!element}`);
             if (selector.includes('volume-bar')) {
               // Reset volume bar (width style or progress value)
               if (element instanceof HTMLProgressElement) {
@@ -787,8 +791,17 @@ export class AudioDetectionComponent {
                 (element as HTMLElement).style.opacity = '';
               }
             } else if (selector.includes('note')) {
-              // Reset note display
+              // Reset note display - use multiple approaches for reliability
+              const currentText = element.textContent;
+              const currentHTML = (element as HTMLElement).innerHTML;
+              this.debugLog(`Resetting note element: ${selector}, textContent: "${currentText}", innerHTML: "${currentHTML}"`);
               element.textContent = '-';
+              (element as HTMLElement).innerHTML = '-';
+              // Force DOM refresh
+              (element as HTMLElement).style.opacity = '0.99';
+              (element as HTMLElement).offsetHeight; // Force reflow
+              (element as HTMLElement).style.opacity = '';
+              this.debugLog(`Note reset complete: ${selector}, new textContent: "${element.textContent}", new innerHTML: "${(element as HTMLElement).innerHTML}"`);
             }
           }
         }

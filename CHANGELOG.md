@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.7] - 2025-09-10
+
+### 🐛 Fixed
+- **Critical Bug Fix**: 周波数表示のリセット不具合を修正
+  - `resetAllUIElements` メソッドに不足していたセレクターID (`#mic-frequency-display`, `#range-frequency-display`) を追加
+  - モード切り替え時にすべての周波数表示が確実に "0.0 Hz" にリセットされるように修正
+  - v1.1.6で実装した機能の不完全な部分を解消
+
+### 📝 Technical Details
+- `AudioDetectionComponent.ts` 735-737行目を更新し、すべての周波数表示セレクターを含めるように修正
+- これによりv1.1.6で意図していた完全なUIリセット機能が正常に動作
+
 ## [1.1.6] - 2025-09-10
 
 ### ✨ Added
