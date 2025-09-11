@@ -309,9 +309,9 @@
             </div>
             <div class="config-row">
                 <label>Min Volume:</label>
-                <input type="range" id="min-volume" min="0.001" max="0.015" step="0.001" value="0.003">
-                <span id="min-volume-value">0.003</span>
-                <small style="margin-left: 10px; opacity: 0.7;">(デフォルト: 0.003, 雑音対策: 0.008+)</small>
+                <input type="range" id="min-volume" min="0.001" max="0.020" step="0.001" value="0.015">
+                <span id="min-volume-value">0.015</span>
+                <small style="margin-left: 10px; opacity: 0.7;">(感度高: 0.005, 標準: 0.008, 雑音多: 0.012)</small>
             </div>
             <div class="config-row">
                 <label>UI Update Rate:</label>
@@ -540,15 +540,15 @@
         }
 
         document.getElementById('noise-preset-default').addEventListener('click', () => {
-            applyNoisePreset('0.4', '0.003', 'デフォルト');
+            applyNoisePreset('0.4', '0.010', '標準設定（バランス重視）');
         });
 
         document.getElementById('noise-preset-low').addEventListener('click', () => {
-            applyNoisePreset('0.5', '0.006', '低レベル雑音対策');
+            applyNoisePreset('0.5', '0.008', '標準感度設定');
         });
 
         document.getElementById('noise-preset-medium').addEventListener('click', () => {
-            applyNoisePreset('0.6', '0.008', '中レベル雑音対策');
+            applyNoisePreset('0.6', '0.010', '中レベル雑音対策');
         });
 
         document.getElementById('noise-preset-high').addEventListener('click', () => {
@@ -561,20 +561,36 @@
                 addLog('AudioDetectionComponent初期化中...', 'info');
                 
                 const config = {
-                    volumeBarSelector: '#volume-bar',
-                    volumeTextSelector: '#volume-text',
+                    // volumeBarSelector: '#volume-bar',     // 音量バー自動更新を無効化
+                    // volumeTextSelector: '#volume-text',   // 音量テキスト自動更新を無効化
                     frequencySelector: '#frequency-display',
                     noteSelector: '#note-display',
                     clarityThreshold: parseFloat(elements.clarityThreshold.value),
-                    minVolumeAbsolute: parseFloat(elements.minVolume.value),
+                    minVolumeAbsolute: parseFloat(elements.minVolume.value), // UI値を明示使用
                     uiUpdateInterval: parseInt(elements.updateRate.value),
                     debug: elements.debugMode.checked,
-                    deviceOptimization: true,  // v1.1.8 デバイス最適化
+                    deviceOptimization: false, // デバイス最適化を明示的に無効化
+                    volumeMultiplier: 1.0,     // 音量倍率を1.0に固定
+                    sensitivityMultiplier: 1.0, // 感度倍率も1.0に固定
                     autoUpdateUI: true        // v1.1.8 UI自動更新
                 };
+                
+                addLog(`🔧 設定値: deviceOptimization=${config.deviceOptimization}, volumeMultiplier=${config.volumeMultiplier}, minVolumeAbsolute=${config.minVolumeAbsolute}`, 'info');
 
                 // PitchPro v1.1.8 統合インターフェース使用
                 audioDetector = new PitchPro.AudioDetectionComponent(config);
+                
+                // デバッグ: 実際に適用された設定を確認
+                setTimeout(() => {
+                    const status = audioDetector.getStatus();
+                    addLog(`📊 実際の設定確認:`, 'info');
+                    addLog(`  minVolumeAbsolute: ${status.config.minVolumeAbsolute}`, 'info');
+                    addLog(`  deviceOptimization: ${status.config.deviceOptimization}`, 'info');
+                    if (status.deviceSettings) {
+                        addLog(`  volumeMultiplier: ${status.deviceSettings.volumeMultiplier}`, 'info');
+                        addLog(`  sensitivityMultiplier: ${status.deviceSettings.sensitivityMultiplier}`, 'info');
+                    }
+                }, 1000);
 
                 // コールバック設定
                 audioDetector.setCallbacks({
@@ -582,6 +598,45 @@
                         pitchUpdateCount++;
                         updateCount++;
                         updateMetrics();
+                        
+                        // 雑音閾値チェック
+                        const noiseThreshold = parseFloat(elements.minVolume.value); // 0.012
+                        
+                        let displayVolumePercent;
+                        
+                        if (result.volume < noiseThreshold) {
+                            // 雑音レベル以下は完全に0%固定
+                            displayVolumePercent = 0.0;
+                        } else {
+                            // ライブラリが既にスケーリング済み（SCALING_FACTOR=10）なので追加倍率は不要
+                            displayVolumePercent = Math.min(100, result.volume); // 直接使用
+                        }
+                        
+                        // 音量バー更新
+                        if (elements.volumeBar) {
+                            elements.volumeBar.style.width = displayVolumePercent + '%';
+                        }
+                        
+                        // 音量テキスト更新
+                        if (elements.volumeText) {
+                            elements.volumeText.textContent = displayVolumePercent.toFixed(1) + '%';
+                        }
+                        
+                        // Raw値も表示（ライブラリ値をそのまま表示）
+                        if (elements.rawVolume) {
+                            elements.rawVolume.textContent = `Raw: ${result.volume.toFixed(2)}%`;
+                        }
+                        
+                        // 初回の音量値をログ出力
+                        if (pitchUpdateCount <= 5) {
+                            const statusText = result.volume < noiseThreshold ? 'NOISE' : 'VALID';
+                            addLog(`🔍 Update #${pitchUpdateCount}: raw=${result.volume.toFixed(6)}, display=${displayVolumePercent.toFixed(1)}% [${statusText}]`, 'info');
+                            
+                            // さらに詳細な音量分析
+                            if (pitchUpdateCount === 1) {
+                                addLog(`🔍 音量分析: threshold=${noiseThreshold.toFixed(6)}, raw=${result.volume.toFixed(6)}`, 'info');
+                            }
+                        }
                     },
                     // v1.1.8ではonVolumeUpdateは廃止、onPitchUpdateで統合処理
                     onStateChange: (state) => {

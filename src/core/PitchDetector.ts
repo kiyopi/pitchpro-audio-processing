@@ -170,6 +170,7 @@ export class PitchDetector {
   private stableVolume = 0;
   
   /** @private Previous frequency for harmonic correction */
+  // @ts-ignore - Used in correctHarmonic method for frequency tracking
   private previousFrequency = 0;
   
   /** @private History buffer for harmonic analysis */
@@ -237,7 +238,7 @@ export class PitchDetector {
    * @param config.harmonicCorrection.historyWindow - Time window for harmonic analysis in ms (default: 1000)
    * @param config.harmonicCorrection.frequencyThreshold - Frequency difference threshold (default: 0.1)
    * @param config.volumeHistory - Volume history buffer configuration
-   * @param config.volumeHistory.historyLength - Number of frames to average (default: 5)
+   * @param config.volumeHistory.historyLength - Number of frames to average (default: 10)
    * @param config.volumeHistory.useTypedArray - Use TypedArray for better performance (default: true)
    * @param config.silenceDetection - Silence detection and timeout configuration
    * @param config.silenceDetection.enabled - Enable silence detection (default: false)
@@ -295,9 +296,9 @@ export class PitchDetector {
     this.audioManager = audioManager;
     this.config = {
       fftSize: 4096,
-      smoothing: 0.1,
+      smoothing: 0.9, // 揺れ防止のため強化 (0.1 → 0.9)
       clarityThreshold: 0.4,    // 0.8から0.4に現実的な値に変更
-      minVolumeAbsolute: 0.008, // v1.1.8: 雑音対策強化のため閾値上昇 (0.003→0.008)
+      minVolumeAbsolute: 0.010, // v1.1.8: 音程変化対応極限調整 (0.011→0.010)
       noiseGate: 0.02,          // v1.1.8: デフォルトnoiseGate値
       deviceOptimization: true, // v1.1.8: デバイス最適化デフォルト有効
       ...config
@@ -314,7 +315,7 @@ export class PitchDetector {
     
     // Initialize volume history configuration (prefer TypedArray for better performance)
     this.volumeHistoryConfig = {
-      historyLength: 5,
+      historyLength: 10, // 音程変化対応のため大幅短縮 (12 -> 10) - 高応答性重視
       useTypedArray: true, // Enable by default for better performance
       ...config.volumeHistory
     };
@@ -594,6 +595,10 @@ export class PitchDetector {
    * redundant calculations and efficient buffer operations
    */
   private detectPitch(): void {
+    // デバッグモード判定（本番環境ではログを無効化）
+    const IS_DEBUG_MODE = typeof process !== 'undefined' && process.env?.NODE_ENV === 'development' || 
+                          typeof window !== 'undefined';
+    
     // Batch timestamp retrieval for performance
     const frameStartTime = performance.now();
     
@@ -642,14 +647,24 @@ export class PitchDetector {
     // Platform-specific volume calculation
     const platformSpecs = this.deviceSpecs;
     const adjustedRms = rms * platformSpecs.gainCompensation;
-    const volumePercent = Math.max(0, Math.min(100, 
-      (adjustedRms * 100) / platformSpecs.divisor * 25 - platformSpecs.noiseThreshold
-    ));
     
-    // Development-only volume calculation debug logging
-    if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
-      console.log(`[Debug] 音量計算: rms=${rms.toFixed(6)}, adjustedRms=${adjustedRms.toFixed(6)}, volumePercent=${volumePercent.toFixed(2)}%`);
-      console.log(`[Debug] プラットフォーム設定: gain=${platformSpecs.gainCompensation}, divisor=${platformSpecs.divisor}, noise=${platformSpecs.noiseThreshold}`);
+    // 音量計算用定数定義
+    const SCALING_FACTOR = 400; // RMS値からパーセント表示への変換係数
+    const NOISE_GATE_SCALING_FACTOR = 1500; // ノイズゲート閾値計算用係数 
+    // ハードクリッピング（シンプルなリニア変換）
+    const rawVolumeValue = adjustedRms * SCALING_FACTOR;
+    const volumePercent = Math.min(100, Math.max(0, rawVolumeValue));
+    
+    // ブラウザ環境でのデバッグログ（デバッグモード時のみ）
+    if (IS_DEBUG_MODE) {
+      console.log(`[Debug] 音量計算詳細:`);
+      console.log(`  rms=${rms.toFixed(6)}`);
+      console.log(`  adjustedRms=${adjustedRms.toFixed(6)}`);
+      console.log(`  SCALING_FACTOR=${SCALING_FACTOR}`);
+      console.log(`  計算前: adjustedRms * SCALING_FACTOR = ${rawVolumeValue.toFixed(6)}`);
+      console.log(`  計算後volumePercent=${volumePercent.toFixed(2)}%`);
+      console.log(`  クリップされた？: ${rawVolumeValue > 100 ? 'YES' : 'NO'}`);
+      console.log(`  プラットフォーム: gain=${platformSpecs.gainCompensation}, divisor=${platformSpecs.divisor}`);
     }
     
     // Raw volume calculation (pre-filter)
@@ -658,20 +673,54 @@ export class PitchDetector {
       rawSum += Math.abs(rawBuffer[i]);
     }
     const rawRms = Math.sqrt(rawSum / rawBuffer.length);
-    const rawVolumePercent = Math.max(0, Math.min(100, 
-      (rawRms * platformSpecs.gainCompensation * 100) / platformSpecs.divisor * 25 - platformSpecs.noiseThreshold
-    ));
+    const rawAdjustedRms = rawRms * platformSpecs.gainCompensation;
+    const rawVolumePercent = Math.min(100, Math.max(0, rawAdjustedRms * SCALING_FACTOR));
     
     // Volume stabilization with configurable history length
     this.addToVolumeHistory(volumePercent);
     this.stableVolume = this.calculateVolumeAverage();
-    this.currentVolume = this.stableVolume;
-    this.rawVolume = rawVolumePercent;
     
-    // Pitch detection (using PitchDetector) with error handling
-    const sampleRate = 44100; // Fixed sample rate for now
-    let pitch = 0;
-    let clarity = 0;
+    // 平滑化結果のデバッグログ
+    if (IS_DEBUG_MODE) {
+      console.log(`[Debug] 平滑化結果: volumePercent=${volumePercent.toFixed(2)}%, stableVolume=${this.stableVolume.toFixed(2)}%`);
+    }
+    
+    // ★★★ ノイズゲート処理の追加 ★★★
+    const NOISE_GATE_THRESHOLD = this.config.minVolumeAbsolute * NOISE_GATE_SCALING_FACTOR; // 0.015 * 1500 = 22.5%
+    const isSignalBelowNoiseGate = volumePercent < NOISE_GATE_THRESHOLD; // 平滑化前の値で判定
+    
+    // ノイズゲート判定のデバッグログ
+    if (IS_DEBUG_MODE) {
+      console.log(`[Debug] ノイズゲート判定:`);
+      console.log(`  閾値: ${NOISE_GATE_THRESHOLD.toFixed(2)}%`);
+      console.log(`  現在値: ${volumePercent.toFixed(2)}%`);
+      console.log(`  判定: ${isSignalBelowNoiseGate ? 'ノイズとしてブロック' : '有効信号として通過'}`);
+    }
+    
+    if (isSignalBelowNoiseGate) {
+      // 閾値以下の場合は、検出結果をクリアするが、stableVolumeは保持（スムージング維持）
+      this.currentVolume = 0;
+      this.rawVolume = 0;
+      // this.stableVolume = 0; <- 削除：スムージング履歴を保持
+      this.currentFrequency = 0;
+      this.detectedNote = '--';
+      this.detectedOctave = null;
+      this.pitchClarity = 0;
+      this.resetHarmonicHistory();
+      
+      if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
+        console.log(`[Debug] ノイズゲート作動: 入力音量=${volumePercent.toFixed(3)} < 閾値=${NOISE_GATE_THRESHOLD}, stableVolume=${this.stableVolume.toFixed(3)}（保持）`);
+      }
+    } else {
+      // 閾値以上の信号がある場合のみ、ピッチ検出を実行
+      this.currentVolume = this.stableVolume;
+      this.rawVolume = rawVolumePercent;
+      
+      // Pitch detection (using PitchDetector) with error handling
+      // AudioContextから実際のサンプルレートを動的に取得する
+      const sampleRate = this.analyser.context?.sampleRate || 44100; // フォールバック値
+      let pitch = 0;
+      let clarity = 0;
     
     try {
       const pitchResult = this.pitchDetector.findPitch(buffer, sampleRate);
@@ -717,10 +766,10 @@ export class PitchDetector {
     
     // Development-only decision criteria debug logging
     if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
-      console.log(`[Debug] 判定条件: pitch=${!!pitch}, clarity=${clarity?.toFixed(3)}>${this.config.clarityThreshold}, volume=${this.currentVolume?.toFixed(1)}>0.4, range=${isValidVocalRange}`);
+      console.log(`[Debug] 判定条件: pitch=${!!pitch}, clarity=${clarity?.toFixed(3)}>${this.config.clarityThreshold}, volume=${this.currentVolume?.toFixed(1)}>${this.config.minVolumeAbsolute}, range=${isValidVocalRange}`);
     }
     
-    if (pitch && clarity > this.config.clarityThreshold && this.currentVolume > 0.4 && isValidVocalRange) {
+    if (pitch && clarity > this.config.clarityThreshold && this.currentVolume > this.config.minVolumeAbsolute && isValidVocalRange) {
       let finalFreq = pitch;
       
       // Harmonic correction control
@@ -748,10 +797,11 @@ export class PitchDetector {
       this.detectedNote = '--';
       this.detectedOctave = null;
       this.pitchClarity = 0;
-    }
+      }
+    } // else節の終了
     
-    // Set VolumeBar to 0 when no pitch is detected (counter extreme low frequency noise)
-    const displayVolume = this.currentFrequency > 0 ? this.rawVolume : 0;
+    // 最後に、表示音量を決定するロジック - ノイズゲート適用
+    const displayVolume = isSignalBelowNoiseGate ? 0 : this.stableVolume; // ノイズゲート適用後の表示値
     
     // Process silence detection
     this.processSilenceDetection(this.currentVolume);
@@ -805,54 +855,51 @@ export class PitchDetector {
       this.previousFrequency = frequency;
       return frequency;
     }
-    
-    const now = Date.now();
-    
-    // Clean old history based on configured window
+
+    const now = performance.now();
+
+    // 履歴から古いデータを削除
     this.harmonicHistory = this.harmonicHistory.filter(
       h => now - h.timestamp < this.harmonicConfig.historyWindow
     );
-    
-    // Calculate confidence based on volume and stability
-    const volumeConfidence = Math.min(volume * 1.5, 1.0);
-    const stabilityConfidence = this.previousFrequency > 0 ? 
-      Math.max(0, 1 - Math.abs(frequency - this.previousFrequency) / this.previousFrequency) : 0.5;
-    const confidence = (volumeConfidence + stabilityConfidence) / 2;
-    
-    // Add to history
-    this.harmonicHistory.push({ frequency, confidence, timestamp: now });
-    
-    // Check for harmonic patterns
-    if (this.harmonicHistory.length >= 3) {
-      const recentHistory = this.harmonicHistory.slice(-5);
-      const avgFrequency = recentHistory.reduce((sum, h) => sum + h.frequency, 0) / recentHistory.length;
-      const avgConfidence = recentHistory.reduce((sum, h) => sum + h.confidence, 0) / recentHistory.length;
-      
-      // Check for 2x harmonic (octave up error)
-      const halfFrequency = frequency / 2;
-      if (Math.abs(halfFrequency - avgFrequency) / avgFrequency < this.harmonicConfig.frequencyThreshold && 
-          avgConfidence > this.harmonicConfig.confidenceThreshold) {
-        if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
-          console.log(`🔧 [PitchDetector] Octave correction: ${frequency.toFixed(1)}Hz → ${halfFrequency.toFixed(1)}Hz`);
-        }
-        this.previousFrequency = halfFrequency;
-        return halfFrequency;
+
+    // ★【重要】履歴には補正前の「生の周波数」のみを追加する
+    this.harmonicHistory.push({ frequency: frequency, confidence: volume, timestamp: now });
+
+    if (this.harmonicHistory.length < 8) { // 十分な履歴が溜まるまで補正しない（5→8に厳格化）
+      this.previousFrequency = frequency;
+      return frequency;
+    }
+
+    // 履歴内の平均周波数を計算
+    const avgFrequency = this.harmonicHistory.reduce((sum, h) => sum + h.frequency, 0) / this.harmonicHistory.length;
+
+    const octaveUp = frequency * 2;
+    const octaveDown = frequency / 2;
+    const diffCurrent = Math.abs(frequency - avgFrequency);
+    const diffUp = Math.abs(octaveUp - avgFrequency);
+    const diffDown = Math.abs(octaveDown - avgFrequency);
+
+    let correctedFrequency = frequency;
+
+    // 現在の周波数よりも、オクターブ下のほうが履歴の平均に近い場合、オクターブ下と判断
+    if (diffDown < diffCurrent && diffDown < diffUp) {
+      correctedFrequency = octaveDown;
+      if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
+        console.log(`🔧 [PitchDetector] Octave correction DOWN: ${frequency.toFixed(1)}Hz → ${correctedFrequency.toFixed(1)}Hz (avg: ${avgFrequency.toFixed(1)}Hz)`);
       }
-      
-      // Check for 1/2x harmonic (octave down error)
-      const doubleFrequency = frequency * 2;
-      if (Math.abs(doubleFrequency - avgFrequency) / avgFrequency < this.harmonicConfig.frequencyThreshold && 
-          avgConfidence > this.harmonicConfig.confidenceThreshold) {
-        if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
-          console.log(`🔧 [PitchDetector] Octave up correction: ${frequency.toFixed(1)}Hz → ${doubleFrequency.toFixed(1)}Hz`);
-        }
-        this.previousFrequency = doubleFrequency;
-        return doubleFrequency;
+    } 
+    // 現在の周波数よりも、オクターブ上のほうが履歴の平均に近い場合、オクターブ上と判断
+    else if (diffUp < diffCurrent && diffUp < diffDown) {
+      correctedFrequency = octaveUp;
+      if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
+        console.log(`🔧 [PitchDetector] Octave correction UP: ${frequency.toFixed(1)}Hz → ${correctedFrequency.toFixed(1)}Hz (avg: ${avgFrequency.toFixed(1)}Hz)`);
       }
     }
-    
-    this.previousFrequency = frequency;
-    return frequency;
+
+    // 補正後の周波数をpreviousFrequencyとして保持
+    this.previousFrequency = correctedFrequency;
+    return correctedFrequency;
   }
 
   /**
