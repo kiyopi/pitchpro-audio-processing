@@ -290,7 +290,7 @@
 <body>
     <div class="container">
         <h1>🎵 AudioDetectionComponent</h1>
-        <p class="subtitle">単体テスト・デモ - PitchPro v1.1.8統合</p>
+        <p class="subtitle">単体テスト・デモ - PitchPro v1.1.9統合</p>
         
         <div style="background: #e8f4fd; padding: 15px; border-radius: 10px; margin: 20px 0; font-size: 14px;">
             <h4 style="margin: 0 0 10px 0; color: #0056b3;">🎯 シンプル4ボタン操作</h4>
@@ -313,12 +313,12 @@
 
         <!-- 設定パネル -->
         <div class="config-panel">
-            <h4>⚙️ 設定 (v1.1.8最適化値)</h4>
+            <h4>⚙️ 設定 (v1.1.9最適化値)</h4>
             <div class="config-row">
                 <label>Clarity Threshold:</label>
                 <input type="range" id="clarity-threshold" min="0.1" max="0.9" step="0.1" value="0.4">
                 <span id="clarity-value">0.4</span>
-                <small style="margin-left: 10px; opacity: 0.7;">(v1.1.8推奨: 0.4)</small>
+                <small style="margin-left: 10px; opacity: 0.7;">(v1.1.9推奨: 0.4)</small>
             </div>
             <div class="config-row">
                 <label>Min Volume:</label>
@@ -434,7 +434,7 @@
         </div>
     </div>
 
-    <!-- PitchPro v1.1.8 UMDモジュール読み込み -->
+    <!-- PitchPro v1.1.9 UMDモジュール読み込み -->
     <script src="dist/pitchpro.umd.js"></script>
     <script>
 
@@ -581,12 +581,12 @@
                     deviceOptimization: false, // デバイス最適化を明示的に無効化
                     volumeMultiplier: 1.0,     // 音量倍率を1.0に固定
                     sensitivityMultiplier: 1.0, // 感度倍率も1.0に固定
-                    autoUpdateUI: true        // v1.1.8 UI自動更新
+                    autoUpdateUI: true        // v1.1.9 UI自動更新
                 };
                 
                 addLog(`🔧 設定値: deviceOptimization=${config.deviceOptimization}, volumeMultiplier=${config.volumeMultiplier}, minVolumeAbsolute=${config.minVolumeAbsolute}`, 'info');
 
-                // PitchPro v1.1.8 統合インターフェース使用
+                // PitchPro v1.1.9 統合インターフェース使用
                 audioDetector = new PitchPro.AudioDetectionComponent(config);
                 
                 // デバッグ: 実際に適用された設定を確認
@@ -647,7 +647,7 @@
                             }
                         }
                     },
-                    // v1.1.8ではonVolumeUpdateは廃止、onPitchUpdateで統合処理
+                    // v1.1.9ではonVolumeUpdateは廃止、onPitchUpdateで統合処理
                     onStateChange: (state) => {
                         addLog(`状態変更: ${state}`, 'info');
                         updateStatus();
@@ -687,7 +687,7 @@
         elements.resetBtn.addEventListener('click', () => {
             try {
                 if (audioDetector) {
-                    // v1.1.8+ MicrophoneController統合リセット機能テスト
+                    // v1.1.9+ MicrophoneController統合リセット機能テスト
                     addLog('🔄 MicrophoneController.reset() 統合リセット実行中...', 'info');
                     
                     // 新しいmicrophoneControllerゲッターでMicrophoneControllerにアクセス
@@ -799,8 +799,8 @@
         });
 
         // 初期化時のログ
-        addLog('AudioDetectionComponent v1.1.8 テストページ準備完了', 'success');
-        addLog('🆕 v1.1.8新機能: クロスモードUI干渉防止, 自動noteSelector管理', 'info');
+        addLog('AudioDetectionComponent v1.1.9 テストページ準備完了', 'success');
+        addLog('🆕 v1.1.9新機能: クロスモードUI干渉防止, 自動noteSelector管理', 'info');
         addLog('🎯 NEW: MicrophoneController統合管理機能テスト対応', 'info');
         addLog('🔄 NEW: シンプル4ボタン操作 - initialize()→start()→reset()→destroy()', 'info');
         addLog('🔧 雑音対策: デフォルト設定で開始、雑音が多い場合はプリセットボタンを使用', 'info');
