@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.8] - 2025-09-11
+
+### 🚨 Critical Bug Fix
+- **クロスモードUI干渉の完全解決**: 音程表示が他モードでも更新され続ける問題を根本的に修正
+  - `updateUI()`メソッドに要素-セレクター検証ロジックを実装
+  - キャッシュされたUI要素が現在のセレクターと一致する場合のみ更新
+  - 音程表示（`#practice-note`）が切り替え後に不正に動作し続ける問題を解消
+
+### ✨ 機能強化
+- **noteSelectorの自動管理**: 開発者の手動操作を不要にするライブラリレベルでの自動制御
+  - `updateSelectors()`でnoteSelectorが未指定の場合に自動的に空文字をセット
+  - クロスモード干渉防止のための完全自動化
+  - 従来の手動空文字設定が不要になり開発者体験が向上
+
+### 🔧 コード品質向上
+- **async/awaitパターン導入**: `updateSelectors()`メソッドの可読性と保守性向上
+- **マジックナンバー定数化**: タイミング制御の定数化で保守性向上
+  - `NOTE_RESET_DELAY_MS = 300`
+  - `SELECTOR_UPDATE_DELAY_MS = 50` 
+  - `UI_RESTART_DELAY_MS = 200`
+- **包括的UI保護**: 全UI要素（音量、周波数、音程）にクロスモード干渉防止を適用
+
+### 🧪 テスト・検証
+- **8時間の包括的デバッグセッション**: 根本原因の特定と完全解決
+- **複数環境でのテスト**: `frequency-reset-test.html`と`updateSelectors-demo.html`での検証
+- **リアルタイム動作確認**: ブラウザコンソールでの詳細な動作ログ追跡
+
+### 📝 Technical Details
+- **AudioDetectionComponent.ts**:
+  - 461-533行目: 要素検証ロジック付きUI更新メソッド
+  - 529-582行目: async/await化されたupdateSelectorsメソッド
+  - 100-102行目: タイミング定数の追加
+  - 152-154行目: delay()ヘルパーメソッドの追加
+
 ## [1.1.7] - 2025-09-10
 
 ### 🐛 Fixed

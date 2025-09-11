@@ -4,7 +4,7 @@
 PitchPro Audio Processingは、リアルタイム音響処理とピッチ検出に特化したTypeScriptライブラリです。McLeod Pitch Methodを使用し、iPhone/Android/PC向けに最適化されています。
 
 ## 現在のバージョン
-**v1.1.6** - 2025年9月10日リリース（モード切り替えリセット機能）
+**v1.1.8** - 2025年9月11日リリース（クロスモード干渉防止と品質改善）
 
 ## 主要コンポーネント
 
@@ -18,9 +18,16 @@ PitchPro Audio Processingは、リアルタイム音響処理とピッチ検出�
 - `PerformanceMonitor`: CircularBufferによるメトリクス監視
 - 構造化エラーハンドリングシステム
 
-## 改善完了項目（v1.1.6）
+## 改善完了項目（v1.1.8）
 
-### 🔄 最新機能追加（v1.1.6）
+### 🛡️ 重要機能追加（v1.1.8）
+- **クロスモード干渉完全防止**：UIキャッシュ要素と現在セレクターの一致検証システム
+- **自動noteSelector管理**：未指定時の自動クリアによる開発者負担軽減
+- **包括的UI保護**：volume bar, volume text, frequency, note全要素での干渉防止
+- **async/await改善**：updateSelectorsメソッドの可読性向上とsetTimeoutネスト解消
+- **タイミング定数化**：NOTE_RESET_DELAY_MS等のマジックナンバー解消
+
+### 🔄 継続機能（v1.1.6）
 - **モード切り替え時の周波数表示リセット機能**：非アクティブモードが0.0 Hzに正しくリセットされる機能を実装
 - **isUpdatingSelectorsフラグ**：精密なUI更新制御による切り替え中の衝突防止
 - **タイミング制御システム**：50ms, 200ms段階でのUI更新調整
@@ -63,6 +70,39 @@ PitchPro Audio Processingは、リアルタイム音響処理とピッチ検出�
 - デバイス固有テスト（iPhone/Android/Desktop）
 - パフォーマンステスト（フレームドロップ、省電力）
 - 実世界シナリオテスト
+
+## 解決済み課題（v1.1.8）
+
+### ✅ 完全解決された重要課題
+
+#### 1. ✅ クロスモード干渉問題（解決済み）
+**解決した問題**: モード切り替え後にUI要素が意図しない更新を続ける
+**実装した解決策**:
+```typescript
+// 要素とセレクターの一致検証
+if (this.uiElements.note && this.config.noteSelector) {
+  const currentElement = document.querySelector(this.config.noteSelector);
+  if (currentElement && currentElement === this.uiElements.note) {
+    // 一致する場合のみ更新
+  }
+}
+```
+
+#### 2. ✅ noteSelector手動管理の問題（解決済み）
+**解決した問題**: 開発者がnoteSelector: ''を手動設定する必要性
+**実装した解決策**:
+```typescript
+// 自動クリア機能
+if (selectors.noteSelector !== undefined) {
+  this.config.noteSelector = selectors.noteSelector;
+} else {
+  this.config.noteSelector = ''; // 自動クリア
+}
+```
+
+#### 3. ✅ コード品質問題（解決済み）
+**解決した問題**: updateSelectorsの複雑なsetTimeoutネストと可読性
+**実装した解決策**: async/await化とタイミング定数化
 
 ## 次期課題（v1.2.0対応予定）
 

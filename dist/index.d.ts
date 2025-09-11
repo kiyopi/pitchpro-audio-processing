@@ -2,7 +2,7 @@
  * PitchPro Audio Processing Library
  * High-precision pitch detection and audio processing for web applications
  *
- * @version 1.1.3
+ * @version 1.1.8
  * @author PitchPro Team
  * @license MIT
  */
