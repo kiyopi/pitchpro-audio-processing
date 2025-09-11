@@ -36,6 +36,7 @@ import type {
 import { AudioManager } from './AudioManager';
 import { MicrophoneLifecycleManager } from './MicrophoneLifecycleManager';
 import { ErrorNotificationSystem } from './ErrorNotificationSystem';
+import { PitchDetector } from './PitchDetector';
 import { 
   MicrophoneAccessError,
   AudioContextError,
@@ -114,6 +115,12 @@ export class MicrophoneController {
   
   /** @private Device-specific optimization specifications */
   private deviceSpecs: DeviceSpecs | null = null;
+  
+  /** @private PitchDetector instance management for unified control */
+  private pitchDetector: PitchDetector | null = null;
+  
+  /** @private AudioDetectionComponent instance management for UI control */
+  private audioDetectionComponent: any | null = null;
 
   /**
    * Creates a new MicrophoneController with integrated management systems
@@ -469,6 +476,294 @@ export class MicrophoneController {
    */
   getSensitivity(): number {
     return this.audioManager.getSensitivity();
+  }
+
+  /**
+   * Mutes the microphone by disabling audio tracks
+   * 
+   * @description Provides instant mute functionality by disabling MediaStream 
+   * audio tracks without requiring resource reinitialization. Maintains stream 
+   * connection for quick unmute operations. Ideal for UI switching and temporary 
+   * audio interruptions.
+   * 
+   * @example
+   * ```typescript
+   * micController.mute();
+   * console.log('Microphone muted');
+   * ```
+   */
+  mute(): void {
+    this.logger.info('Muting microphone via controller');
+    this.audioManager.mute();
+    
+    // Dispatch mute event
+    this.dispatchCustomEvent('pitchpro:microphoneMuted', {
+      timestamp: Date.now(),
+      controllerState: this.currentState
+    });
+  }
+
+  /**
+   * Unmutes the microphone by enabling audio tracks
+   * 
+   * @description Re-enables audio input immediately without initialization delays.
+   * Complements the mute() method for seamless audio control during UI operations.
+   * 
+   * @example
+   * ```typescript
+   * micController.unmute();
+   * console.log('Microphone unmuted');
+   * ```
+   */
+  unmute(): void {
+    this.logger.info('Unmuting microphone via controller');
+    this.audioManager.unmute();
+    
+    // Dispatch unmute event
+    this.dispatchCustomEvent('pitchpro:microphoneUnmuted', {
+      timestamp: Date.now(),
+      controllerState: this.currentState
+    });
+  }
+
+  /**
+   * Toggles microphone mute state
+   * 
+   * @description Convenience method that automatically mutes or unmutes based on 
+   * current state. Useful for implementing mute buttons and keyboard shortcuts.
+   * 
+   * @returns The new mute state (true if now muted, false if now unmuted)
+   * 
+   * @example
+   * ```typescript
+   * const isMuted = micController.toggleMute();
+   * console.log(`Microphone is now ${isMuted ? 'muted' : 'unmuted'}`);
+   * ```
+   */
+  toggleMute(): boolean {
+    if (this.audioManager.getIsMuted()) {
+      this.unmute();
+      return false;
+    } else {
+      this.mute();
+      return true;
+    }
+  }
+
+  /**
+   * Checks if microphone is currently muted
+   * 
+   * @returns True if microphone is muted, false otherwise
+   * 
+   * @example
+   * ```typescript
+   * if (micController.isMuted()) {
+   *   console.log('Microphone is currently muted');
+   * }
+   * ```
+   */
+  isMuted(): boolean {
+    return this.audioManager.getIsMuted();
+  }
+
+  /**
+   * Registers an AudioDetectionComponent instance with this controller for UI management
+   * 
+   * @description Enables the MicrophoneController to control AudioDetectionComponent UI
+   * reset operations for complete system reset including comprehensive UI cleanup.
+   * 
+   * @param component - The AudioDetectionComponent instance to register
+   * 
+   * @example
+   * ```typescript
+   * const audioDetector = new AudioDetectionComponent();
+   * const micController = audioDetector.microphoneController;
+   * 
+   * // Register component for UI control
+   * micController.registerAudioDetectionComponent(audioDetector);
+   * 
+   * // Now reset() includes comprehensive UI reset
+   * micController.reset(); // Includes AudioDetectionComponent UI reset
+   * ```
+   */
+  registerAudioDetectionComponent(component: any): void {
+    this.audioDetectionComponent = component;
+    this.logger.info('AudioDetectionComponent registered for UI control');
+    console.log('🎛️ [MicrophoneController] AudioDetectionComponent registered for UI management');
+  }
+
+  /**
+   * Registers a PitchDetector instance with this controller for unified management
+   * 
+   * @description Enables the MicrophoneController to act as the central coordinator
+   * for the entire PitchPro library by managing PitchDetector instances. This allows
+   * unified control over detection, display, and audio management operations.
+   * 
+   * @param detector - The PitchDetector instance to register
+   * 
+   * @example
+   * ```typescript
+   * const micController = new MicrophoneController();
+   * const pitchDetector = new PitchDetector(micController.audioManager);
+   * 
+   * // Register detector for unified control
+   * micController.registerDetector(pitchDetector);
+   * 
+   * // Now controller can manage both audio and detection
+   * micController.reset(); // Stops detection, resets display, mutes mic
+   * ```
+   */
+  registerDetector(detector: PitchDetector): void {
+    this.pitchDetector = detector;
+    this.logger.info('PitchDetector instance has been registered to the controller.');
+    console.log('🎯 [MicrophoneController] PitchDetector registered for unified management');
+  }
+
+  /**
+   * Starts microphone and pitch detection systems
+   * 
+   * @description Unmutes the microphone and starts pitch detection if a PitchDetector
+   * is registered. This method complements the reset() method for complete system
+   * lifecycle management. Provides one-click start functionality for the entire
+   * PitchPro library ecosystem.
+   * 
+   * @returns True if both unmute and detection start succeeded, false otherwise
+   * 
+   * @example
+   * ```typescript
+   * // Start system - unmutes mic and begins detection
+   * const success = micController.start();
+   * if (success) {
+   *   console.log('System started successfully');
+   * }
+   * 
+   * // Typical usage pattern
+   * micController.reset(); // Stop everything
+   * micController.start(); // Resume everything
+   * ```
+   */
+  start(): boolean {
+    this.logger.info('Starting microphone and pitch detection systems...');
+    console.log('▶️ [MicrophoneController] Starting comprehensive system startup');
+
+    // 1. Unmute the microphone
+    try {
+      this.unmute();
+      console.log('✅ [MicrophoneController] Microphone unmuted');
+    } catch (error) {
+      this.logger.error('Error during microphone unmute', error as Error);
+      console.warn('⚠️ [MicrophoneController] Microphone unmute failed:', (error as Error).message);
+      return false;
+    }
+
+    // 2. Start PitchDetector if registered
+    if (this.pitchDetector) {
+      try {
+        const started = this.pitchDetector.startDetection();
+        if (started) {
+          this.logger.info('PitchDetector detection started successfully');
+          console.log('✅ [MicrophoneController] Pitch detection started');
+          console.log('🎉 [MicrophoneController] System startup completed successfully');
+          return true;
+        } else {
+          this.logger.warn('PitchDetector failed to start detection');
+          console.warn('⚠️ [MicrophoneController] Pitch detection failed to start');
+          return false;
+        }
+      } catch (error) {
+        this.logger.error('Error during PitchDetector start', error as Error);
+        console.warn('⚠️ [MicrophoneController] PitchDetector start encountered error:', (error as Error).message);
+        return false;
+      }
+    } else {
+      this.logger.warn('No PitchDetector registered, cannot start detection');
+      console.log('⚠️ [MicrophoneController] No PitchDetector registered - skipping detection start');
+      console.log('ℹ️ [MicrophoneController] Only microphone unmuted, detection not available');
+      return false; // Cannot start detection without registered detector
+    }
+  }
+
+  /**
+   * Performs comprehensive system reset across all managed components
+   * 
+   * @description Executes a complete system reset by stopping pitch detection,
+   * clearing all UI display elements, muting the microphone, and resetting
+   * internal states. Provides one-click reset functionality for the entire
+   * PitchPro library ecosystem when used as the central coordinator.
+   * 
+   * @example
+   * ```typescript
+   * // Complete system reset - stops everything and clears UI
+   * micController.reset();
+   * console.log('All systems reset and ready for next operation');
+   * 
+   * // Ideal for UI reset buttons
+   * function handleResetButtonClick() {
+   *   micController.reset(); // One call handles everything
+   * }
+   * ```
+   */
+  reset(): void {
+    this.logger.info('Performing full system reset...');
+    console.log('🔄 [MicrophoneController] Starting comprehensive system reset');
+
+    // 1. Stop and reset PitchDetector if registered
+    if (this.pitchDetector) {
+      try {
+        // Stop detection processing
+        this.pitchDetector.stopDetection();
+        console.log('✅ [MicrophoneController] PitchDetector stopped');
+        
+        // Reset display state to clear all UI elements
+        this.pitchDetector.resetDisplayState();
+        console.log('✅ [MicrophoneController] Display state reset');
+      } catch (error) {
+        this.logger.error('Error during PitchDetector reset', error as Error);
+        console.warn('⚠️ [MicrophoneController] PitchDetector reset encountered error:', (error as Error).message);
+      }
+    } else {
+      this.logger.warn('No PitchDetector registered, skipping detector reset.');
+      console.log('⚠️ [MicrophoneController] No PitchDetector registered - skipping detection reset');
+    }
+
+    // 1.5. Reset AudioDetectionComponent UI if registered
+    if (this.audioDetectionComponent) {
+      try {
+        if (typeof this.audioDetectionComponent.resetDisplayElements === 'function') {
+          this.audioDetectionComponent.resetDisplayElements();
+          console.log('✅ [MicrophoneController] AudioDetectionComponent UI reset');
+        } else {
+          console.warn('⚠️ [MicrophoneController] AudioDetectionComponent does not have resetDisplayElements method');
+        }
+      } catch (error) {
+        this.logger.error('Error during AudioDetectionComponent UI reset', error as Error);
+        console.warn('⚠️ [MicrophoneController] AudioDetectionComponent UI reset encountered error:', (error as Error).message);
+      }
+    } else {
+      console.log('ℹ️ [MicrophoneController] No AudioDetectionComponent registered - skipping comprehensive UI reset');
+    }
+
+    // 2. Mute microphone to ensure audio input is disabled
+    try {
+      this.mute();
+      console.log('✅ [MicrophoneController] Microphone muted');
+    } catch (error) {
+      this.logger.error('Error during microphone mute', error as Error);
+      console.warn('⚠️ [MicrophoneController] Microphone mute encountered error:', (error as Error).message);
+    }
+
+    // 3. Reset recovery attempts for clean state (this also clears error states)
+    try {
+      this.resetRecoveryAttempts();
+      console.log('✅ [MicrophoneController] Recovery attempts reset');
+    } catch (error) {
+      this.logger.error('Error during recovery reset', error as Error);
+      console.warn('⚠️ [MicrophoneController] Recovery reset encountered error:', (error as Error).message);
+    }
+
+    this.logger.info('System reset complete.');
+    console.log('🎉 [MicrophoneController] Comprehensive system reset completed');
+    console.log('ℹ️ [MicrophoneController] Note: Muted state is normal and will not trigger health check errors');
   }
 
   /**

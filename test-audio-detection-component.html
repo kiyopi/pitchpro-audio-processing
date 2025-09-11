@@ -291,6 +291,19 @@
     <div class="container">
         <h1>🎵 AudioDetectionComponent</h1>
         <p class="subtitle">単体テスト・デモ - PitchPro v1.1.8統合</p>
+        
+        <div style="background: #e8f4fd; padding: 15px; border-radius: 10px; margin: 20px 0; font-size: 14px;">
+            <h4 style="margin: 0 0 10px 0; color: #0056b3;">🎯 シンプル4ボタン操作</h4>
+            <p style="margin: 5px 0; color: #0056b3;">
+                <strong>🎤 initialize()</strong>: システム初期化・マイク許可<br>
+                <strong>🔄 reset()</strong>: 検出停止 + UI初期化 + ミュート<br>
+                <strong>🚀 start()</strong>: ミュート解除 + 検出開始（完全復帰）<br>
+                <strong>🗑️ destroy()</strong>: 全リソース解放・終了
+            </p>
+            <div style="margin-top: 10px; padding: 10px; background: rgba(40, 167, 69, 0.1); border-radius: 5px;">
+                <strong>推奨フロー</strong>: initialize() → start() → reset() → start() → destroy()
+            </div>
+        </div>
 
         <!-- デバイス情報 -->
         <div class="device-info">
@@ -336,12 +349,10 @@
 
         <!-- コントロールパネル -->
         <div class="control-panel">
-            <button id="init-btn" class="btn-primary">🎤 初期化</button>
-            <button id="start-btn" class="btn-secondary" disabled>▶️ 検出開始</button>
-            <button id="stop-btn" class="btn-secondary" disabled>⏸️ 検出停止</button>
-            <button id="test-btn" class="btn-secondary" disabled>🧪 マイクテスト</button>
-            <button id="reset-btn" class="btn-warning" disabled>🔄 リセット</button>
-            <button id="destroy-btn" class="btn-danger" disabled>🗑️ 破棄</button>
+            <button id="init-btn" class="btn-primary">🎤 initialize()</button>
+            <button id="reset-btn" class="btn-warning" disabled>🔄 reset()</button>
+            <button id="start-system-btn" class="btn-success" disabled>🚀 start() - システム復帰</button>
+            <button id="destroy-btn" class="btn-danger" disabled>🗑️ destroy()</button>
         </div>
 
         <!-- ステータスパネル -->
@@ -438,10 +449,8 @@
         // DOM要素
         const elements = {
             initBtn: document.getElementById('init-btn'),
-            startBtn: document.getElementById('start-btn'),
-            stopBtn: document.getElementById('stop-btn'),
-            testBtn: document.getElementById('test-btn'),
             resetBtn: document.getElementById('reset-btn'),
+            startSystemBtn: document.getElementById('start-system-btn'),
             destroyBtn: document.getElementById('destroy-btn'),
             
             clarityThreshold: document.getElementById('clarity-threshold'),
@@ -558,7 +567,7 @@
         // ボタンイベント
         elements.initBtn.addEventListener('click', async () => {
             try {
-                addLog('AudioDetectionComponent初期化中...', 'info');
+                addLog('🎤 AudioDetectionComponent.initialize() 実行中...', 'info');
                 
                 const config = {
                     // volumeBarSelector: '#volume-bar',     // 音量バー自動更新を無効化
@@ -645,10 +654,8 @@
                         
                         // ボタン状態更新
                         elements.initBtn.disabled = state !== 'uninitialized';
-                        elements.startBtn.disabled = state !== 'ready' && state !== 'stopped';
-                        elements.stopBtn.disabled = state !== 'detecting';
-                        elements.testBtn.disabled = state === 'uninitialized';
                         elements.resetBtn.disabled = state === 'uninitialized';
+                        elements.startSystemBtn.disabled = state === 'uninitialized';
                         elements.destroyBtn.disabled = state === 'uninitialized';
                     },
                     onError: (error) => {
@@ -664,87 +671,71 @@
                 });
 
                 await audioDetector.initialize();
-                addLog('初期化完了!', 'success');
+                addLog('✅ initialize() 完了!', 'success');
                 
                 elements.statusPermission.textContent = '✅';
                 updateStatus();
 
             } catch (error) {
-                addLog(`初期化エラー: ${error.message}`, 'error');
+                addLog(`❌ initialize() エラー: ${error.message}`, 'error');
                 elements.statusPermission.textContent = '❌';
                 errorCount++;
                 updateMetrics();
             }
         });
 
-        elements.startBtn.addEventListener('click', () => {
-            try {
-                if (audioDetector.startDetection()) {
-                    addLog('音声検出開始', 'success');
-                } else {
-                    addLog('音声検出開始に失敗', 'error');
-                }
-            } catch (error) {
-                addLog(`開始エラー: ${error.message}`, 'error');
-            }
-        });
-
-        elements.stopBtn.addEventListener('click', () => {
-            try {
-                audioDetector.stopDetection();
-                addLog('音声検出停止', 'info');
-            } catch (error) {
-                addLog(`停止エラー: ${error.message}`, 'error');
-            }
-        });
-
-        elements.testBtn.addEventListener('click', async () => {
-            try {
-                addLog('マイクテスト開始...', 'info');
-                
-                // v1.1.8 updateSelectorsメソッドテスト
-                if (audioDetector && audioDetector.updateSelectors) {
-                    addLog('🔄 updateSelectors()メソッドテスト中...', 'info');
-                    
-                    // セレクターを再設定してクロスモード干渉防止をテスト
-                    audioDetector.updateSelectors({
-                        volumeBarSelector: '#volume-bar',
-                        volumeTextSelector: '#volume-text',
-                        frequencySelector: '#frequency-display',
-                        noteSelector: '#note-display'
-                    });
-                    
-                    addLog('✅ updateSelectors()テスト完了 - クロスモード干渉防止機能確認', 'success');
-                } else {
-                    addLog('⚠️ updateSelectors()メソッドが利用できません', 'error');
-                }
-            } catch (error) {
-                addLog(`テストエラー: ${error.message}`, 'error');
-            }
-        });
-
         elements.resetBtn.addEventListener('click', () => {
             try {
                 if (audioDetector) {
-                    // v1.1.8 手動UIリセットテスト
-                    addLog('🔄 UI要素手動リセットテスト...', 'info');
+                    // v1.1.8+ MicrophoneController統合リセット機能テスト
+                    addLog('🔄 MicrophoneController.reset() 統合リセット実行中...', 'info');
                     
-                    // 手動でUIをリセット
-                    if (audioDetector.updateUI) {
-                        audioDetector.updateUI({
-                            frequency: 0,
-                            note: '',
-                            octave: 0,
-                            volume: 0,
-                            clarity: 0
-                        });
-                        addLog('✅ 手動UIリセット完了', 'success');
-                    }
+                    // 新しいmicrophoneControllerゲッターでMicrophoneControllerにアクセス
+                    const micController = audioDetector.microphoneController;
                     
-                    // リカバリー試行リセット（既存機能）
-                    if (audioDetector.resetRecoveryAttempts) {
-                        audioDetector.resetRecoveryAttempts();
-                        addLog('✅ リカバリー試行回数リセット', 'success');
+                    if (micController && micController.reset) {
+                        // ⭐ 統合reset()メソッドが利用可能 - これが新機能!
+                        micController.reset();
+                        addLog('✅ MicrophoneController統合リセット完了', 'success');
+                        addLog('  → PitchDetector停止・リセット', 'success');
+                        addLog('  → UI表示クリア', 'success');
+                        addLog('  → マイクミュート', 'success');
+                        addLog('  → リカバリー試行リセット', 'success');
+                        addLog('🎉 統合管理機能が正常に動作しています!', 'success');
+                        
+                        // 🔧 UIボタン状態を実際のミュート状態と同期
+                        setTimeout(() => {
+                            const actualMuteState = micController.isMuted();
+                            addLog(`🔍 [SYNC] リセット後の実際ミュート状態: ${actualMuteState ? 'ミュート中' : 'アクティブ'}`, 'info');
+                            addLog('✅ リセット状態確認完了', 'info');
+                        }, 100); // リセット操作の完了を待つ
+                    } else {
+                        // フォールバック: 従来の個別リセット
+                        addLog('⚠️ 統合リセット未対応 - 個別リセット実行', 'info');
+                        
+                        // 手動でUIをリセット
+                        if (audioDetector.updateUI) {
+                            audioDetector.updateUI({
+                                frequency: 0,
+                                note: '',
+                                octave: 0,
+                                volume: 0,
+                                clarity: 0
+                            });
+                            addLog('✅ 手動UIリセット完了', 'success');
+                        }
+                        
+                        // リカバリー試行リセット（既存機能）
+                        if (audioDetector.resetRecoveryAttempts) {
+                            audioDetector.resetRecoveryAttempts();
+                            addLog('✅ リカバリー試行回数リセット', 'success');
+                        }
+                        
+                        // マイクミュート
+                        if (audioDetector.audioManager && !audioDetector.audioManager.getIsMuted()) {
+                            audioDetector.audioManager.mute();
+                            addLog('🔇 AudioManager.mute() 実行', 'info');
+                        }
                     }
                 } else {
                     addLog('AudioDetectionComponentが初期化されていません', 'error');
@@ -754,12 +745,34 @@
             }
         });
 
+        // start()システム復帰ボタン
+        elements.startSystemBtn.addEventListener('click', () => {
+            try {
+                if (audioDetector && audioDetector.microphoneController) {
+                    addLog('🚀 MicrophoneController.start() システム復帰実行中...', 'info');
+                    
+                    const micController = audioDetector.microphoneController;
+                    const success = micController.start();
+                    
+                    if (success) {
+                        addLog('✅ start() 成功 - ミュート解除・検出再開完了', 'success');
+                    } else {
+                        addLog('❌ start() 失敗 - PitchDetectorが登録されていない可能性があります', 'error');
+                    }
+                } else {
+                    addLog('❌ MicrophoneControllerが利用できません', 'error');
+                }
+            } catch (error) {
+                addLog(`❌ start() エラー: ${error.message}`, 'error');
+            }
+        });
+
         elements.destroyBtn.addEventListener('click', () => {
             try {
                 if (audioDetector) {
                     audioDetector.destroy();
                     audioDetector = null;
-                    addLog('AudioDetectionComponent破棄完了', 'info');
+                    addLog('🗑️ destroy() 完了', 'info');
                     
                     // UI リセット
                     elements.statusState.textContent = 'uninitialized';
@@ -776,22 +789,22 @@
                     
                     // ボタンリセット
                     elements.initBtn.disabled = false;
-                    elements.startBtn.disabled = true;
-                    elements.stopBtn.disabled = true;
-                    elements.testBtn.disabled = true;
                     elements.resetBtn.disabled = true;
+                    elements.startSystemBtn.disabled = true;
                     elements.destroyBtn.disabled = true;
                 }
             } catch (error) {
-                addLog(`破棄エラー: ${error.message}`, 'error');
+                addLog(`❌ destroy() エラー: ${error.message}`, 'error');
             }
         });
 
         // 初期化時のログ
         addLog('AudioDetectionComponent v1.1.8 テストページ準備完了', 'success');
         addLog('🆕 v1.1.8新機能: クロスモードUI干渉防止, 自動noteSelector管理', 'info');
+        addLog('🎯 NEW: MicrophoneController統合管理機能テスト対応', 'info');
+        addLog('🔄 NEW: シンプル4ボタン操作 - initialize()→start()→reset()→destroy()', 'info');
         addLog('🔧 雑音対策: デフォルト設定で開始、雑音が多い場合はプリセットボタンを使用', 'info');
-        addLog('「初期化」ボタンをクリックしてマイクアクセスを許可してください', 'info');
+        addLog('「🎤 initialize()」ボタンをクリックしてマイクアクセスを許可してください', 'info');
 
         // パフォーマンス監視
         setInterval(updateMetrics, 1000);

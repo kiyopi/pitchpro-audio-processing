@@ -165,6 +165,8 @@ export interface MicrophoneControllerEvents {
   'pitchpro:microphoneGranted': CustomEvent<{ stream: MediaStream }>;
   'pitchpro:microphoneDenied': CustomEvent<{ error: Error }>;
   'pitchpro:microphoneStopped': CustomEvent;
+  'pitchpro:microphoneMuted': CustomEvent<{ timestamp: number; controllerState: string }>;
+  'pitchpro:microphoneUnmuted': CustomEvent<{ timestamp: number; controllerState: string }>;
   'pitchpro:sensitivityChanged': CustomEvent<{ sensitivity: number }>;
   'pitchpro:noiseGateChanged': CustomEvent<{ threshold: number }>;
   'pitchpro:deviceDetected': CustomEvent<{ specs: DeviceSpecs }>;

@@ -191,6 +191,20 @@
             <div class="mode-display" style="text-align: center; padding: 10px; background: #f8f9fa; border-radius: 5px;">
                 ℹ️ 青色の枠がアクティブなモードです。モード切り替え時に他の表示がリセットされるか確認してください。
             </div>
+            
+            <div class="mode-display" style="padding: 15px; background: #e8f4fd; border-radius: 5px; margin: 10px 0;">
+                <h4 style="margin: 0 0 10px 0; color: #0056b3;">🧪 音程リセットテストガイド</h4>
+                <ol style="margin: 0; padding-left: 20px; font-size: 14px;">
+                    <li>「440Hz シミュレート」で全モードに値を設定</li>
+                    <li>「統合リセット (MicrophoneController)」をクリック</li>
+                    <li>すべてのモードが「0.0 Hz」「-」にリセットされるか確認</li>
+                    <li>ログで「✅ 音程表示リセット成功」が表示されるか確認</li>
+                </ol>
+                <p style="margin: 10px 0 0 0; color: #856404; font-size: 12px;">
+                    ⚠️ v1.1.8で追加された統合リセット機能により、MicrophoneController.reset()は
+                    PitchDetectorの基本リセット + AudioDetectionComponentの包括的UIリセットを両方実行します。
+                </p>
+            </div>
         </div>
         
         <div class="controls">
@@ -207,6 +221,8 @@
         
         <div class="controls">
             <button id="manual-reset-btn" class="btn-primary">手動リセット</button>
+            <button id="integrated-reset-btn" class="btn-danger">統合リセット (MicrophoneController)</button>
+            <button id="audio-component-reset-btn" class="btn-warning">UI リセット (AudioDetectionComponent)</button>
             <button id="simulate-pitch-btn" class="btn-primary">440Hz シミュレート</button>
         </div>
         
@@ -461,10 +477,112 @@
         // 手動リセット
         document.getElementById('manual-reset-btn').addEventListener('click', manualReset);
         
+        // 統合リセット (MicrophoneController)
+        document.getElementById('integrated-reset-btn').addEventListener('click', () => {
+            if (audioDetector && audioDetector.microphoneController) {
+                log('🔄 MicrophoneController統合リセット実行中...', 'warning');
+                
+                // リセット前の値を記録
+                const beforeValues = {
+                    mode1: document.getElementById('freq-1').textContent,
+                    mode2: document.getElementById('freq-2').textContent,
+                    mode3: document.getElementById('freq-3').textContent,
+                    note3: document.getElementById('note-3').textContent
+                };
+                log(`リセット前: [1]${beforeValues.mode1} [2]${beforeValues.mode2} [3]${beforeValues.mode3} [note-3]${beforeValues.note3}`, 'info');
+                
+                // 統合リセット実行
+                audioDetector.microphoneController.reset();
+                
+                // 複数のタイミングで結果を確認
+                setTimeout(() => {
+                    const after50Values = {
+                        mode1: document.getElementById('freq-1').textContent,
+                        mode2: document.getElementById('freq-2').textContent,
+                        mode3: document.getElementById('freq-3').textContent,
+                        note3: document.getElementById('note-3').textContent
+                    };
+                    log(`50ms後: [1]${after50Values.mode1} [2]${after50Values.mode2} [3]${after50Values.mode3} [note-3]${after50Values.note3}`, 'info');
+                }, 50);
+                
+                setTimeout(() => {
+                    const afterValues = {
+                        mode1: document.getElementById('freq-1').textContent,
+                        mode2: document.getElementById('freq-2').textContent,
+                        mode3: document.getElementById('freq-3').textContent,
+                        note3: document.getElementById('note-3').textContent
+                    };
+                    log(`200ms後: [1]${afterValues.mode1} [2]${afterValues.mode2} [3]${afterValues.mode3} [note-3]${afterValues.note3}`, 'success');
+                    
+                    // 音程表示のリセット成功確認
+                    if (afterValues.note3 === '-' || afterValues.note3 === '--') {
+                        log('✅ 音程表示リセット成功', 'success');
+                    } else {
+                        log('❌ 音程表示リセット失敗', 'error');
+                    }
+                    
+                    // 周波数表示のリセット確認
+                    const resetSuccess = [afterValues.mode1, afterValues.mode2, afterValues.mode3].every(val => 
+                        val === '0.0 Hz' || val === '0 Hz' || val.startsWith('0.0') || val.startsWith('0 ')
+                    );
+                    if (resetSuccess) {
+                        log('✅ 周波数表示リセット成功', 'success');
+                    } else {
+                        log('❌ 周波数表示リセット失敗', 'error');
+                    }
+                }, 200);
+                
+                log('🎉 統合リセット完了', 'success');
+            } else {
+                log('❌ MicrophoneControllerが利用できません', 'error');
+            }
+        });
+        
+        // AudioDetectionComponent UI リセット
+        document.getElementById('audio-component-reset-btn').addEventListener('click', () => {
+            if (audioDetector && audioDetector.resetDisplayElements) {
+                log('🔄 AudioDetectionComponent UIリセット実行中...', 'warning');
+                
+                const beforeValues = {
+                    mode1: document.getElementById('freq-1').textContent,
+                    mode2: document.getElementById('freq-2').textContent,
+                    mode3: document.getElementById('freq-3').textContent,
+                    note3: document.getElementById('note-3').textContent
+                };
+                log(`リセット前: [1]${beforeValues.mode1} [2]${beforeValues.mode2} [3]${beforeValues.mode3} [note-3]${beforeValues.note3}`, 'info');
+                
+                audioDetector.resetDisplayElements();
+                
+                setTimeout(() => {
+                    const afterValues = {
+                        mode1: document.getElementById('freq-1').textContent,
+                        mode2: document.getElementById('freq-2').textContent,
+                        mode3: document.getElementById('freq-3').textContent,
+                        note3: document.getElementById('note-3').textContent
+                    };
+                    log(`リセット後: [1]${afterValues.mode1} [2]${afterValues.mode2} [3]${afterValues.mode3} [note-3]${afterValues.note3}`, 'success');
+                }, 100);
+                
+                log('🎉 AudioDetectionComponent UIリセット完了', 'success');
+            } else {
+                log('❌ resetDisplayElementsメソッドが利用できません', 'error');
+            }
+        });
+        
         // 440Hz シミュレート
         document.getElementById('simulate-pitch-btn').addEventListener('click', () => {
+            log('440Hz をシミュレート - 全モードに値を設定', 'info');
+            
+            // 直接DOM要素に値を設定（全モード同時設定）
+            document.getElementById('freq-1').textContent = '440.0 Hz';
+            document.getElementById('freq-2').textContent = '523.3 Hz';  // C5
+            document.getElementById('freq-3').textContent = '659.3 Hz';  // E5
+            document.getElementById('note-3').textContent = 'E5';
+            
+            log('設定完了: [1]440.0 Hz [2]523.3 Hz [3]659.3 Hz [note-3]E5', 'success');
+            
+            // AudioDetectionComponentのupdateUIも実行（現在のアクティブモード用）
             if (audioDetector && audioDetector.updateUI) {
-                log('440Hz をシミュレート', 'info');
                 audioDetector.updateUI({
                     frequency: 440,
                     note: 'A4',
@@ -472,6 +590,7 @@
                     volume: 75,
                     clarity: 0.9
                 });
+                log('AudioDetectionComponent.updateUIも実行', 'info');
             }
         });
         

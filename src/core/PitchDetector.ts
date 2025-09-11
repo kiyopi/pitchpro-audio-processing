@@ -1082,7 +1082,7 @@ export class PitchDetector {
   }
 
   /**
-   * Reset display state
+   * Reset display state and immediately update UI elements
    */
   resetDisplayState(): void {
     this.currentVolume = 0;
@@ -1103,6 +1103,76 @@ export class PitchDetector {
     this.resetSilenceTracking();
     
     console.log('🔄 [PitchDetector] Display state reset');
+    
+    // Immediately update UI to reflect reset state by forcing a manual update
+    this.forceUIUpdate();
+    console.log('✅ [PitchDetector] UI forcefully updated to reflect reset state');
+  }
+
+  /**
+   * Force UI update with current internal state (reset values)
+   * @private
+   */
+  private forceUIUpdate(): void {
+    try {
+      // Reset common volume bar selectors
+      const volumeBarSelectors = [
+        '#volume-bar', '#mic-volume-bar', '#range-volume-bar', '#practice-volume-bar',
+        '[id*="volume-bar"]', '.volume-bar'
+      ];
+      
+      volumeBarSelectors.forEach(selector => {
+        const element = document.querySelector(selector);
+        if (element) {
+          if (element instanceof HTMLProgressElement) {
+            element.value = 0;
+          } else {
+            (element as HTMLElement).style.width = '0%';
+          }
+        }
+      });
+
+      // Reset common volume text selectors
+      const volumeTextSelectors = [
+        '#volume-text', '#mic-volume-text', '#range-volume-text', '#practice-volume-text',
+        '[id*="volume-text"]', '.volume-text'
+      ];
+      
+      volumeTextSelectors.forEach(selector => {
+        const element = document.querySelector(selector);
+        if (element) {
+          element.textContent = '0.0%';
+        }
+      });
+
+      // Reset common frequency selectors
+      const frequencySelectors = [
+        '#frequency', '#mic-frequency', '#range-frequency', '#practice-frequency',
+        '[id*="frequency"]', '.frequency', '#freq-1', '#freq-2', '#freq-3'
+      ];
+      
+      frequencySelectors.forEach(selector => {
+        const element = document.querySelector(selector);
+        if (element) {
+          element.textContent = '0.0 Hz';
+        }
+      });
+
+      // Reset common note selectors
+      const noteSelectors = [
+        '#note', '#note-display', '#mic-note', '#range-note', '#practice-note',
+        '[id*="note"]', '.note', '.note-display'
+      ];
+      
+      noteSelectors.forEach(selector => {
+        const element = document.querySelector(selector);
+        if (element) {
+          element.textContent = '--';
+        }
+      });
+    } catch (error) {
+      console.warn('⚠️ [PitchDetector] Error in forceUIUpdate:', (error as Error).message);
+    }
   }
 
   /**

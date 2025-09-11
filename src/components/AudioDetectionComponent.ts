@@ -321,6 +321,13 @@ export class AudioDetectionComponent {
 
       await this.pitchDetector.initialize();
 
+      // ⭐ Register PitchDetector and AudioDetectionComponent with MicrophoneController for unified management
+      if (this.micController && this.pitchDetector) {
+        this.micController.registerDetector(this.pitchDetector);
+        this.micController.registerAudioDetectionComponent(this);
+        this.debugLog('✅ PitchDetector and AudioDetectionComponent registered with MicrophoneController for unified management');
+      }
+
       // Cache UI elements
       this.cacheUIElements();
 
@@ -725,6 +732,31 @@ export class AudioDetectionComponent {
     };
   }
 
+  /**
+   * Provides access to the MicrophoneController for unified system management
+   * 
+   * @description Exposes the MicrophoneController instance to enable external access
+   * to unified reset operations, mute/unmute functionality, and centralized control
+   * of the entire PitchPro system. This is the primary interface for system-wide operations.
+   * 
+   * @returns The MicrophoneController instance, or null if not initialized
+   * 
+   * @example
+   * ```typescript
+   * const micController = audioDetector.microphoneController;
+   * if (micController) {
+   *   // Perform unified system reset
+   *   micController.reset(); // Stops detection, clears UI, mutes mic
+   *   
+   *   // Control microphone state
+   *   micController.toggleMute();
+   * }
+   * ```
+   */
+  get microphoneController(): MicrophoneController | null {
+    return this.micController;
+  }
+
   // Private methods implementation continues...
   // (Will be implemented in the next part)
 
@@ -785,6 +817,14 @@ export class AudioDetectionComponent {
     }
 
     this.debugLog('UI elements cached:', Object.keys(this.uiElements));
+  }
+
+  /**
+   * Publicly accessible method to reset all UI elements to their initial state
+   * Provides external access to comprehensive UI reset functionality
+   */
+  public resetDisplayElements(): void {
+    this.resetAllUIElements();
   }
 
   /**

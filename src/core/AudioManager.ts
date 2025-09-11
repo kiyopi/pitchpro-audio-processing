@@ -74,6 +74,9 @@ export class AudioManager {
   /** @private Interval ID for gain monitoring (hotfix v1.1.3) */
   private gainMonitorInterval: number | null = null;
   
+  /** @private Microphone mute state flag */
+  private isMuted = false;
+  
   /** @private AudioManager configuration */
   private config: AudioManagerConfig;
 
@@ -587,6 +590,73 @@ export class AudioManager {
   }
 
   /**
+   * Mutes the microphone by disabling audio tracks
+   * 
+   * @description Disables all audio tracks in the MediaStream while maintaining 
+   * the connection. This provides instant mute functionality without requiring 
+   * MediaStream reinitialization.
+   * 
+   * @example
+   * ```typescript
+   * audioManager.mute();
+   * console.log('Microphone muted');
+   * ```
+   */
+  mute(): void {
+    if (!this.mediaStream) {
+      console.warn('⚠️ [AudioManager] Cannot mute, MediaStream is not available.');
+      return;
+    }
+
+    this.mediaStream.getAudioTracks().forEach(track => {
+      track.enabled = false; // Disable audio track (core mute functionality)
+    });
+    this.isMuted = true;
+    console.log('🔇 [AudioManager] Microphone muted.');
+  }
+
+  /**
+   * Unmutes the microphone by enabling audio tracks
+   * 
+   * @description Re-enables all audio tracks in the MediaStream. The audio 
+   * input resumes immediately without any initialization delays.
+   * 
+   * @example
+   * ```typescript
+   * audioManager.unmute();
+   * console.log('Microphone unmuted');
+   * ```
+   */
+  unmute(): void {
+    if (!this.mediaStream) {
+      console.warn('⚠️ [AudioManager] Cannot unmute, MediaStream is not available.');
+      return;
+    }
+
+    this.mediaStream.getAudioTracks().forEach(track => {
+      track.enabled = true; // Re-enable audio track
+    });
+    this.isMuted = false;
+    console.log('🔊 [AudioManager] Microphone unmuted.');
+  }
+
+  /**
+   * Gets the current mute state
+   * 
+   * @returns True if microphone is muted, false otherwise
+   * 
+   * @example
+   * ```typescript
+   * if (audioManager.getIsMuted()) {
+   *   console.log('Microphone is currently muted');
+   * }
+   * ```
+   */
+  getIsMuted(): boolean {
+    return this.isMuted;
+  }
+
+  /**
    * HOTFIX: Start gain monitoring to prevent level drops
    * @deprecated Temporarily disabled in v1.1.4 due to browser compatibility issues
    * 
@@ -921,14 +991,17 @@ export class AudioManager {
       };
     }
 
-    if (!audioTrack.enabled) {
-      return {
-        mediaStreamActive: this.mediaStream.active,
-        audioContextState: this.audioContext?.state || 'none',
-        trackStates,
-        healthy: false
-      };
-    }
+    // 🔧 Note: audioTrack.enabled=false (muted state) is NOT considered unhealthy
+    // Mute/unmute operations are normal user actions and should not trigger health check failures
+    // Only check readyState and muted property for actual hardware/system issues
+    // if (!audioTrack.enabled) {
+    //   return {
+    //     mediaStreamActive: this.mediaStream.active,
+    //     audioContextState: this.audioContext?.state || 'none',
+    //     trackStates,
+    //     healthy: false
+    //   };
+    // }
 
     // Safari-specific muted state check
     if (audioTrack.muted) {
