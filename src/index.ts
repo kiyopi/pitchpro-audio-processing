@@ -49,7 +49,7 @@ export type {
 } from './types';
 
 // Constants
-export const VERSION = '1.1.7';
+export const VERSION = '1.1.8';
 export const BUILD_DATE = new Date().toISOString();
 
 // Default configurations

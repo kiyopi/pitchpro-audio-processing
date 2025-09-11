@@ -96,6 +96,11 @@ interface DeviceSettings {
 }
 
 export class AudioDetectionComponent {
+  /** @private UI timing constants */
+  private static readonly NOTE_RESET_DELAY_MS = 300;
+  private static readonly SELECTOR_UPDATE_DELAY_MS = 50;
+  private static readonly UI_RESTART_DELAY_MS = 200;
+
   /** @private Configuration with applied defaults */
   private config: Required<AudioDetectionConfig>;
   
@@ -139,6 +144,14 @@ export class AudioDetectionComponent {
   
   /** @private Initialization state */
   private isInitialized = false;
+
+  /** @private Note display persistence timer */
+  private noteResetTimer: number | null = null;
+
+  /** @private Helper method for creating delays */
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
 
   /**
    * Creates a new AudioDetectionComponent with automatic device optimization
@@ -461,45 +474,82 @@ export class AudioDetectionComponent {
   updateUI(result: PitchDetectionResult): void {
     // Skip UI updates if selectors are being updated
     if (this.isUpdatingSelectors) {
+      this.debugLog('UI update skipped - selectors are being updated');
       return;
     }
     
     try {
-      // Update volume bar
-      if (this.uiElements.volumeBar) {
-        const volumePercent = Math.min(100, result.volume * (this.deviceSettings?.volumeMultiplier ?? 1.0));
-        if (this.uiElements.volumeBar instanceof HTMLProgressElement) {
-          this.uiElements.volumeBar.value = volumePercent;
-        } else {
-          // Assume it's a div with a width style
-          (this.uiElements.volumeBar as HTMLElement).style.width = `${volumePercent}%`;
+      // Update volume bar - verify element matches current selector to prevent cross-mode updates
+      if (this.uiElements.volumeBar && this.config.volumeBarSelector) {
+        const currentElement = document.querySelector(this.config.volumeBarSelector);
+        if (currentElement && currentElement === this.uiElements.volumeBar) {
+          const volumePercent = Math.min(100, result.volume * (this.deviceSettings?.volumeMultiplier ?? 1.0));
+          if (this.uiElements.volumeBar instanceof HTMLProgressElement) {
+            this.uiElements.volumeBar.value = volumePercent;
+          } else {
+            // Assume it's a div with a width style
+            (this.uiElements.volumeBar as HTMLElement).style.width = `${volumePercent}%`;
+          }
         }
       }
 
-      // Update volume text
-      if (this.uiElements.volumeText) {
-        const volumePercent = Math.min(100, result.volume * (this.deviceSettings?.volumeMultiplier ?? 1.0));
-        this.uiElements.volumeText.textContent = `${volumePercent.toFixed(1)}%`;
-      }
-
-      // Update frequency display
-      if (this.uiElements.frequency) {
-        if (result.frequency && result.frequency > 0) {
-          this.uiElements.frequency.textContent = FrequencyUtils.formatFrequency(result.frequency);
-        } else {
-          // Reset frequency display when no pitch is detected
-          this.uiElements.frequency.textContent = '0.0 Hz';
+      // Update volume text - verify element matches current selector to prevent cross-mode updates
+      if (this.uiElements.volumeText && this.config.volumeTextSelector) {
+        const currentElement = document.querySelector(this.config.volumeTextSelector);
+        if (currentElement && currentElement === this.uiElements.volumeText) {
+          const volumePercent = Math.min(100, result.volume * (this.deviceSettings?.volumeMultiplier ?? 1.0));
+          this.uiElements.volumeText.textContent = `${volumePercent.toFixed(1)}%`;
         }
       }
 
-      // Update note display
-      if (this.uiElements.note) {
-        if (result.frequency && result.frequency > 0) {
-          const noteInfo = FrequencyUtils.frequencyToNote(result.frequency);
-          this.uiElements.note.textContent = noteInfo.name;
+      // Update frequency display - verify element matches current selector to prevent cross-mode updates
+      if (this.uiElements.frequency && this.config.frequencySelector) {
+        const currentElement = document.querySelector(this.config.frequencySelector);
+        if (currentElement && currentElement === this.uiElements.frequency) {
+          if (result.frequency && result.frequency > 0) {
+            this.uiElements.frequency.textContent = FrequencyUtils.formatFrequency(result.frequency);
+          } else {
+            // Reset frequency display when no pitch is detected
+            this.uiElements.frequency.textContent = '0.0 Hz';
+          }
+        }
+      }
+
+      // Update note display with persistence - only if noteSelector is configured and matches current cached element
+      if (this.uiElements.note && this.config.noteSelector && this.config.noteSelector !== '#note-display') {
+        // Verify that cached element matches current selector to prevent cross-mode updates
+        const currentElement = document.querySelector(this.config.noteSelector);
+        if (currentElement && currentElement === this.uiElements.note) {
+          if (result.frequency && result.frequency > 0) {
+            // Clear any pending reset timer
+            if (this.noteResetTimer) {
+              clearTimeout(this.noteResetTimer);
+              this.noteResetTimer = null;
+            }
+            
+            const noteInfo = FrequencyUtils.frequencyToNote(result.frequency);
+            this.debugLog(`Updating note display: ${this.uiElements.note.id || 'unknown-id'} with note: ${noteInfo.name} (selector: ${this.config.noteSelector})`);
+            this.uiElements.note.textContent = noteInfo.name;
+          } else {
+            // Only reset after a short delay to avoid flickering
+            if (!this.noteResetTimer) {
+              this.noteResetTimer = window.setTimeout(() => {
+                if (this.uiElements.note) {
+                  this.debugLog(`Resetting note display: ${this.uiElements.note.id || 'unknown-id'} to "-" (delayed, selector: ${this.config.noteSelector})`);
+                  this.uiElements.note.textContent = '-';
+                }
+                this.noteResetTimer = null;
+              }, AudioDetectionComponent.NOTE_RESET_DELAY_MS);
+            }
+          }
         } else {
-          // Reset note display when no pitch is detected
-          this.uiElements.note.textContent = '-';
+          this.debugLog(`Note element mismatch: cached element does not match current selector ${this.config.noteSelector} - skipping update to prevent cross-mode interference`);
+        }
+      } else {
+        if (!this.config.noteSelector) {
+          this.debugLog('Note updates skipped - no noteSelector configured');
+        } else {
+          this.debugLog('Note element not found in uiElements.note - check selector caching');
         }
       }
     } catch (error) {
@@ -514,7 +564,7 @@ export class AudioDetectionComponent {
    * @param selectors.volumeBarSelector - New selector for volume bar element
    * @param selectors.volumeTextSelector - New selector for volume text element
    * @param selectors.frequencySelector - New selector for frequency display element
-   * @param selectors.noteSelector - New selector for note display element
+   * @param selectors.noteSelector - New selector for note display element (if not provided, will be cleared to prevent cross-mode interference)
    * 
    * @example
    * ```typescript
@@ -526,8 +576,8 @@ export class AudioDetectionComponent {
    * });
    * ```
    */
-  updateSelectors(selectors: Partial<Pick<AudioDetectionConfig, 
-    'volumeBarSelector' | 'volumeTextSelector' | 'frequencySelector' | 'noteSelector'>>): void {
+  async updateSelectors(selectors: Partial<Pick<AudioDetectionConfig, 
+    'volumeBarSelector' | 'volumeTextSelector' | 'frequencySelector' | 'noteSelector'>>): Promise<void> {
     
     this.debugLog('Updating selectors:', selectors);
     
@@ -541,44 +591,50 @@ export class AudioDetectionComponent {
     }
     
     // Wait a moment to ensure any pending UI updates are processed
-    setTimeout(() => {
-      // Reset all existing UI elements to initial state before switching
-      this.resetAllUIElements();
-      
-      // Update configuration with new selectors
-      if (selectors.volumeBarSelector !== undefined) {
-        this.config.volumeBarSelector = selectors.volumeBarSelector;
-      }
-      if (selectors.volumeTextSelector !== undefined) {
-        this.config.volumeTextSelector = selectors.volumeTextSelector;
-      }
-      if (selectors.frequencySelector !== undefined) {
-        this.config.frequencySelector = selectors.frequencySelector;
-      }
-      if (selectors.noteSelector !== undefined) {
-        this.config.noteSelector = selectors.noteSelector;
-      }
-      
-      // Re-cache UI elements with new selectors
-      this.cacheUIElements();
-      
-      // Reset the new UI elements as well to ensure they start clean
-      setTimeout(() => {
-        this.resetAllUIElements();
-        
-        // Clear the flag and resume UI updates if they were running
-        this.isUpdatingSelectors = false;
-        
-        if (wasUIUpdating) {
-          // Add longer delay to ensure reset values are visible
-          setTimeout(() => {
-            this.startUIUpdates();
-          }, 200);
-        }
-        
-        this.debugLog('Selectors updated, all elements reset, and UI elements re-cached:', Object.keys(this.uiElements));
-      }, 50);
-    }, 50);
+    await this.delay(AudioDetectionComponent.SELECTOR_UPDATE_DELAY_MS);
+    
+    // Reset all existing UI elements to initial state before switching
+    this.resetAllUIElements();
+    
+    // Update configuration with new selectors
+    if (selectors.volumeBarSelector !== undefined) {
+      this.config.volumeBarSelector = selectors.volumeBarSelector;
+    }
+    if (selectors.volumeTextSelector !== undefined) {
+      this.config.volumeTextSelector = selectors.volumeTextSelector;
+    }
+    if (selectors.frequencySelector !== undefined) {
+      this.config.frequencySelector = selectors.frequencySelector;
+    }
+    
+    // Handle noteSelector: if explicitly provided, use it; if not provided in a mode switch, clear it to prevent cross-mode interference
+    if (selectors.noteSelector !== undefined) {
+      this.config.noteSelector = selectors.noteSelector;
+    } else {
+      // When switching modes without specifying noteSelector, clear it to prevent old note elements from updating
+      this.config.noteSelector = '';
+      this.debugLog('noteSelector cleared automatically to prevent cross-mode interference');
+    }
+    
+    // Re-cache UI elements with new selectors
+    this.cacheUIElements();
+    
+    // Wait for DOM updates
+    await this.delay(AudioDetectionComponent.SELECTOR_UPDATE_DELAY_MS);
+    
+    // Reset the new UI elements as well to ensure they start clean
+    this.resetAllUIElements();
+    
+    // Clear the flag and resume UI updates if they were running
+    this.isUpdatingSelectors = false;
+    
+    if (wasUIUpdating) {
+      // Add longer delay to ensure reset values are visible
+      await this.delay(AudioDetectionComponent.UI_RESTART_DELAY_MS);
+      this.startUIUpdates();
+    }
+    
+    this.debugLog('Selectors updated, all elements reset, and UI elements re-cached:', Object.keys(this.uiElements));
   }
 
   /**
@@ -617,6 +673,12 @@ export class AudioDetectionComponent {
     try {
       // Stop detection and UI updates
       this.stopDetection();
+      
+      // Clear note reset timer
+      if (this.noteResetTimer) {
+        clearTimeout(this.noteResetTimer);
+        this.noteResetTimer = null;
+      }
       
       // Cleanup components
       if (this.pitchDetector) {
@@ -718,6 +780,7 @@ export class AudioDetectionComponent {
     }
     if (this.config.noteSelector) {
       this.uiElements.note = document.querySelector(this.config.noteSelector) || undefined;
+      this.debugLog(`Note element cached: selector="${this.config.noteSelector}", found=${!!this.uiElements.note}, id="${this.uiElements.note?.id || 'no-id'}"`);
     }
 
     this.debugLog('UI elements cached:', Object.keys(this.uiElements));

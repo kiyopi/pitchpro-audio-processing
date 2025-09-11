@@ -26,7 +26,7 @@ export { Logger, LogLevel, defaultLogger, debug, info, warn, error } from './uti
 export type { LogContext, LogEntry } from './utils/Logger';
 export { MicrophoneHealthError } from './utils/errors';
 export type { AudioManagerConfig, PitchDetectorConfig, PitchDetectionResult, NoiseFilterConfig, HarmonicCorrectionResult, NotificationConfig, MusicalNote, MusicalInterval, VoiceAnalysis, DeviceSpecs } from './types';
-export declare const VERSION = "1.1.7";
+export declare const VERSION = "1.1.8";
 export declare const BUILD_DATE: string;
 export declare const DEFAULT_CONFIG: {
     readonly pitchDetector: {

@@ -184,6 +184,7 @@
                 <div id="mode-3-box" class="frequency-box">
                     <div class="frequency-label">🎯 モード3 - 練習モード</div>
                     <div class="frequency-display" id="freq-3">0.0 Hz</div>
+                    <div class="frequency-display" id="note-3" style="font-size: 18px; color: #28a745;">-</div>
                 </div>
             </div>
             
@@ -251,6 +252,7 @@
             document.getElementById('freq-1').textContent = '0.0 Hz';
             document.getElementById('freq-2').textContent = '0.0 Hz';
             document.getElementById('freq-3').textContent = '0.0 Hz';
+            document.getElementById('note-3').textContent = '-';
             log('手動リセット実行', 'warning');
         }
         
@@ -275,7 +277,7 @@
                 
                 audioDetector = new AudioDetectionComponent({
                     frequencySelector: '#freq-1',
-                    debugMode: true,
+                    debug: true,
                     autoUpdateUI: true,
                     uiUpdateInterval: 33
                 });
@@ -339,11 +341,12 @@
                 const values = {
                     mode1: document.getElementById('freq-1').textContent,
                     mode2: document.getElementById('freq-2').textContent,
-                    mode3: document.getElementById('freq-3').textContent
+                    mode3: document.getElementById('freq-3').textContent,
+                    note3: document.getElementById('note-3').textContent
                 };
-                log(`切り替え前: [1]${values.mode1} [2]${values.mode2} [3]${values.mode3}`, 'info');
+                log(`切り替え前: [1]${values.mode1} [2]${values.mode2} [3]${values.mode3} [note3]${values.note3}`, 'info');
                 
-                // updateSelectorsを呼び出し
+                // updateSelectorsを呼び出し（noteSelector自動クリア）
                 audioDetector.updateSelectors({
                     frequencySelector: '#freq-1'
                 });
@@ -356,18 +359,20 @@
                     const after50 = {
                         mode1: document.getElementById('freq-1').textContent,
                         mode2: document.getElementById('freq-2').textContent,
-                        mode3: document.getElementById('freq-3').textContent
+                        mode3: document.getElementById('freq-3').textContent,
+                        note3: document.getElementById('note-3').textContent
                     };
-                    log(`50ms後: [1]${after50.mode1} [2]${after50.mode2} [3]${after50.mode3}`, 'info');
+                    log(`50ms後: [1]${after50.mode1} [2]${after50.mode2} [3]${after50.mode3} [note3]${after50.note3}`, 'info');
                 }, 50);
                 
                 setTimeout(() => {
                     const after200 = {
                         mode1: document.getElementById('freq-1').textContent,
                         mode2: document.getElementById('freq-2').textContent,
-                        mode3: document.getElementById('freq-3').textContent
+                        mode3: document.getElementById('freq-3').textContent,
+                        note3: document.getElementById('note-3').textContent
                     };
-                    log(`200ms後: [1]${after200.mode1} [2]${after200.mode2} [3]${after200.mode3}`, 'success');
+                    log(`200ms後: [1]${after200.mode1} [2]${after200.mode2} [3]${after200.mode3} [note3]${after200.note3}`, 'success');
                 }, 200);
             }
         });
@@ -379,9 +384,10 @@
                 const values = {
                     mode1: document.getElementById('freq-1').textContent,
                     mode2: document.getElementById('freq-2').textContent,
-                    mode3: document.getElementById('freq-3').textContent
+                    mode3: document.getElementById('freq-3').textContent,
+                    note3: document.getElementById('note-3').textContent
                 };
-                log(`切り替え前: [1]${values.mode1} [2]${values.mode2} [3]${values.mode3}`, 'info');
+                log(`切り替え前: [1]${values.mode1} [2]${values.mode2} [3]${values.mode3} [note3]${values.note3}`, 'info');
                 
                 audioDetector.updateSelectors({
                     frequencySelector: '#freq-2'
@@ -393,18 +399,20 @@
                     const after50 = {
                         mode1: document.getElementById('freq-1').textContent,
                         mode2: document.getElementById('freq-2').textContent,
-                        mode3: document.getElementById('freq-3').textContent
+                        mode3: document.getElementById('freq-3').textContent,
+                        note3: document.getElementById('note-3').textContent
                     };
-                    log(`50ms後: [1]${after50.mode1} [2]${after50.mode2} [3]${after50.mode3}`, 'info');
+                    log(`50ms後: [1]${after50.mode1} [2]${after50.mode2} [3]${after50.mode3} [note3]${after50.note3}`, 'info');
                 }, 50);
                 
                 setTimeout(() => {
                     const after200 = {
                         mode1: document.getElementById('freq-1').textContent,
                         mode2: document.getElementById('freq-2').textContent,
-                        mode3: document.getElementById('freq-3').textContent
+                        mode3: document.getElementById('freq-3').textContent,
+                        note3: document.getElementById('note-3').textContent
                     };
-                    log(`200ms後: [1]${after200.mode1} [2]${after200.mode2} [3]${after200.mode3}`, 'success');
+                    log(`200ms後: [1]${after200.mode1} [2]${after200.mode2} [3]${after200.mode3} [note3]${after200.note3}`, 'success');
                 }, 200);
             }
         });
@@ -416,12 +424,14 @@
                 const values = {
                     mode1: document.getElementById('freq-1').textContent,
                     mode2: document.getElementById('freq-2').textContent,
-                    mode3: document.getElementById('freq-3').textContent
+                    mode3: document.getElementById('freq-3').textContent,
+                    note3: document.getElementById('note-3').textContent
                 };
-                log(`切り替え前: [1]${values.mode1} [2]${values.mode2} [3]${values.mode3}`, 'info');
+                log(`切り替え前: [1]${values.mode1} [2]${values.mode2} [3]${values.mode3} [note-3]${values.note3}`, 'info');
                 
                 audioDetector.updateSelectors({
-                    frequencySelector: '#freq-3'
+                    frequencySelector: '#freq-3',
+                    noteSelector: '#note-3'
                 });
                 
                 updateModeUI(3);
@@ -430,18 +440,20 @@
                     const after50 = {
                         mode1: document.getElementById('freq-1').textContent,
                         mode2: document.getElementById('freq-2').textContent,
-                        mode3: document.getElementById('freq-3').textContent
+                        mode3: document.getElementById('freq-3').textContent,
+                        note3: document.getElementById('note-3').textContent
                     };
-                    log(`50ms後: [1]${after50.mode1} [2]${after50.mode2} [3]${after50.mode3}`, 'info');
+                    log(`50ms後: [1]${after50.mode1} [2]${after50.mode2} [3]${after50.mode3} [note-3]${after50.note3}`, 'info');
                 }, 50);
                 
                 setTimeout(() => {
                     const after200 = {
                         mode1: document.getElementById('freq-1').textContent,
                         mode2: document.getElementById('freq-2').textContent,
-                        mode3: document.getElementById('freq-3').textContent
+                        mode3: document.getElementById('freq-3').textContent,
+                        note3: document.getElementById('note-3').textContent
                     };
-                    log(`200ms後: [1]${after200.mode1} [2]${after200.mode2} [3]${after200.mode3}`, 'success');
+                    log(`200ms後: [1]${after200.mode1} [2]${after200.mode2} [3]${after200.mode3} [note-3]${after200.note3}`, 'success');
                 }, 200);
             }
         });
