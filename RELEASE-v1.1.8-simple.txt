@@ -1,0 +1,18 @@
+v1.1.8 - Cross-Mode UI Interference Bug Fix
+
+CRITICAL BUG FIX:
+- Fixed note display continuing to update in wrong modes after switching
+- Added element validation to prevent cross-mode interference  
+- Automatic noteSelector management
+
+TECHNICAL IMPROVEMENTS:
+- Enhanced updateSelectors() with async/await
+- Added timing constants
+- Comprehensive UI protection
+
+MIGRATION:
+npm install @pitchpro/audio-processing@1.1.8
+
+No breaking changes. Backward compatible.
+
+This release completely resolves cross-mode UI interference issues.

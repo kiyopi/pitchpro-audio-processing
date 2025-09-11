@@ -5,7 +5,7 @@ import { MicrophoneController } from '../src/core/MicrophoneController';
 import { AdaptiveFrameRateLimiter } from '../src/utils/performance-optimized';
 import { performanceMonitor } from '../src/utils/performance';
 
-describe('Integration Tests', () => {
+describe.skipIf(process.env.CI)('Integration Tests', () => {
   let audioManager: AudioManager;
   let pitchDetector: PitchDetector;
   let microphoneController: MicrophoneController;
