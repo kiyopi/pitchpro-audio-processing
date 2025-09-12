@@ -124,6 +124,8 @@ open pitchpro-complete-demo.html
 
 ## 🚀 クイックスタート
 
+> ⚠️ **重要**: 統合前に必ず[統合ベストプラクティスガイド](./INTEGRATION_BEST_PRACTICES.md)をお読みください。実装時の落とし穴と推奨パターンが記載されています。
+
 ### 📦 インストール・ダウンロード
 
 #### NPMインストール（推奨）
@@ -835,6 +837,7 @@ console.log('✅ デバイス能力:', {
 - [🔧 API Reference](./docs/api-reference.md) - 全クラス・メソッド詳細
 - [💡 Examples Collection](./examples/) - 実装パターン集
 - [🔄 Migration Guide](./docs/migration.md) - 他ライブラリからの移行
+- **[🎯 統合ベストプラクティス](./INTEGRATION_BEST_PRACTICES.md)** - 実装時の落とし穴と推奨パターン
 
 ### 🎯 専門ドキュメント
 - [🎤 Microphone Management](./docs/microphone-management.md) - マイクライフサイクル管理
@@ -1395,6 +1398,8 @@ pitchDetector.startDetection(); // すぐに音程検出開始！
 ```
 
 ## 🔧 トラブルシューティング
+
+> 📖 **統合時の問題については[統合ベストプラクティスガイド](./INTEGRATION_BEST_PRACTICES.md)も参照してください。**
 
 ### よくある問題と解決方法
 
