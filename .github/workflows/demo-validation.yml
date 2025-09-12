@@ -131,10 +131,10 @@ jobs:
           const page = await browser.newPage();
           
           const demos = [
-            ['integration-test-demo.html', 'Integration Test Demo'],
-            ['demos/test-imports.html', 'Import Test Demo'],
-            ['demos/silence-detection-test.html', 'Silence Detection Demo'],
-            ['demos/quick-test.html', 'Quick Test Demo']
+            ['demos/index.html', 'Demo Index Page'],
+            ['demos/silence-detection-demo.html', 'Silence Detection Demo'],
+            ['demos/test-audio-detection-component.html', 'Audio Detection Component Test'],
+            ['demos/frequency-reset-test.html', 'Frequency Reset Test']
           ];
           
           let passed = 0;
