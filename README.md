@@ -176,13 +176,8 @@ micController.setCallbacks({
 // マイク許可とリソース確保
 const resources = await micController.initialize();
 
-// 音程検出器の作成
-const pitchDetector = new PitchDetector(micController.audioManager, {
-  fftSize: 4096,
-  clarityThreshold: 0.4,        // 実用的なデフォルト値
-  minVolumeAbsolute: 0.003,     // 適切な最小音量
-  smoothing: 0.1                // 平滑化係数
-});
+// 音程検出器の作成（v1.1.9推奨：デフォルト設定）
+const pitchDetector = new PitchDetector(micController.audioManager);
 
 await pitchDetector.initialize();
 
@@ -224,12 +219,8 @@ const audioManager = new AudioManager({
 
 const resources = await audioManager.initialize();
 
-// 音程検出器の作成（フィルタリング付きAnalyser使用）
-const pitchDetector = new PitchDetector(audioManager, {
-  fftSize: 4096,
-  clarityThreshold: 0.4,
-  minVolumeAbsolute: 0.003
-});
+// 音程検出器の作成（v1.1.9推奨：デフォルト設定）
+const pitchDetector = new PitchDetector(audioManager);
 
 await pitchDetector.initialize();
 
@@ -268,11 +259,7 @@ const audioDetector = new AudioDetectionComponent({
   frequencySelector: '#frequency-display',
   noteSelector: '#note-display',
   
-  // 高精度設定
-  clarityThreshold: 0.4,
-  minVolumeAbsolute: 0.003,
-  deviceOptimization: true,
-  debug: true
+  // v1.1.9推奨：その他の設定はデフォルト値を使用
 });
 
 // 初期化
@@ -499,14 +486,8 @@ audioManager.release(['pitch-detection']);
 import { PitchDetector } from '@pitchpro/audio-processing/core';
 
 // 高精度設定での音程検出器
-const detector = new PitchDetector(audioManager, {
-  fftSize: 4096,                   // 高解像度FFT
-  clarityThreshold: 0.4,           // 実用的な信頼性閾値
-  minVolumeAbsolute: 0.003,        // 適切な最小音量
-  enableHarmonicCorrection: true,  // 倍音補正有効
-  smoothingFactor: 0.2,            // 平滑化係数
-  noiseGate: 0.015                 // ノイズゲート
-});
+// v1.1.9推奨：デフォルト設定で最適な精度を実現
+const detector = new PitchDetector(audioManager);
 
 // PitchDetectorを初期化
 await detector.initialize();
@@ -1232,13 +1213,8 @@ export const usePitchDetection = () => {
         const resources = await controller.initialize();
         controllerRef.current = controller;
         
-        // 音程検出器設定
-        const detector = new PitchDetector(controller.audioManager, {
-          fftSize: 4096,
-          clarityThreshold: 0.4,           // 実用的なデフォルト値
-          minVolumeAbsolute: 0.003,        // 適切な最小音量
-          enableHarmonicCorrection: true
-        });
+        // 音程検出器設定（v1.1.9推奨：デフォルト設定）
+        const detector = new PitchDetector(controller.audioManager);
         
         await detector.initialize();
         
@@ -1559,13 +1535,8 @@ const setupPitchDetection = async () => {
   const audioManager = new PitchPro.AudioManager();
   await audioManager.initialize();
   
-  // 2. 最適化されたデフォルト設定のPitchDetector  
-  const pitchDetector = new PitchPro.PitchDetector(audioManager, {
-    fftSize: 4096,
-    smoothing: 0.1,
-    clarityThreshold: 0.4,     // 実用的な設定
-    minVolumeAbsolute: 0.003   // 適切な閾値
-  });
+  // 2. PitchDetector（v1.1.9推奨：デフォルト設定）  
+  const pitchDetector = new PitchPro.PitchDetector(audioManager);
   
   // 3. コールバック設定
   pitchDetector.setCallbacks({
