@@ -41,21 +41,22 @@ jobs:
       - name: Install dependencies
         run: npm ci
         
-      - name: Build UMD bundle
-        run: npm run build:umd
-        
-      - name: Copy UMD files to demos
-        run: |
-          cp dist-umd/pitchpro.umd.js demos/
-          cp dist-umd/pitchpro.umd.js demos/audio-basic/
+      - name: Build project
+        run: npm run build
           
       - name: Setup Pages
         uses: actions/configure-pages@v4
         
+      - name: Prepare GitHub Pages content
+        run: |
+          mkdir -p _site
+          cp -r demos/* _site/
+          cp -r dist _site/
+          
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: 'demos'
+          path: '_site'
           
   deploy:
     environment:
