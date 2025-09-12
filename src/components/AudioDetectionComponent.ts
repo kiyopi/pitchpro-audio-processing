@@ -52,9 +52,37 @@ import type { PitchDetectionResult, DeviceSpecs } from '../types';
  */
 export interface AudioDetectionConfig {
   // UI Element Selectors
+  /**
+   * CSS selector for volume bar element.
+   * @warning When this selector is used with autoUpdateUI=true, the UI will be updated automatically.
+   * The value applied includes device-specific multipliers and may NOT be identical
+   * to the `result.volume` in the onPitchUpdate callback. For direct control,
+   * omit this selector and update the UI manually within the callback.
+   * @example
+   * // Manual control (recommended for precise values)
+   * { autoUpdateUI: false } // Handle UI in onPitchUpdate callback
+   * 
+   * // Automatic control (convenient but may apply multipliers)
+   * { autoUpdateUI: true, volumeBarSelector: '#volume' }
+   */
   volumeBarSelector?: string;
+  
+  /**
+   * CSS selector for volume text element.
+   * @warning Same considerations as volumeBarSelector apply.
+   */
   volumeTextSelector?: string;
+  
+  /**
+   * CSS selector for frequency display element.
+   * @warning Same considerations as volumeBarSelector apply.
+   */
   frequencySelector?: string;
+  
+  /**
+   * CSS selector for note display element.
+   * @warning Same considerations as volumeBarSelector apply.
+   */
   noteSelector?: string;
   
   // PitchDetector Settings
@@ -68,6 +96,32 @@ export interface AudioDetectionConfig {
   
   // UI Update Settings
   uiUpdateInterval?: number;
+  
+  /**
+   * Controls automatic UI updates using provided selectors.
+   * @default true (for backward compatibility)
+   * @description When true, UI elements specified by selectors will be updated automatically
+   * with device-specific multipliers applied. When false, no automatic updates occur
+   * and you should handle UI updates manually in the onPitchUpdate callback.
+   * @example
+   * // Recommended: Manual control for precise values
+   * const detector = new AudioDetectionComponent({
+   *   autoUpdateUI: false,
+   *   // Don't provide selectors when using manual mode
+   * });
+   * detector.setCallbacks({
+   *   onPitchUpdate: (result) => {
+   *     // Handle UI updates with exact result.volume values
+   *     volumeBar.style.width = `${result.volume}%`;
+   *   }
+   * });
+   * 
+   * // Alternative: Automatic control (may apply multipliers)
+   * const detector = new AudioDetectionComponent({
+   *   autoUpdateUI: true,
+   *   volumeBarSelector: '#volume-bar'
+   * });
+   */
   autoUpdateUI?: boolean;
   
   // Debug Settings
@@ -102,7 +156,12 @@ export class AudioDetectionComponent {
   private static readonly UI_RESTART_DELAY_MS = 200;
 
   /** @private Configuration with applied defaults */
-  private config: Required<AudioDetectionConfig>;
+  private config: Required<Omit<AudioDetectionConfig, 'volumeBarSelector' | 'volumeTextSelector' | 'frequencySelector' | 'noteSelector'>> & {
+    volumeBarSelector?: string;
+    volumeTextSelector?: string;
+    frequencySelector?: string;
+    noteSelector?: string;
+  };
   
   /** @private AudioManager instance for resource management */
   private audioManager: AudioManager;
@@ -194,10 +253,10 @@ export class AudioDetectionComponent {
   constructor(config: AudioDetectionConfig = {}) {
     // Apply default configuration
     this.config = {
-      volumeBarSelector: config.volumeBarSelector || '#volume-bar',
-      volumeTextSelector: config.volumeTextSelector || '#volume-text',
-      frequencySelector: config.frequencySelector || '#frequency-display',
-      noteSelector: config.noteSelector || '#note-display',
+      volumeBarSelector: config.volumeBarSelector,
+      volumeTextSelector: config.volumeTextSelector,
+      frequencySelector: config.frequencySelector,
+      noteSelector: config.noteSelector,
       
       clarityThreshold: config.clarityThreshold ?? 0.4,
       minVolumeAbsolute: config.minVolumeAbsolute ?? 0.003,
@@ -227,7 +286,38 @@ export class AudioDetectionComponent {
       this.detectAndOptimizeDevice();
     }
 
+    // UI自動更新機能の警告メッセージ
+    this.checkAutoUpdateUIWarnings();
+    
     this.debugLog('AudioDetectionComponent created with config:', this.config);
+  }
+
+  /**
+   * 自動UI更新機能に関する警告をチェックして表示
+   */
+  private checkAutoUpdateUIWarnings(): void {
+    const hasUISelectors = !!(
+      this.config.volumeBarSelector || 
+      this.config.volumeTextSelector || 
+      this.config.frequencySelector || 
+      this.config.noteSelector
+    );
+    
+    if (hasUISelectors && !this.config.autoUpdateUI) {
+      console.warn(
+        '⚠️ [PitchPro v1.1.9] UI selectors provided without autoUpdateUI=true. ' +
+        'Set autoUpdateUI=true to enable automatic updates, ' +
+        'or remove selectors for manual control in onPitchUpdate callback.'
+      );
+    }
+    
+    if (hasUISelectors && this.config.autoUpdateUI) {
+      console.info(
+        'ℹ️ [PitchPro] Automatic UI updates enabled. ' +
+        'Note: Values applied may include device-specific multipliers and may differ from callback result.volume. ' +
+        'For precise control, set autoUpdateUI=false and handle UI manually.'
+      );
+    }
   }
 
   /**
@@ -480,6 +570,11 @@ export class AudioDetectionComponent {
    * ```
    */
   updateUI(result: PitchDetectionResult): void {
+    // Skip UI updates if autoUpdateUI is disabled
+    if (!this.config.autoUpdateUI) {
+      return;
+    }
+    
     // Skip UI updates if selectors are being updated
     if (this.isUpdatingSelectors) {
       this.debugLog('UI update skipped - selectors are being updated');
@@ -491,7 +586,8 @@ export class AudioDetectionComponent {
       if (this.uiElements.volumeBar && this.config.volumeBarSelector) {
         const currentElement = document.querySelector(this.config.volumeBarSelector);
         if (currentElement && currentElement === this.uiElements.volumeBar) {
-          const volumePercent = Math.min(100, result.volume * (this.deviceSettings?.volumeMultiplier ?? 1.0));
+          // result.volume は既に補正済みの値（_getProcessedResultで処理済み）
+          const volumePercent = Math.min(100, Math.max(0, result.volume));
           if (this.uiElements.volumeBar instanceof HTMLProgressElement) {
             this.uiElements.volumeBar.value = volumePercent;
           } else {
@@ -505,7 +601,8 @@ export class AudioDetectionComponent {
       if (this.uiElements.volumeText && this.config.volumeTextSelector) {
         const currentElement = document.querySelector(this.config.volumeTextSelector);
         if (currentElement && currentElement === this.uiElements.volumeText) {
-          const volumePercent = Math.min(100, result.volume * (this.deviceSettings?.volumeMultiplier ?? 1.0));
+          // result.volume は既に補正済みの値（_getProcessedResultで処理済み）
+          const volumePercent = Math.min(100, Math.max(0, result.volume));
           this.uiElements.volumeText.textContent = `${volumePercent.toFixed(1)}%`;
         }
       }
@@ -802,6 +899,12 @@ export class AudioDetectionComponent {
    * @private
    */
   private cacheUIElements(): void {
+    // Only cache UI elements if autoUpdateUI is enabled
+    if (!this.config.autoUpdateUI) {
+      this.debugLog('UI element caching skipped - autoUpdateUI is disabled');
+      return;
+    }
+    
     if (this.config.volumeBarSelector) {
       this.uiElements.volumeBar = document.querySelector(this.config.volumeBarSelector) || undefined;
     }
@@ -921,12 +1024,15 @@ export class AudioDetectionComponent {
    * Handles pitch update events from PitchDetector
    * @private
    */
-  private handlePitchUpdate(result: PitchDetectionResult): void {
-    // Notify callback
-    this.callbacks.onPitchUpdate?.(result);
+  private handlePitchUpdate(rawResult: PitchDetectionResult): void {
+    // 生の結果にデバイス最適化を適用
+    const processedResult = this._getProcessedResult(rawResult);
     
-    // Notify volume callback
-    this.callbacks.onVolumeUpdate?.(result.volume);
+    if (processedResult) {
+      // 加工後の結果をコールバックに渡す
+      this.callbacks.onPitchUpdate?.(processedResult);
+      this.callbacks.onVolumeUpdate?.(processedResult.volume);
+    }
     
     // UI updates are handled by the timer for consistent frame rate
   }
@@ -943,9 +1049,14 @@ export class AudioDetectionComponent {
     this.uiUpdateTimer = window.setInterval(() => {
       if (this.pitchDetector && this.currentState === 'detecting') {
         // Get the latest pitch detection result
-        const result = this.pitchDetector.getLatestResult();
-        if (result) {
-          this.updateUI(result);
+        const rawResult = this.pitchDetector.getLatestResult();
+        
+        // 生の結果にデバイス最適化を適用
+        const processedResult = this._getProcessedResult(rawResult);
+        
+        if (processedResult) {
+          // 加工後の結果でUIを更新
+          this.updateUI(processedResult);
         } else {
           // When no result, ensure UI shows reset state
           this.updateUI({
@@ -969,6 +1080,28 @@ export class AudioDetectionComponent {
       clearInterval(this.uiUpdateTimer);
       this.uiUpdateTimer = null;
     }
+  }
+
+  /**
+   * 検出結果にデバイス最適化を適用し、最終的な値を生成します。
+   * コールバック値とUI値の一貫性を保証するための一元管理メソッド。
+   * @param rawResult PitchDetectorからの生の検出結果
+   * @returns デバイス最適化が適用された処理済み結果、またはnull
+   * @private
+   */
+  private _getProcessedResult(rawResult: PitchDetectionResult | null): PitchDetectionResult | null {
+    if (!rawResult) return null;
+
+    // 元のオブジェクトを変更しないようにコピーを作成
+    const processedResult = { ...rawResult };
+
+    // デバイスごとの補正係数を適用
+    const finalVolume = rawResult.volume * (this.deviceSettings?.volumeMultiplier ?? 1.0);
+    
+    // 最終的な音量を0-100の範囲に丸めて、結果オブジェクトを更新
+    processedResult.volume = Math.min(100, Math.max(0, finalVolume));
+
+    return processedResult;
   }
 
   /**
