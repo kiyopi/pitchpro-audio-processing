@@ -48,9 +48,9 @@ jobs:
         test -f dist/pitchpro.umd.js || (echo "❌ UMD build missing" && exit 1)
         test -f dist/index.d.ts || (echo "❌ Type definitions missing" && exit 1)
         
-        # 後方互換性シンボリックリンクの確認
-        test -L dist/pitchpro.esm.js || (echo "⚠️ Legacy ESM symlink missing" && exit 0)
-        test -L dist/pitchpro.cjs.js || (echo "⚠️ Legacy CJS symlink missing" && exit 0)
+        # 後方互換性ファイルの確認（v1.1.9からファイルコピーに変更）
+        test -f dist/pitchpro.esm.js || (echo "⚠️ Legacy ESM file missing" && exit 0)
+        test -f dist/pitchpro.cjs.js || (echo "⚠️ Legacy CJS file missing" && exit 0)
         
         echo "✅ All build outputs verified"
         
@@ -164,9 +164,7 @@ jobs:
         EOF
         
     - name: Run demo validation
-      run: |
-        npm install playwright
-        node validate-demos.js
+      run: node validate-demos.js
         
     - name: Check package.json consistency
       run: |
