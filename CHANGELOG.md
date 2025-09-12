@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2025-09-12
+
+### 🎯 CRITICAL BUG FIXES
+- **音量値一貫性問題の完全解決**: `6.139596009254456`のような異常値出力を修正
+- **コールバック/UI値統一**: `onPitchUpdate`コールバックとUI自動更新で同一値を保証
+- **volumeMultiplier重複適用修正**: デバイス固有補正の不整合処理を統合
+
+### 🔧 New Features
+- **`_getProcessedResult()`メソッド**: 一元的な音量処理システムを新設
+- **autoUpdateUI警告システム**: UI自動更新時の透明性向上のための警告メッセージ
+- **Enhanced JSDoc**: volumeBarSelector等のセレクターに詳細な警告を追加
+
+### 🛠️ Technical Improvements
+- **AudioDetectionComponent.ts**:
+  - `_getProcessedResult()`: デバイス補正の一元処理
+  - `handlePitchUpdate()`: 処理済み結果をコールバックに渡すように修正
+  - `updateUI()`: 重複volumeMultiplier計算を削除
+  - `startUIUpdates()`: 統一された処理済み結果を使用
+  - `checkAutoUpdateUIWarnings()`: 開発者向け透明性警告システム
+
+### 🧪 Testing & Quality Assurance
+- **新規テストスイート**: `AudioDetectionComponent.test.ts` (13テスト全通過)
+- **`_getProcessedResult()`テスト**: 境界値・null処理・倍率計算の包括的検証
+- **autoUpdateUI機能テスト**: 警告メッセージとUI制御の完全検証
+- **TypeScript型安全性**: オプショナルプロパティの適切な型処理
+
+### 📊 Impact & Results
+- ✅ **完全な値一貫性**: コールバックとUI更新で同じ音量値を保証
+- ✅ **予測可能な動作**: 開発者が期待通りの値を受け取り可能
+- ✅ **透明性向上**: autoUpdateUI使用時の動作が明確
+- ✅ **後方互換性**: 既存コードへの影響なし
+- ✅ **TypeScript完全対応**: コンパイルエラー解決とビルド成功
+
+### 📝 Documentation
+- **`VOLUME_RANGE_ISSUE_REPORT.md`**: 詳細な問題調査レポートを追加
+- **Enhanced configuration warnings**: UIセレクター使用時の注意事項を明確化
+
 ## [1.1.9] - 2025-09-11
 
 ### 🎉 PRODUCTION-LEVEL MILESTONE

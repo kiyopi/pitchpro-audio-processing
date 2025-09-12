@@ -45,9 +45,9 @@ Web音楽アプリケーション開発のための包括的な音響処理ツ�
 - **完全TypeScript対応**：strictモード対応、厳密な型定義とIntelliSense支援
 - **ES/CommonJS対応**：モダンバンドラーと従来環境の両対応
 
-## 🚨 重要：v1.1.8 クリティカルバグ修正リリース
+## 🎯 重要：v1.2.0 音量値一貫性修正リリース
 
-**クロスモードUI干渉問題完全解決**：モード切り替え時のUI要素干渉バグを根本的に修正
+**音量値一貫性問題完全解決**：`6.139596009254456`のような異常値出力を修正し、コールバックとUI自動更新で完全に同じ値を保証
 - 要素セレクター検証システムによる完全な干渉防止
 - 自動noteSelector管理機能
 - 非アクティブモード時の確実なUI停止
@@ -55,7 +55,7 @@ Web音楽アプリケーション開発のための包括的な音響処理ツ�
 **対象ユーザー**：全ユーザー（クリティカルバグ修正のため即座の更新推奨）
 ```bash
 # 最新版へのアップデート  
-npm install @pitchpro/audio-processing@1.1.8
+npm install @pitchpro/audio-processing@1.2.0
 ```
 
 ## 🔄 v1.1.3 マイクレベル修正（継続中）
@@ -83,7 +83,13 @@ import PitchPro from './dist/index.esm.js';
 
 NPM/CDNを利用している場合は変更不要です。
 
-### 🚀 新機能（v1.1.8）
+### 🚀 新機能（v1.2.0）
+- **🎯 音量値一貫性保証**：コールバックとUI自動更新で完全に同じ値を提供
+- **⚠️ autoUpdateUI警告システム**：UI自動更新時の透明性向上
+- **🔧 一元的音量処理**：`_getProcessedResult()`による統合処理システム
+- **📊 完全な予測可能性**：6.139のような異常値を完全に排除
+
+### 🚀 継続機能（v1.1.8）
 - **🛡️ クロスモード干渉防止**：要素セレクター検証による完全なUI保護
 - **🔄 自動noteSelector管理**：開発者による手動管理不要
 - **⚡ 即座のUI停止**：モード切り替え時の瞬時干渉防止
@@ -149,8 +155,8 @@ npm install @pitchpro/audio-processing
 ```
 
 #### 📥 直接ダウンロード
-- **最新版**: [v1.1.8 リリース](https://github.com/kiyopi/pitchpro-audio-processing/releases/latest)
-- **UMDファイル**: [pitchpro.umd.js](https://github.com/kiyopi/pitchpro-audio-processing/releases/download/v1.1.8/pitchpro.umd.js)
+- **最新版**: [v1.2.0 リリース](https://github.com/kiyopi/pitchpro-audio-processing/releases/latest)
+- **UMDファイル**: [pitchpro.umd.js](https://github.com/kiyopi/pitchpro-audio-processing/releases/download/v1.2.0/pitchpro.umd.js)
 - **デモページ**: [ワンクリックダウンロード＋デモ](https://kiyopi.github.io/pitchpro-audio-processing/quickstart-demo.html)
 
 ### 基本的な使用方法
