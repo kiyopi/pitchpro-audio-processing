@@ -71,12 +71,41 @@ volumeBar.style.width = '0%';   // widthのみ設定
 #range-frequency  /* -displayサフィックスがない */
 ```
 
+### 📋 PitchPro標準ID命名規則
+
+PitchProは以下の命名規則でUI要素を自動管理します：
+
+```html
+<!-- ✅ 標準命名規則（推奨） -->
+<div id="mic-frequency">0 Hz</div>
+<div id="mic-volume-bar"></div>
+<div id="mic-volume-text">0.0%</div>
+
+<div id="range-frequency">0 Hz</div>
+<div id="range-volume-bar"></div>
+<div id="range-volume-text">0.0%</div>
+
+<div id="practice-frequency">0 Hz</div>
+<div id="practice-volume-bar"></div>
+<div id="practice-volume-text">0.0%</div>
+<div id="practice-note">-</div>
+```
+
+### ✨ 標準命名規則の利点
+
+**追加処理が一切不要:**
+```javascript
+// これだけで完璧に動作！
+microphoneController.reset();  // UI要素も自動リセット
+```
+
 **解決策:**
 
-**オプション1: 標準命名規則に合わせる**
+**オプション1: 標準命名規則に合わせる（推奨）**
 ```html
 <div id="range-frequency">0 Hz</div>
 ```
+→ **追加のリセット処理が不要になる**
 
 **オプション2: カスタムリセット処理を追加**
 ```javascript
@@ -86,6 +115,7 @@ function resetAllUIElements() {
     if (frequencyDisplay) frequencyDisplay.textContent = '0 Hz';
 }
 ```
+→ 保守コストが増加
 
 ### 🚨 問題3: updateUIのカスタマイズによる副作用
 
@@ -113,6 +143,15 @@ function updateUI(result) {
 
 ### パターン1: 最小構成（推奨）
 
+**HTMLは標準ID命名規則に従う:**
+```html
+<!-- ✅ PitchPro標準に準拠 -->
+<div id="mic-frequency">0 Hz</div>
+<div id="mic-volume-bar"></div>
+<div id="mic-volume-text">0.0%</div>
+```
+
+**JavaScriptは最小限:**
 ```javascript
 // 1. 初期化はシンプルに
 const microphoneController = new PitchPro.MicrophoneController();
@@ -120,7 +159,7 @@ await microphoneController.initialize();
 
 const audioManager = microphoneController.audioManager;
 const pitchDetector = new PitchPro.PitchDetector(audioManager);
-// カスタム設定は必要最小限に
+// デフォルト設定で十分
 await pitchDetector.initialize();
 
 // 2. 登録を忘れずに
@@ -129,10 +168,15 @@ microphoneController.registerDetector(pitchDetector);
 // 3. コールバックはシンプルに
 pitchDetector.setCallbacks({
     onPitchUpdate: (result) => {
-        // ライブラリの値をそのまま使用
+        // 標準IDなら追加処理不要
         updateUI(result);
     }
 });
+
+// 4. リセットも一行で完璧
+function handleStop() {
+    microphoneController.reset();  // これだけでUI完全リセット！
+}
 ```
 
 ### パターン2: カスタムUI要素との統合
@@ -160,7 +204,38 @@ function handleStop() {
 }
 ```
 
-### パターン3: モード切り替えの実装
+### パターン3: デバッグモード活用
+
+**開発時（デバッグ有効）:**
+```javascript
+const audioDetector = new AudioDetectionComponent({
+    volumeBarSelector: '#volume-bar',
+    volumeTextSelector: '#volume-text',
+    frequencySelector: '#frequency',
+    debug: true  // 🔍 開発時のみ有効化
+});
+```
+
+**本番環境（デフォルト）:**
+```javascript
+const audioDetector = new AudioDetectionComponent({
+    volumeBarSelector: '#volume-bar',
+    volumeTextSelector: '#volume-text',
+    frequencySelector: '#frequency'
+    // debug: false がデフォルト（本番最適化）
+});
+```
+
+### 🔍 デバッグログで確認できる情報
+
+```
+🎵 AudioDetection UI要素キャッシュ完了: ["volumeBar", "volumeText", "frequency"]
+🎵 AudioDetection セレクター更新: {frequencySelector: "#new-frequency"}
+🎵 AudioDetection Note element mismatch: 干渉防止でスキップ
+🎵 AudioDetection Device optimization applied: {device: "PC", settings: {...}}
+```
+
+### パターン4: モード切り替えの実装
 
 ```javascript
 // モード切り替え時の完全リセットパターン
@@ -186,6 +261,23 @@ async function switchMode(newMode) {
 ## トラブルシューティング
 
 ### デバッグ手法
+
+#### 1. PitchProデバッグログ活用
+
+```javascript
+// 開発時のみデバッグログ有効化
+const audioDetector = new AudioDetectionComponent({
+    volumeBarSelector: '#volume-bar',
+    frequencySelector: '#frequency',
+    debug: true  // 🔍 詳細ログで問題を特定
+});
+
+// 期待される出力例:
+// 🎵 AudioDetection UI要素キャッシュ完了: ["volumeBar", "frequency"]
+// 🎵 AudioDetection Note element mismatch: 干渉防止でスキップ
+```
+
+#### 2. 手動デバッグ手法
 
 ```javascript
 // 1. 要素の存在確認
@@ -214,9 +306,19 @@ function debugVolumeBar() {
 function testReset() {
     console.log('Before reset:', getCurrentValues());
     microphoneController.reset();
-    resetAllUIElements();
     console.log('After reset:', getCurrentValues());
 }
+```
+
+#### 3. 本番環境への切り替え
+
+```javascript
+// 開発完了後はデバッグログを無効化
+const audioDetector = new AudioDetectionComponent({
+    volumeBarSelector: '#volume-bar',
+    frequencySelector: '#frequency'
+    // debug: false（デフォルト）でパフォーマンス最適化
+});
 ```
 
 ### よくあるエラーと解決策
@@ -240,10 +342,17 @@ function testReset() {
 
 ### UI統合時
 
-- [ ] ID命名規則を確認（標準: `mode-element`形式）
+- [ ] **PitchPro標準ID命名規則に準拠**（`mode-element`形式）
 - [ ] updateUI関数はライブラリの値をそのまま使用
 - [ ] CSS強制設定（minWidth, maxWidth）を避ける
-- [ ] カスタムUI要素用のリセット処理を実装
+- [ ] 標準ID使用時は追加リセット処理を実装**しない**
+
+### 開発・デバッグ時
+
+- [ ] 問題発生時は`debug: true`で詳細ログを確認
+- [ ] 開発完了後は`debug`未指定（デフォルト無効）に戻す
+- [ ] PitchProのデバッグログでUI要素キャッシュ状況を確認
+- [ ] クロスモード干渉の警告ログを監視
 
 ### テスト時
 
@@ -256,10 +365,10 @@ function testReset() {
 
 ### 🎯 成功の鍵
 
-1. **ライブラリを信頼する**: デフォルト設定で十分動作する
-2. **責任を明確にする**: ライブラリとアプリの役割を理解
-3. **シンプルに保つ**: 不要なカスタマイズを避ける
-4. **明示的に補完する**: カスタムUI要素は明示的に管理
+1. **標準ID命名規則に従う**: `mode-element`形式で追加処理不要
+2. **ライブラリを信頼する**: デフォルト設定で十分動作する
+3. **責任を明確にする**: ライブラリとアプリの役割を理解
+4. **シンプルに保つ**: 不要なカスタマイズを避ける
 
 ### ⚠️ 避けるべきこと
 
