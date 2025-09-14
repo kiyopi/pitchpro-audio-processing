@@ -257,8 +257,8 @@
                 <label for="sensitivity-slider">Sensitivity (音量感度)</label>
                 <div class="slider-container">
                     <input type="range" id="sensitivity-slider" class="slider" 
-                           min="1.0" max="6.0" step="0.1" value="3.5">
-                    <span id="sensitivity-value" class="slider-value">3.5</span>
+                           min="1.0" max="25.0" step="0.5" value="20.0">
+                    <span id="sensitivity-value" class="slider-value">20.0</span>
                 </div>
             </div>
             
@@ -317,7 +317,7 @@
                 this.audioDetector = null;
                 this.isRunning = false;
                 this.currentSettings = {
-                    sensitivity: 3.5,
+                    sensitivity: 20.0,
                     noiseGateScaling: 500
                 };
                 
@@ -356,7 +356,7 @@
                 
                 if (/iPhone/.test(userAgent)) {
                     deviceType = 'iPhone';
-                    this.currentSettings.sensitivity = 3.5;
+                    this.currentSettings.sensitivity = 20.0; // 大きな値で確実に変化を確認
                 } else if (/iPad/.test(userAgent)) {
                     deviceType = 'iPad';
                     this.currentSettings.sensitivity = 5.0;
@@ -374,7 +374,7 @@
                 
                 // デバイスに応じた初期値設定
                 this.elements.sensitivitySlider.value = this.currentSettings.sensitivity;
-                this.elements.sensitivityValue.textContent = this.currentSettings.sensitivity;
+                this.elements.sensitivityValue.textContent = this.currentSettings.sensitivity.toString();
             }
             
             getBrowserInfo() {
@@ -460,26 +460,44 @@
             }
             
             async reinitializeDetector() {
+                this.addLogEntry('info', `Reinitializing with Sensitivity: ${this.currentSettings.sensitivity}, NoiseGate: ${this.currentSettings.noiseGateScaling}`);
+                
+                // 既存のdetectorを停止・破棄
                 if (this.audioDetector) {
+                    this.audioDetector.stopDetection();
                     this.audioDetector.destroy();
                     this.audioDetector = null;
                 }
                 
-                await this.initializeDetector();
+                // 新しい設定で初期化
+                const success = await this.initializeDetector();
+                if (!success) {
+                    this.addLogEntry('error', 'Failed to reinitialize detector');
+                    return;
+                }
                 
+                // テストが実行中だった場合は再開
                 if (this.isRunning) {
-                    await this.audioDetector.startDetection();
+                    try {
+                        await this.audioDetector.startDetection();
+                        this.addLogEntry('info', 'Detection restarted with new settings');
+                    } catch (error) {
+                        this.addLogEntry('error', `Failed to restart detection: ${error.message}`);
+                    }
                 }
             }
             
             async initializeDetector() {
                 try {
+                    this.addLogEntry('info', `Initializing detector with: Sensitivity=${this.currentSettings.sensitivity}, NoiseGate=${this.currentSettings.noiseGateScaling}`);
+                    
                     // カスタム設定でAudioDetectionComponentを初期化
                     this.audioDetector = new PitchPro.AudioDetectionComponent({
                         clarityThreshold: 0.4,
                         minVolumeAbsolute: 0.003,
                         deviceOptimization: false, // カスタム設定を使用
                         autoUpdateUI: false,
+                        debug: true, // デバッグログ有効化
                         customDeviceConfig: {
                             sensitivity: this.currentSettings.sensitivity,
                             noiseGateScalingFactor: this.currentSettings.noiseGateScaling
@@ -499,7 +517,7 @@
                         }
                     });
                     
-                    this.addLogEntry('info', 'AudioDetector initialized successfully');
+                    this.addLogEntry('info', `AudioDetector initialized successfully with SCALING_FACTOR=${Math.round(400 / (this.currentSettings.sensitivity * this.currentSettings.sensitivity))}`);
                     return true;
                     
                 } catch (error) {
