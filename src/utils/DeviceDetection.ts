@@ -113,7 +113,7 @@ export class DeviceDetection {
     switch (deviceType) {
       case 'iPad':
         return {
-          sensitivity: 7.0,        // High sensitivity for iPad microphones
+          sensitivity: 5.0,        // Optimized sensitivity for iPad microphones (テスト導出値)
           noiseGate: 0.025,        // v1.1.8: Increased noise gate for better noise rejection
           divisor: 4.0,            // Volume calculation divisor
           gainCompensation: 1.5,   // Gain compensation for low-frequency cut
@@ -123,7 +123,7 @@ export class DeviceDetection {
         
       case 'iPhone':
         return {
-          sensitivity: 2.0,        // Lower sensitivity for cleaner signal
+          sensitivity: 3.5,        // Optimized sensitivity for iPhone microphones (テスト導出値)
           noiseGate: 0.03,         // v1.1.8: Increased noise gate to filter out background noise
           divisor: 4.0,            // Keep original divisor
           gainCompensation: 1.5,   // Keep original gain compensation
@@ -134,7 +134,7 @@ export class DeviceDetection {
       case 'PC':
       default:
         return {
-          sensitivity: 1.0,        // Standard sensitivity for PC
+          sensitivity: 1.8,        // Optimized sensitivity for PC microphones (上昇速度調整)
           noiseGate: 0.035,        // v1.1.8: Increased noise gate for better ambient noise filtering
           divisor: 6.0,            // Different volume calculation for PC
           gainCompensation: 1.0,   // No additional gain compensation needed
@@ -151,7 +151,7 @@ export class DeviceDetection {
     return {
       deviceType: 'PC',
       isIOS: false,
-      sensitivity: 1.0,
+      sensitivity: 1.8,        // Updated to match optimized PC value
       noiseGate: 0.035,        // v1.1.8: Improved default noise gate
       divisor: 6.0,
       gainCompensation: 1.0,

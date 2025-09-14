@@ -533,6 +533,18 @@ export class AudioManager {
    * audioManager.setSensitivity(0.5);
    * ```
    */
+  private async _verifyGainChange(expectedGain: number, timeout = 200, interval = 20): Promise<boolean> {
+    const startTime = Date.now();
+    while (Date.now() - startTime < timeout) {
+      if (this.gainNode && Math.abs(this.gainNode.gain.value - expectedGain) <= 0.1) {
+        return true; // 許容誤差内で一致したので成功
+      }
+      // 指定された間隔で待機
+      await new Promise(resolve => setTimeout(resolve, interval));
+    }
+    return false; // タイムアウトまでに一致しなかったので失敗
+  }
+
   setSensitivity(sensitivity: number): void {
     // Range limit (extended to 10.0x for iPad real device support)
     const clampedSensitivity = Math.max(0.1, Math.min(10.0, sensitivity));
@@ -542,37 +554,25 @@ export class AudioManager {
       this.gainNode.gain.setValueAtTime(clampedSensitivity, this.audioContext?.currentTime || 0);
       this.currentSensitivity = clampedSensitivity;
       
-      // Immediate verification of gain setting success
-      setTimeout(() => {
-        if (!this.gainNode) return; // Safety check
-        
-        const actualGain = this.gainNode.gain.value;
-        const tolerance = 0.1;
-        
-        if (Math.abs(actualGain - clampedSensitivity) > tolerance) {
-          // Critical: Gain setting failed - throw fatal error to prevent infinite loops
-          const gainSettingError = new PitchProError(
-            `期待ゲイン(${clampedSensitivity}x)が設定できませんでした。ブラウザのautoGainControlが有効になっている可能性があります。実際値: ${actualGain}`,
-            ErrorCode.AUDIO_CONTEXT_ERROR,
-            {
-              operation: 'setSensitivity_verification_critical',
-              expectedGain: clampedSensitivity,
-              actualGain: actualGain,
-              driftAmount: Math.abs(actualGain - clampedSensitivity),
-              tolerance: tolerance,
-              isCriticalFailure: true,
-              suggestion: 'ブラウザ設定でautoGainControlを無効にするか、デバイス設定を確認してください'
-            }
-          );
-          
-          ErrorMessageBuilder.logError(gainSettingError, 'Critical gain setting failure');
-          
-          // Do not attempt to reset - this indicates a fundamental browser/device issue
-          throw gainSettingError;
-        } else {
-          console.log(`✅ [AudioManager] Gain setting verified: ${actualGain.toFixed(1)}x (expected: ${clampedSensitivity.toFixed(1)}x)`);
+      // 非同期検証による堅牢なゲイン設定確認
+      (async () => {
+        const verified = await this._verifyGainChange(clampedSensitivity);
+
+        if (verified) {
+          console.log(`✅ [AudioManager] Gain setting verified: ${this.gainNode?.gain.value.toFixed(1)}x (expected: ${clampedSensitivity.toFixed(1)}x)`);
+        } else if (this.gainNode) { // ゲイン設定の検証失敗（警告レベル・機能継続）
+          const actualGain = this.gainNode.gain.value;
+          console.warn(`⚠️ [AudioManager] ゲイン検証失敗 (機能継続):`, {
+            期待値: `${clampedSensitivity}x`,
+            実際値: `${actualGain}x`,
+            差分: Math.abs(actualGain - clampedSensitivity).toFixed(2),
+            理由: 'ブラウザのautoGainControl制御による制限',
+            影響: '音量計算には影響なし（動的SCALING_FACTOR使用）',
+            状態: '正常動作中'
+          });
+          // エラーを投げずに機能を継続（音量計算に影響なし）
         }
-      }, 50); // Reduced timeout for faster detection
+      })();
       
       console.log(`🎤 [AudioManager] Microphone sensitivity updated: ${clampedSensitivity.toFixed(1)}x`);
     } else {

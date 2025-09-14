@@ -406,6 +406,46 @@ export class PitchDetector {
   }
 
   /**
+   * Sets custom device specifications to override default DeviceDetection settings.
+   * This method allows mobile test applications to provide custom sensitivity and
+   * noise gate settings for real-time calibration.
+   * 
+   * @param customSpecs - Custom device specifications to override defaults
+   * 
+   * @example
+   * ```typescript
+   * // Override sensitivity for mobile testing
+   * pitchDetector.setCustomDeviceSpecs({
+   *   ...pitchDetector.getDeviceSpecs(),
+   *   sensitivity: 2.5,
+   *   noiseGate: 0.025
+   * });
+   * ```
+   */
+  setCustomDeviceSpecs(customSpecs: DeviceSpecs): void {
+    this.deviceSpecs = customSpecs;
+    
+    // Log the change for debugging
+    console.log('🎛️ [PitchDetector] Custom device specs applied:', {
+      deviceType: customSpecs.deviceType,
+      sensitivity: customSpecs.sensitivity,
+      noiseGate: customSpecs.noiseGate,
+      customProperties: Object.keys(customSpecs).filter(key => 
+        !['deviceType', 'sensitivity', 'noiseGate', 'divisor', 'gainCompensation', 'noiseThreshold', 'smoothingFactor'].includes(key)
+      )
+    });
+  }
+
+  /**
+   * Gets current device specifications
+   * 
+   * @returns Current device specifications or null if not initialized
+   */
+  getDeviceSpecs(): DeviceSpecs | null {
+    return this.deviceSpecs;
+  }
+
+  /**
    * Initializes the pitch detector with audio resources and Pitchy engine
    * 
    * @description Sets up audio analysers, creates Pitchy detector instance, and initializes
@@ -648,9 +688,20 @@ export class PitchDetector {
     const platformSpecs = this.deviceSpecs;
     const adjustedRms = rms * platformSpecs.gainCompensation;
     
-    // 音量計算用定数定義
-    const SCALING_FACTOR = 400; // RMS値からパーセント表示への変換係数
-    const NOISE_GATE_SCALING_FACTOR = 1500; // ノイズゲート閾値計算用係数 
+    // 音量計算用定数定義（デバイス固有・感度調整済み）
+    const currentSensitivity = this.audioManager.getSensitivity();
+    const SCALING_FACTOR = 400 / (platformSpecs.sensitivity * currentSensitivity); // 実際の感度設定を反映
+    
+    // デバッグ：SCALING_FACTOR計算の詳細
+    if (IS_DEBUG_MODE) {
+      console.log(`[Debug] SCALING_FACTOR計算:`);
+      console.log(`  platformSpecs.sensitivity=${platformSpecs.sensitivity}`);
+      console.log(`  currentSensitivity=${currentSensitivity}`);
+      console.log(`  計算: 400 / (${platformSpecs.sensitivity} * ${currentSensitivity}) = ${SCALING_FACTOR}`);
+    }
+    // カスタムNOISE_GATE_SCALING_FACTORがあればそれを使用、なければデフォルト値
+    const customNoiseGateScaling = (platformSpecs as any).customNoiseGateScaling;
+    const NOISE_GATE_SCALING_FACTOR = customNoiseGateScaling || 500; // ノイズゲート閾値計算用係数（音量調整のため1500→500に縮小） 
     // ハードクリッピング（シンプルなリニア変換）
     const rawVolumeValue = adjustedRms * SCALING_FACTOR;
     const volumePercent = Math.min(100, Math.max(0, rawVolumeValue));

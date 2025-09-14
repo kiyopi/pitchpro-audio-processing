@@ -127,6 +127,31 @@ export interface AudioDetectionConfig {
   // Debug Settings
   debug?: boolean;
   logPrefix?: string;
+  
+  // Custom Device Configuration (for mobile testing)
+  /**
+   * Custom device configuration to override default device detection.
+   * Primarily used for mobile testing and calibration.
+   * @example
+   * ```typescript
+   * const detector = new AudioDetectionComponent({
+   *   deviceOptimization: false, // Disable automatic optimization
+   *   customDeviceConfig: {
+   *     sensitivity: 2.5,
+   *     noiseGateScalingFactor: 300
+   *   }
+   * });
+   * ```
+   */
+  customDeviceConfig?: {
+    sensitivity?: number;
+    noiseGateScalingFactor?: number;
+    noiseGate?: number;
+    divisor?: number;
+    gainCompensation?: number;
+    noiseThreshold?: number;
+    smoothingFactor?: number;
+  };
 }
 
 /**
@@ -269,7 +294,9 @@ export class AudioDetectionComponent {
       autoUpdateUI: config.autoUpdateUI ?? true,
       
       debug: config.debug ?? false,
-      logPrefix: config.logPrefix ?? '🎵 AudioDetection'
+      logPrefix: config.logPrefix ?? '🎵 AudioDetection',
+      
+      customDeviceConfig: config.customDeviceConfig ?? {}
     };
 
     // Initialize AudioManager
@@ -396,6 +423,16 @@ export class AudioDetectionComponent {
         deviceOptimization: this.config.deviceOptimization
       });
 
+      // Apply custom device configuration if provided (for mobile testing)
+      if (Object.keys(this.config.customDeviceConfig).length > 0) {
+        this.applyCustomDeviceConfig();
+        // Pass custom device specs directly to PitchDetector
+        if (this.pitchDetector && this.deviceSpecs) {
+          this.pitchDetector.setCustomDeviceSpecs(this.deviceSpecs);
+        }
+        this.debugLog('Custom device configuration applied:', this.config.customDeviceConfig);
+      }
+
       // Set up PitchDetector callbacks
       this.pitchDetector.setCallbacks({
         onPitchUpdate: (result) => {
@@ -511,10 +548,8 @@ export class AudioDetectionComponent {
       if (started) {
         this.updateState('detecting');
         
-        // Start UI update timer
-        if (this.config.autoUpdateUI) {
-          this.startUIUpdates();
-        }
+        // Start UI update timer only if autoUpdateUI is enabled
+        this.startUIUpdates();
         
         this.debugLog('Detection started successfully');
         return true;
@@ -902,6 +937,8 @@ export class AudioDetectionComponent {
     // Only cache UI elements if autoUpdateUI is enabled
     if (!this.config.autoUpdateUI) {
       this.debugLog('UI element caching skipped - autoUpdateUI is disabled');
+      // Clear any existing cached elements when autoUpdateUI is false
+      this.uiElements = {};
       return;
     }
     
@@ -935,6 +972,12 @@ export class AudioDetectionComponent {
    * @private
    */
   private resetAllUIElements(): void {
+    // Skip resetting if autoUpdateUI is disabled
+    if (!this.config.autoUpdateUI) {
+      this.debugLog('UI reset skipped - autoUpdateUI is disabled');
+      return;
+    }
+    
     try {
       // Reset all possible UI elements by querying all selectors that might exist
       const allPossibleSelectors = [
@@ -1042,6 +1085,12 @@ export class AudioDetectionComponent {
    * @private
    */
   private startUIUpdates(): void {
+    // Don't start UI updates if autoUpdateUI is disabled
+    if (!this.config.autoUpdateUI) {
+      this.debugLog('UI updates not started - autoUpdateUI is disabled');
+      return;
+    }
+    
     if (this.uiUpdateTimer) {
       clearInterval(this.uiUpdateTimer);
     }
@@ -1096,7 +1145,19 @@ export class AudioDetectionComponent {
     const processedResult = { ...rawResult };
 
     // デバイスごとの補正係数を適用
-    const finalVolume = rawResult.volume * (this.deviceSettings?.volumeMultiplier ?? 1.0);
+    const multiplier = this.deviceSettings?.volumeMultiplier ?? 1.0;
+    const finalVolume = rawResult.volume * multiplier;
+    
+    // デバッグログ: 音量変換の詳細
+    if (this.config.debug && rawResult.volume > 0) {
+      console.log(`🔍 [AudioDetectionComponent] Volume conversion:`, {
+        original: rawResult.volume.toFixed(2) + '%',
+        multiplier: multiplier.toFixed(1) + 'x',
+        beforeClamp: finalVolume.toFixed(2) + '%',
+        afterClamp: Math.min(100, Math.max(0, finalVolume)).toFixed(2) + '%',
+        device: this.deviceSpecs?.deviceType || 'Unknown'
+      });
+    }
     
     // 最終的な音量を0-100の範囲に丸めて、結果オブジェクトを更新
     processedResult.volume = Math.min(100, Math.max(0, finalVolume));
@@ -1178,6 +1239,50 @@ export class AudioDetectionComponent {
         isInitialized: this.isInitialized
       }
     );
+  }
+
+  /**
+   * Applies custom device configuration to override default DeviceDetection settings
+   * @private
+   */
+  private applyCustomDeviceConfig(): void {
+    if (!this.deviceSpecs || Object.keys(this.config.customDeviceConfig).length === 0) {
+      return;
+    }
+
+    // Create a modified deviceSpecs object with custom overrides
+    const customSpecs: DeviceSpecs = {
+      ...this.deviceSpecs,
+      // Override with custom values if provided
+      sensitivity: this.config.customDeviceConfig.sensitivity ?? this.deviceSpecs.sensitivity,
+      noiseGate: this.config.customDeviceConfig.noiseGate ?? this.deviceSpecs.noiseGate,
+      divisor: this.config.customDeviceConfig.divisor ?? this.deviceSpecs.divisor,
+      gainCompensation: this.config.customDeviceConfig.gainCompensation ?? this.deviceSpecs.gainCompensation,
+      noiseThreshold: this.config.customDeviceConfig.noiseThreshold ?? this.deviceSpecs.noiseThreshold,
+      smoothingFactor: this.config.customDeviceConfig.smoothingFactor ?? this.deviceSpecs.smoothingFactor
+    };
+
+    // Override deviceSpecs for this component
+    this.deviceSpecs = customSpecs;
+
+    // Apply custom noise gate scaling factor if provided (for mobile test page)
+    if (this.config.customDeviceConfig.noiseGateScalingFactor) {
+      // This will be used by the PitchDetector's volume calculation
+      // Store it in deviceSpecs as a custom property for the PitchDetector to access
+      (this.deviceSpecs as any).customNoiseGateScaling = this.config.customDeviceConfig.noiseGateScalingFactor;
+    }
+
+    // Update device-specific settings based on custom configuration
+    if (this.config.customDeviceConfig.sensitivity && this.deviceSettings) {
+      this.deviceSettings.sensitivityMultiplier = this.config.customDeviceConfig.sensitivity;
+      this.deviceSettings.volumeMultiplier = this.config.customDeviceConfig.sensitivity * 1.5; // Approximate volume scaling
+    }
+
+    this.debugLog('Applied custom device configuration:', {
+      originalSpecs: this.audioManager.getPlatformSpecs(),
+      customSpecs: this.deviceSpecs,
+      customConfig: this.config.customDeviceConfig
+    });
   }
 
   /**

@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>📱 PitchPro モバイル音量調整テスト</title>
+    <style>
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 10px;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .device-info {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .controls {
+            margin-bottom: 20px;
+        }
+        
+        .control-group {
+            margin-bottom: 15px;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .slider-container {
+            position: relative;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 40px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: #4CAF50;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .slider::-moz-range-thumb {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: #4CAF50;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .slider-value {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(45deg, #f44336, #d32f2f);
+            color: white;
+        }
+        
+        .btn:active {
+            transform: scale(0.95);
+        }
+        
+        .volume-display {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .volume-bar-container {
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .volume-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #FFC107, #F44336);
+            transition: width 0.1s ease;
+            border-radius: 10px;
+        }
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .metric {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .metric-label {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        
+        .metric-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        
+        .log-container {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .log-entry {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            margin-bottom: 2px;
+            word-break: break-all;
+        }
+        
+        .log-debug { color: #90CAF9; }
+        .log-info { color: #81C784; }
+        .log-warn { color: #FFB74D; }
+        .log-error { color: #E57373; }
+        
+        .hidden { display: none !important; }
+        
+        .status {
+            text-align: center;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .status-ready { background: rgba(76, 175, 80, 0.3); }
+        .status-testing { background: rgba(33, 150, 243, 0.3); }
+        .status-error { background: rgba(244, 67, 54, 0.3); }
+        
+        @media (max-width: 480px) {
+            .container {
+                margin: 5px;
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📱 PitchPro モバイル調整</h1>
+            <p>音量バランスをリアルタイムで調整</p>
+        </div>
+        
+        <div id="device-info" class="device-info">
+            <div><strong>デバイス:</strong> <span id="device-type">検出中...</span></div>
+            <div><strong>ブラウザ:</strong> <span id="browser-info">検出中...</span></div>
+            <div><strong>画面:</strong> <span id="screen-info">検出中...</span></div>
+        </div>
+        
+        <div id="status" class="status status-ready">
+            準備完了 - 設定を調整してテストを開始
+        </div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="sensitivity-slider">Sensitivity (音量感度)</label>
+                <div class="slider-container">
+                    <input type="range" id="sensitivity-slider" class="slider" 
+                           min="1.0" max="6.0" step="0.1" value="3.5">
+                    <span id="sensitivity-value" class="slider-value">3.5</span>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label for="noise-gate-slider">Noise Gate (ノイズ除去)</label>
+                <div class="slider-container">
+                    <input type="range" id="noise-gate-slider" class="slider" 
+                           min="200" max="1000" step="50" value="500">
+                    <span id="noise-gate-value" class="slider-value">500</span>
+                </div>
+            </div>
+            
+            <button id="apply-settings" class="btn btn-secondary">設定を適用</button>
+        </div>
+        
+        <div class="volume-display">
+            <div class="volume-bar-container">
+                <div id="volume-bar" class="volume-bar" style="width: 0%;"></div>
+            </div>
+            
+            <div class="metrics">
+                <div class="metric">
+                    <div class="metric-label">音量</div>
+                    <div id="volume-text" class="metric-value">0%</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">SCALING</div>
+                    <div id="scaling-factor" class="metric-value">0</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">周波数</div>
+                    <div id="frequency-value" class="metric-value">---</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">ノート</div>
+                    <div id="note-value" class="metric-value">---</div>
+                </div>
+            </div>
+        </div>
+        
+        <button id="start-test" class="btn btn-primary">🎤 テスト開始</button>
+        <button id="stop-test" class="btn btn-danger hidden">⏹️ テスト停止</button>
+        
+        <div class="log-container">
+            <div><strong>デバッグログ:</strong></div>
+            <div id="log-output"></div>
+        </div>
+    </div>
+
+    <!-- PitchPro UMDライブラリ -->
+    <script src="../dist/pitchpro.umd.js"></script>
+    
+    <script>
+        class MobileVolumeTest {
+            constructor() {
+                this.audioDetector = null;
+                this.isRunning = false;
+                this.currentSettings = {
+                    sensitivity: 3.5,
+                    noiseGateScaling: 500
+                };
+                
+                this.initElements();
+                this.initDeviceInfo();
+                this.bindEvents();
+                this.setupLogging();
+            }
+            
+            initElements() {
+                this.elements = {
+                    sensitivitySlider: document.getElementById('sensitivity-slider'),
+                    sensitivityValue: document.getElementById('sensitivity-value'),
+                    noiseGateSlider: document.getElementById('noise-gate-slider'),
+                    noiseGateValue: document.getElementById('noise-gate-value'),
+                    applySettings: document.getElementById('apply-settings'),
+                    startTest: document.getElementById('start-test'),
+                    stopTest: document.getElementById('stop-test'),
+                    status: document.getElementById('status'),
+                    volumeBar: document.getElementById('volume-bar'),
+                    volumeText: document.getElementById('volume-text'),
+                    scalingFactor: document.getElementById('scaling-factor'),
+                    frequencyValue: document.getElementById('frequency-value'),
+                    noteValue: document.getElementById('note-value'),
+                    logOutput: document.getElementById('log-output'),
+                    deviceType: document.getElementById('device-type'),
+                    browserInfo: document.getElementById('browser-info'),
+                    screenInfo: document.getElementById('screen-info')
+                };
+            }
+            
+            initDeviceInfo() {
+                // デバイス検出
+                const userAgent = navigator.userAgent;
+                let deviceType = 'PC';
+                
+                if (/iPhone/.test(userAgent)) {
+                    deviceType = 'iPhone';
+                    this.currentSettings.sensitivity = 3.5;
+                } else if (/iPad/.test(userAgent)) {
+                    deviceType = 'iPad';
+                    this.currentSettings.sensitivity = 5.0;
+                } else if (/Macintosh/.test(userAgent) && 'ontouchend' in document) {
+                    deviceType = 'iPad (iPadOS)';
+                    this.currentSettings.sensitivity = 5.0;
+                } else if (/Android/.test(userAgent)) {
+                    deviceType = 'Android';
+                    this.currentSettings.sensitivity = 3.0;
+                }
+                
+                this.elements.deviceType.textContent = deviceType;
+                this.elements.browserInfo.textContent = this.getBrowserInfo();
+                this.elements.screenInfo.textContent = `${window.screen.width}×${window.screen.height}`;
+                
+                // デバイスに応じた初期値設定
+                this.elements.sensitivitySlider.value = this.currentSettings.sensitivity;
+                this.elements.sensitivityValue.textContent = this.currentSettings.sensitivity;
+            }
+            
+            getBrowserInfo() {
+                const userAgent = navigator.userAgent;
+                if (userAgent.includes('Chrome')) return 'Chrome';
+                if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) return 'Safari';
+                if (userAgent.includes('Firefox')) return 'Firefox';
+                return 'Unknown';
+            }
+            
+            bindEvents() {
+                // スライダーイベント
+                this.elements.sensitivitySlider.addEventListener('input', (e) => {
+                    this.elements.sensitivityValue.textContent = e.target.value;
+                });
+                
+                this.elements.noiseGateSlider.addEventListener('input', (e) => {
+                    this.elements.noiseGateValue.textContent = e.target.value;
+                });
+                
+                // ボタンイベント
+                this.elements.applySettings.addEventListener('click', () => {
+                    this.applySettings();
+                });
+                
+                this.elements.startTest.addEventListener('click', () => {
+                    this.startTest();
+                });
+                
+                this.elements.stopTest.addEventListener('click', () => {
+                    this.stopTest();
+                });
+            }
+            
+            setupLogging() {
+                // コンソールログをキャプチャ
+                const originalLog = console.log;
+                const originalWarn = console.warn;
+                const originalError = console.error;
+                
+                console.log = (...args) => {
+                    this.addLogEntry('log', args.join(' '));
+                    originalLog.apply(console, args);
+                };
+                
+                console.warn = (...args) => {
+                    this.addLogEntry('warn', args.join(' '));
+                    originalWarn.apply(console, args);
+                };
+                
+                console.error = (...args) => {
+                    this.addLogEntry('error', args.join(' '));
+                    originalError.apply(console, args);
+                };
+            }
+            
+            addLogEntry(level, message) {
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntry = document.createElement('div');
+                logEntry.className = `log-entry log-${level}`;
+                logEntry.textContent = `[${timestamp}] ${message}`;
+                
+                this.elements.logOutput.appendChild(logEntry);
+                this.elements.logOutput.scrollTop = this.elements.logOutput.scrollHeight;
+                
+                // ログエントリが多すぎる場合は古いものを削除
+                const entries = this.elements.logOutput.children;
+                if (entries.length > 100) {
+                    entries[0].remove();
+                }
+            }
+            
+            applySettings() {
+                this.currentSettings.sensitivity = parseFloat(this.elements.sensitivitySlider.value);
+                this.currentSettings.noiseGateScaling = parseInt(this.elements.noiseGateSlider.value);
+                
+                this.addLogEntry('info', `Settings Applied - Sensitivity: ${this.currentSettings.sensitivity}, NoiseGate: ${this.currentSettings.noiseGateScaling}`);
+                
+                // AudioDetectorが存在する場合は再初期化
+                if (this.audioDetector) {
+                    this.reinitializeDetector();
+                }
+            }
+            
+            async reinitializeDetector() {
+                if (this.audioDetector) {
+                    this.audioDetector.destroy();
+                    this.audioDetector = null;
+                }
+                
+                await this.initializeDetector();
+                
+                if (this.isRunning) {
+                    await this.audioDetector.startDetection();
+                }
+            }
+            
+            async initializeDetector() {
+                try {
+                    // カスタム設定でAudioDetectionComponentを初期化
+                    this.audioDetector = new PitchPro.AudioDetectionComponent({
+                        clarityThreshold: 0.4,
+                        minVolumeAbsolute: 0.003,
+                        deviceOptimization: false, // カスタム設定を使用
+                        autoUpdateUI: false,
+                        customDeviceConfig: {
+                            sensitivity: this.currentSettings.sensitivity,
+                            noiseGateScalingFactor: this.currentSettings.noiseGateScaling
+                        }
+                    });
+                    
+                    await this.audioDetector.initialize();
+                    
+                    // コールバック設定
+                    this.audioDetector.setCallbacks({
+                        onPitchUpdate: (result) => {
+                            this.updateDisplay(result);
+                        },
+                        onError: (error) => {
+                            this.addLogEntry('error', `PitchPro Error: ${error.message}`);
+                            this.setStatus('error', `エラー: ${error.message}`);
+                        }
+                    });
+                    
+                    this.addLogEntry('info', 'AudioDetector initialized successfully');
+                    return true;
+                    
+                } catch (error) {
+                    this.addLogEntry('error', `Initialization failed: ${error.message}`);
+                    this.setStatus('error', `初期化失敗: ${error.message}`);
+                    return false;
+                }
+            }
+            
+            async startTest() {
+                if (!this.audioDetector) {
+                    const success = await this.initializeDetector();
+                    if (!success) return;
+                }
+                
+                try {
+                    await this.audioDetector.startDetection();
+                    this.isRunning = true;
+                    
+                    this.elements.startTest.classList.add('hidden');
+                    this.elements.stopTest.classList.remove('hidden');
+                    this.setStatus('testing', 'テスト実行中 - マイクに向かって声を出してください');
+                    
+                    this.addLogEntry('info', 'Volume test started');
+                    
+                } catch (error) {
+                    this.addLogEntry('error', `Test start failed: ${error.message}`);
+                    this.setStatus('error', `テスト開始失敗: ${error.message}`);
+                }
+            }
+            
+            stopTest() {
+                if (this.audioDetector) {
+                    this.audioDetector.stopDetection();
+                }
+                
+                this.isRunning = false;
+                this.elements.startTest.classList.remove('hidden');
+                this.elements.stopTest.classList.add('hidden');
+                this.setStatus('ready', '準備完了 - 設定を調整してテストを開始');
+                
+                this.addLogEntry('info', 'Volume test stopped');
+            }
+            
+            updateDisplay(result) {
+                // 音量表示
+                if (result.volume !== undefined) {
+                    const volume = Math.round(result.volume);
+                    this.elements.volumeText.textContent = `${volume}%`;
+                    this.elements.volumeBar.style.width = `${Math.min(volume, 100)}%`;
+                }
+                
+                // 周波数とノート
+                if (result.frequency) {
+                    this.elements.frequencyValue.textContent = `${Math.round(result.frequency)}Hz`;
+                }
+                
+                if (result.note) {
+                    this.elements.noteValue.textContent = result.note;
+                }
+                
+                // SCALING_FACTOR計算表示
+                if (result.volume !== undefined) {
+                    const scalingFactor = Math.round(400 / (this.currentSettings.sensitivity * this.currentSettings.sensitivity));
+                    this.elements.scalingFactor.textContent = scalingFactor;
+                }
+                
+                // デバッグ情報のログ出力（間引き）
+                if (Math.random() < 0.05) { // 5%の確率でログ出力
+                    this.addLogEntry('debug', `Volume: ${Math.round(result.volume || 0)}%, Freq: ${Math.round(result.frequency || 0)}Hz, SCALING: ${Math.round(400 / (this.currentSettings.sensitivity * this.currentSettings.sensitivity))}`);
+                }
+            }
+            
+            setStatus(type, message) {
+                this.elements.status.className = `status status-${type}`;
+                this.elements.status.textContent = message;
+            }
+        }
+        
+        // ページ読み込み完了後に初期化
+        document.addEventListener('DOMContentLoaded', () => {
+            window.mobileTest = new MobileVolumeTest();
+        });
+        
+        // ページ離脱時のクリーンアップ
+        window.addEventListener('beforeunload', () => {
+            if (window.mobileTest && window.mobileTest.audioDetector) {
+                window.mobileTest.audioDetector.destroy();
+            }
+        });
+    </script>
+</body>
+</html>
