@@ -426,6 +426,13 @@ export class AudioDetectionComponent {
       // Apply custom device configuration if provided (for mobile testing)
       if (Object.keys(this.config.customDeviceConfig).length > 0) {
         this.applyCustomDeviceConfig();
+        
+        // AudioManagerにカスタム感度を設定（MicrophoneController作成後）
+        if (this.config.customDeviceConfig.sensitivity && this.micController) {
+          this.micController.setSensitivity(this.config.customDeviceConfig.sensitivity);
+          this.debugLog('🔧 Applied custom sensitivity to AudioManager:', this.config.customDeviceConfig.sensitivity);
+        }
+        
         // Pass custom device specs directly to PitchDetector
         if (this.pitchDetector && this.deviceSpecs) {
           this.pitchDetector.setCustomDeviceSpecs(this.deviceSpecs);

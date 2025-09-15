@@ -489,10 +489,10 @@
             
             async initializeDetector() {
                 try {
-                    this.addLogEntry('info', `Initializing detector with: Sensitivity=${this.currentSettings.sensitivity}, NoiseGate=${this.currentSettings.noiseGateScaling}`);
+                    this.addLogEntry('info', `🔧 Initializing detector with: Sensitivity=${this.currentSettings.sensitivity}, NoiseGate=${this.currentSettings.noiseGateScaling}`);
                     
-                    // カスタム設定でAudioDetectionComponentを初期化
-                    this.audioDetector = new PitchPro.AudioDetectionComponent({
+                    // 🔍 設定値をより詳細にログ出力
+                    const config = {
                         clarityThreshold: 0.4,
                         minVolumeAbsolute: 0.003,
                         deviceOptimization: false, // カスタム設定を使用
@@ -502,9 +502,29 @@
                             sensitivity: this.currentSettings.sensitivity,
                             noiseGateScalingFactor: this.currentSettings.noiseGateScaling
                         }
-                    });
+                    };
+                    
+                    this.addLogEntry('info', `🔍 Config passed to AudioDetectionComponent: ${JSON.stringify(config.customDeviceConfig)}`);
+                    
+                    // カスタム設定でAudioDetectionComponentを初期化
+                    this.audioDetector = new PitchPro.AudioDetectionComponent(config);
                     
                     await this.audioDetector.initialize();
+                    
+                    // 🔍 初期化後の状態確認
+                    const micController = this.audioDetector.microphoneController;
+                    if (micController) {
+                        this.addLogEntry('info', `📱 MicrophoneController found`);
+                        // AudioDetectionComponentの内部状態を確認
+                        const status = this.audioDetector.getStatus();
+                        this.addLogEntry('info', `📊 AudioDetectionComponent status: ${JSON.stringify({
+                            state: status.state,
+                            deviceSpecs: status.deviceSpecs,
+                            customConfig: status.config.customDeviceConfig
+                        })}`);
+                    } else {
+                        this.addLogEntry('warn', `⚠️ MicrophoneController not found`);
+                    }
                     
                     // コールバック設定
                     this.audioDetector.setCallbacks({
@@ -517,11 +537,12 @@
                         }
                     });
                     
-                    this.addLogEntry('info', `AudioDetector initialized successfully with SCALING_FACTOR=${Math.round(400 / (this.currentSettings.sensitivity * this.currentSettings.sensitivity))}`);
+                    const expectedScaling = Math.round(400 / (this.currentSettings.sensitivity * this.currentSettings.sensitivity));
+                    this.addLogEntry('info', `✅ AudioDetector initialized - Expected SCALING_FACTOR=${expectedScaling}`);
                     return true;
                     
                 } catch (error) {
-                    this.addLogEntry('error', `Initialization failed: ${error.message}`);
+                    this.addLogEntry('error', `❌ Initialization failed: ${error.message}`);
                     this.setStatus('error', `初期化失敗: ${error.message}`);
                     return false;
                 }
@@ -568,6 +589,11 @@
                     const volume = Math.round(result.volume);
                     this.elements.volumeText.textContent = `${volume}%`;
                     this.elements.volumeBar.style.width = `${Math.min(volume, 100)}%`;
+                    
+                    // 🔍 デバッグ：音量が低い場合の詳細ログ
+                    if (volume > 0 && volume <= 10) {
+                        this.addLogEntry('debug', `❌ Low volume detected: ${volume}% - Expected higher with sensitivity=${this.currentSettings.sensitivity}`);
+                    }
                 }
                 
                 // 周波数とノート
@@ -585,9 +611,9 @@
                     this.elements.scalingFactor.textContent = scalingFactor;
                 }
                 
-                // デバッグ情報のログ出力（間引き）
-                if (Math.random() < 0.05) { // 5%の確率でログ出力
-                    this.addLogEntry('debug', `Volume: ${Math.round(result.volume || 0)}%, Freq: ${Math.round(result.frequency || 0)}Hz, SCALING: ${Math.round(400 / (this.currentSettings.sensitivity * this.currentSettings.sensitivity))}`);
+                // 🔍 強化されたデバッグ情報（より頻繁に出力）
+                if (Math.random() < 0.2 && result.volume > 0) { // 20%の確率でログ出力（音量がある場合のみ）
+                    this.addLogEntry('debug', `📊 Vol: ${Math.round(result.volume || 0)}%, Freq: ${Math.round(result.frequency || 0)}Hz, SCALING: ${Math.round(400 / (this.currentSettings.sensitivity * this.currentSettings.sensitivity))}, Current Settings: S=${this.currentSettings.sensitivity}, NG=${this.currentSettings.noiseGateScaling}`);
                 }
             }
             

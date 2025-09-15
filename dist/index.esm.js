@@ -1176,7 +1176,7 @@ R.prototype._transform4 = function() {
     var m = o >>> 2;
     for (n = 0; n < t; n += o)
       for (var u = n + m, d = n, f = 0; d < u; d += 2, f += s) {
-        const g = d, v = g + m, y = v + m, S = y + m, A = e[g], p = e[g + 1], M = e[v], P = e[v + 1], k = e[y], B = e[y + 1], O = e[S], X = e[S + 1], z = A, $ = p, L = h[f], H = c * h[f + 1], U = M * L - P * H, V = M * H + P * L, J = h[2 * f], Y = c * h[2 * f + 1], K = k * J - B * Y, Z = k * Y + B * J, ee = h[3 * f], te = c * h[3 * f + 1], ie = O * ee - X * te, b = O * te + X * ee, T = z + K, w = $ + Z, G = z - K, F = $ - Z, _ = U + ie, se = V + b, ne = c * (U - ie), ae = c * (V - b), he = T + _, fe = w + se, ge = T - _, pe = w - se, ve = G + ae, ye = F - ne, Se = G - ae, Ce = F + ne;
+        const g = d, v = g + m, y = v + m, S = y + m, A = e[g], p = e[g + 1], M = e[v], P = e[v + 1], k = e[y], B = e[y + 1], O = e[S], X = e[S + 1], z = A, L = p, $ = h[f], H = c * h[f + 1], U = M * $ - P * H, V = M * H + P * $, J = h[2 * f], Y = c * h[2 * f + 1], K = k * J - B * Y, Z = k * Y + B * J, ee = h[3 * f], te = c * h[3 * f + 1], ie = O * ee - X * te, b = O * te + X * ee, T = z + K, w = L + Z, G = z - K, F = L - Z, _ = U + ie, se = V + b, ne = c * (U - ie), ae = c * (V - b), he = T + _, fe = w + se, ge = T - _, pe = w - se, ve = G + ae, ye = F - ne, Se = G - ae, Ce = F + ne;
         e[g] = he, e[g + 1] = fe, e[v] = ve, e[v + 1] = ye, e[y] = ge, e[y + 1] = pe, e[S] = Se, e[S + 1] = Ce;
       }
   }
@@ -1186,8 +1186,8 @@ R.prototype._singleTransform2 = function(e, t, i) {
   s[e] = h, s[e + 1] = m, s[e + 2] = u, s[e + 3] = d;
 };
 R.prototype._singleTransform4 = function(e, t, i) {
-  const s = this._out, o = this._data, n = this._inv ? -1 : 1, r = i * 2, a = i * 3, c = o[t], h = o[t + 1], m = o[t + i], u = o[t + i + 1], d = o[t + r], f = o[t + r + 1], g = o[t + a], v = o[t + a + 1], y = c + d, S = h + f, A = c - d, p = h - f, M = m + g, P = u + v, k = n * (m - g), B = n * (u - v), O = y + M, X = S + P, z = A + B, $ = p - k, L = y - M, H = S - P, U = A - B, V = p + k;
-  s[e] = O, s[e + 1] = X, s[e + 2] = z, s[e + 3] = $, s[e + 4] = L, s[e + 5] = H, s[e + 6] = U, s[e + 7] = V;
+  const s = this._out, o = this._data, n = this._inv ? -1 : 1, r = i * 2, a = i * 3, c = o[t], h = o[t + 1], m = o[t + i], u = o[t + i + 1], d = o[t + r], f = o[t + r + 1], g = o[t + a], v = o[t + a + 1], y = c + d, S = h + f, A = c - d, p = h - f, M = m + g, P = u + v, k = n * (m - g), B = n * (u - v), O = y + M, X = S + P, z = A + B, L = p - k, $ = y - M, H = S - P, U = A - B, V = p + k;
+  s[e] = O, s[e + 1] = X, s[e + 2] = z, s[e + 3] = L, s[e + 4] = $, s[e + 5] = H, s[e + 6] = U, s[e + 7] = V;
 };
 R.prototype._realTransform4 = function() {
   var e = this._out, t = this._csize, i = this._width, s = 1 << i, o = t / s << 1, n, r, a = this._bitrev;
@@ -1207,15 +1207,15 @@ R.prototype._realTransform4 = function() {
     var m = o >>> 1, u = m >>> 1, d = u >>> 1;
     for (n = 0; n < t; n += o)
       for (var f = 0, g = 0; f <= d; f += 2, g += s) {
-        var v = n + f, y = v + u, S = y + u, A = S + u, p = e[v], M = e[v + 1], P = e[y], k = e[y + 1], B = e[S], O = e[S + 1], X = e[A], z = e[A + 1], $ = p, L = M, H = h[g], U = c * h[g + 1], V = P * H - k * U, J = P * U + k * H, Y = h[2 * g], K = c * h[2 * g + 1], Z = B * Y - O * K, ee = B * K + O * Y, te = h[3 * g], ie = c * h[3 * g + 1], b = X * te - z * ie, T = X * ie + z * te, w = $ + Z, G = L + ee, F = $ - Z, _ = L - ee, se = V + b, ne = J + T, ae = c * (V - b), he = c * (J - T), fe = w + se, ge = G + ne, pe = F + he, ve = _ - ae;
+        var v = n + f, y = v + u, S = y + u, A = S + u, p = e[v], M = e[v + 1], P = e[y], k = e[y + 1], B = e[S], O = e[S + 1], X = e[A], z = e[A + 1], L = p, $ = M, H = h[g], U = c * h[g + 1], V = P * H - k * U, J = P * U + k * H, Y = h[2 * g], K = c * h[2 * g + 1], Z = B * Y - O * K, ee = B * K + O * Y, te = h[3 * g], ie = c * h[3 * g + 1], b = X * te - z * ie, T = X * ie + z * te, w = L + Z, G = $ + ee, F = L - Z, _ = $ - ee, se = V + b, ne = J + T, ae = c * (V - b), he = c * (J - T), fe = w + se, ge = G + ne, pe = F + he, ve = _ - ae;
         if (e[v] = fe, e[v + 1] = ge, e[y] = pe, e[y + 1] = ve, f === 0) {
           var ye = w - se, Se = G - ne;
           e[S] = ye, e[S + 1] = Se;
           continue;
         }
         if (f !== d) {
-          var Ce = F, Ie = -_, Ne = w, Re = -G, Pe = -c * he, _e = -c * ae, qe = -c * ne, ke = -c * se, Oe = Ce + Pe, ze = Ie + _e, $e = Ne + ke, Le = Re - qe, Ae = n + u - f, we = n + m - f;
-          e[Ae] = Oe, e[Ae + 1] = ze, e[we] = $e, e[we + 1] = Le;
+          var Ce = F, Ie = -_, Ne = w, Re = -G, Pe = -c * he, _e = -c * ae, qe = -c * ne, ke = -c * se, Oe = Ce + Pe, ze = Ie + _e, Le = Ne + ke, $e = Re - qe, Ae = n + u - f, we = n + m - f;
+          e[Ae] = Oe, e[Ae + 1] = ze, e[we] = Le, e[we + 1] = $e;
         }
       }
   }
@@ -1870,20 +1870,20 @@ class Ke {
    * redundant calculations and efficient buffer operations
    */
   detectPitch() {
-    var z, $, L, H, U, V, J, Y, K, Z, ee, te, ie;
+    var z, L, $, H, U, V, J, Y, K, Z, ee, te, ie;
     const e = typeof process < "u" && ((z = process.env) == null ? void 0 : z.NODE_ENV) === "development" || typeof window < "u", t = performance.now();
     if (!this.frameRateLimiter.shouldProcess()) {
       this.animationFrame = requestAnimationFrame(() => this.detectPitch());
       return;
     }
-    if (typeof process < "u" && (($ = process.env) == null ? void 0 : $.NODE_ENV) === "development") {
+    if (typeof process < "u" && ((L = process.env) == null ? void 0 : L.NODE_ENV) === "development") {
       console.log(`[Debug] detectPitch呼び出し: detecting=${this.isDetecting}, analyser=${!!this.analyser}, rawAnalyser=${!!this.rawAnalyser}, pitchDetector=${!!this.pitchDetector}`);
       const b = this.audioManager.getStatus();
       console.log(`[Debug] AudioManager状態: context=${b.audioContextState}, stream=${b.mediaStreamActive}`);
     }
     if (!this.isDetecting || !this.analyser || !this.rawAnalyser || !this.pitchDetector || !this.deviceSpecs) return;
     const i = this.analyser.fftSize, s = new Float32Array(i), o = new Float32Array(this.rawAnalyser.fftSize);
-    if (this.analyser.getFloatTimeDomainData(s), this.rawAnalyser.getFloatTimeDomainData(o), typeof process < "u" && ((L = process.env) == null ? void 0 : L.NODE_ENV) === "development") {
+    if (this.analyser.getFloatTimeDomainData(s), this.rawAnalyser.getFloatTimeDomainData(o), typeof process < "u" && (($ = process.env) == null ? void 0 : $.NODE_ENV) === "development") {
       const b = s.filter((w) => Math.abs(w) > 1e-4).length, T = Math.max(...s.map((w) => Math.abs(w)));
       console.log(`[Debug] バッファー分析: 非ゼロ値=${b}/${i}, 最大値=${T.toFixed(6)}`);
     }
@@ -4843,7 +4843,7 @@ const j = class j {
         smoothing: ((e = this.deviceSpecs) == null ? void 0 : e.smoothingFactor) ?? this.config.smoothing,
         // v1.1.8: Use DeviceDetection smoothing
         deviceOptimization: this.config.deviceOptimization
-      }), Object.keys(this.config.customDeviceConfig).length > 0 && (this.applyCustomDeviceConfig(), this.pitchDetector && this.deviceSpecs && this.pitchDetector.setCustomDeviceSpecs(this.deviceSpecs), this.debugLog("Custom device configuration applied:", this.config.customDeviceConfig)), this.pitchDetector.setCallbacks({
+      }), Object.keys(this.config.customDeviceConfig).length > 0 && (this.applyCustomDeviceConfig(), this.config.customDeviceConfig.sensitivity && this.micController && (this.micController.setSensitivity(this.config.customDeviceConfig.sensitivity), this.debugLog("🔧 Applied custom sensitivity to AudioManager:", this.config.customDeviceConfig.sensitivity)), this.pitchDetector && this.deviceSpecs && this.pitchDetector.setCustomDeviceSpecs(this.deviceSpecs), this.debugLog("Custom device configuration applied:", this.config.customDeviceConfig)), this.pitchDetector.setCallbacks({
         onPitchUpdate: (t) => {
           this.handlePitchUpdate(t);
         },
