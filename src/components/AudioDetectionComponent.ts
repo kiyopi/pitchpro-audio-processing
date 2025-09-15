@@ -127,31 +127,6 @@ export interface AudioDetectionConfig {
   // Debug Settings
   debug?: boolean;
   logPrefix?: string;
-  
-  // Custom Device Configuration (for mobile testing)
-  /**
-   * Custom device configuration to override default device detection.
-   * Primarily used for mobile testing and calibration.
-   * @example
-   * ```typescript
-   * const detector = new AudioDetectionComponent({
-   *   deviceOptimization: false, // Disable automatic optimization
-   *   customDeviceConfig: {
-   *     sensitivity: 2.5,
-   *     noiseGateScalingFactor: 300
-   *   }
-   * });
-   * ```
-   */
-  customDeviceConfig?: {
-    sensitivity?: number;
-    noiseGateScalingFactor?: number;
-    noiseGate?: number;
-    divisor?: number;
-    gainCompensation?: number;
-    noiseThreshold?: number;
-    smoothingFactor?: number;
-  };
 }
 
 /**
@@ -294,9 +269,7 @@ export class AudioDetectionComponent {
       autoUpdateUI: config.autoUpdateUI ?? true,
       
       debug: config.debug ?? false,
-      logPrefix: config.logPrefix ?? '🎵 AudioDetection',
-      
-      customDeviceConfig: config.customDeviceConfig ?? {}
+      logPrefix: config.logPrefix ?? '🎵 AudioDetection'
     };
 
     // Initialize AudioManager
@@ -414,18 +387,6 @@ export class AudioDetectionComponent {
       // Initialize microphone
       await this.micController.initialize();
 
-      // 🔧 Ensure deviceSpecs is available before applying custom config
-      if (!this.deviceSpecs) {
-        this.deviceSpecs = DeviceDetection.getDeviceSpecs();
-        this.debugLog('🔍 DeviceSpecs initialized:', this.deviceSpecs);
-      }
-
-      // Apply custom device configuration BEFORE PitchDetector initialization
-      if (Object.keys(this.config.customDeviceConfig).length > 0) {
-        this.applyCustomDeviceConfig();
-        this.debugLog('🔧 Custom device configuration applied before PitchDetector init:', this.config.customDeviceConfig);
-      }
-
       // Initialize PitchDetector with DeviceDetection optimized settings
       this.pitchDetector = new PitchDetector(this.audioManager, {
         clarityThreshold: this.config.clarityThreshold,
@@ -434,12 +395,6 @@ export class AudioDetectionComponent {
         smoothing: this.deviceSpecs?.smoothingFactor ?? this.config.smoothing,  // v1.1.8: Use DeviceDetection smoothing
         deviceOptimization: this.config.deviceOptimization
       });
-
-      // Pass custom device specs directly to PitchDetector during initialization
-      if (this.deviceSpecs && Object.keys(this.config.customDeviceConfig).length > 0) {
-        this.pitchDetector.setCustomDeviceSpecs(this.deviceSpecs);
-        this.debugLog('✅ Custom device specs applied to PitchDetector during init');
-      }
 
       // Set up PitchDetector callbacks
       this.pitchDetector.setCallbacks({
@@ -456,15 +411,6 @@ export class AudioDetectionComponent {
 
       await this.pitchDetector.initialize();
 
-      // 🔍 Final verification of custom configuration
-      const hasCustomConfig = Object.keys(this.config.customDeviceConfig).length > 0;
-      this.debugLog('🔍 Final custom config verification:', {
-        hasCustomConfig,
-        customDeviceConfig: this.config.customDeviceConfig,
-        deviceSpecs: this.deviceSpecs,
-        deviceSpecsSensitivity: this.deviceSpecs?.sensitivity
-      });
-
       // ⭐ Register PitchDetector and AudioDetectionComponent with MicrophoneController for unified management
       if (this.micController && this.pitchDetector) {
         this.micController.registerDetector(this.pitchDetector);
@@ -475,17 +421,10 @@ export class AudioDetectionComponent {
       // Cache UI elements
       this.cacheUIElements();
 
-      // Apply device-specific sensitivity OR custom sensitivity
-      if (this.micController) {
-        // カスタム設定がある場合は優先的に適用
-        if (Object.keys(this.config.customDeviceConfig).length > 0 && this.config.customDeviceConfig.sensitivity) {
-          this.micController.setSensitivity(this.config.customDeviceConfig.sensitivity);
-          this.debugLog('🎯 Applied custom sensitivity to AudioManager:', this.config.customDeviceConfig.sensitivity);
-        } else if (this.deviceSettings) {
-          // カスタム設定がない場合はデバイス固有の設定を使用
-          this.micController.setSensitivity(this.deviceSettings.sensitivityMultiplier);
-          this.debugLog('Applied device-specific sensitivity:', this.deviceSettings.sensitivityMultiplier);
-        }
+      // Apply device-specific sensitivity
+      if (this.deviceSettings && this.micController) {
+        this.micController.setSensitivity(this.deviceSettings.sensitivityMultiplier);
+        this.debugLog('Applied device-specific sensitivity:', this.deviceSettings.sensitivityMultiplier);
       }
 
       this.isInitialized = true;
@@ -572,8 +511,10 @@ export class AudioDetectionComponent {
       if (started) {
         this.updateState('detecting');
         
-        // Start UI update timer only if autoUpdateUI is enabled
-        this.startUIUpdates();
+        // Start UI update timer
+        if (this.config.autoUpdateUI) {
+          this.startUIUpdates();
+        }
         
         this.debugLog('Detection started successfully');
         return true;
@@ -961,8 +902,6 @@ export class AudioDetectionComponent {
     // Only cache UI elements if autoUpdateUI is enabled
     if (!this.config.autoUpdateUI) {
       this.debugLog('UI element caching skipped - autoUpdateUI is disabled');
-      // Clear any existing cached elements when autoUpdateUI is false
-      this.uiElements = {};
       return;
     }
     
@@ -996,12 +935,6 @@ export class AudioDetectionComponent {
    * @private
    */
   private resetAllUIElements(): void {
-    // Skip resetting if autoUpdateUI is disabled
-    if (!this.config.autoUpdateUI) {
-      this.debugLog('UI reset skipped - autoUpdateUI is disabled');
-      return;
-    }
-    
     try {
       // Reset all possible UI elements by querying all selectors that might exist
       const allPossibleSelectors = [
@@ -1109,12 +1042,6 @@ export class AudioDetectionComponent {
    * @private
    */
   private startUIUpdates(): void {
-    // Don't start UI updates if autoUpdateUI is disabled
-    if (!this.config.autoUpdateUI) {
-      this.debugLog('UI updates not started - autoUpdateUI is disabled');
-      return;
-    }
-    
     if (this.uiUpdateTimer) {
       clearInterval(this.uiUpdateTimer);
     }
@@ -1169,19 +1096,7 @@ export class AudioDetectionComponent {
     const processedResult = { ...rawResult };
 
     // デバイスごとの補正係数を適用
-    const multiplier = this.deviceSettings?.volumeMultiplier ?? 1.0;
-    const finalVolume = rawResult.volume * multiplier;
-    
-    // デバッグログ: 音量変換の詳細
-    if (this.config.debug && rawResult.volume > 0) {
-      console.log(`🔍 [AudioDetectionComponent] Volume conversion:`, {
-        original: rawResult.volume.toFixed(2) + '%',
-        multiplier: multiplier.toFixed(1) + 'x',
-        beforeClamp: finalVolume.toFixed(2) + '%',
-        afterClamp: Math.min(100, Math.max(0, finalVolume)).toFixed(2) + '%',
-        device: this.deviceSpecs?.deviceType || 'Unknown'
-      });
-    }
+    const finalVolume = rawResult.volume * (this.deviceSettings?.volumeMultiplier ?? 1.0);
     
     // 最終的な音量を0-100の範囲に丸めて、結果オブジェクトを更新
     processedResult.volume = Math.min(100, Math.max(0, finalVolume));
@@ -1263,64 +1178,6 @@ export class AudioDetectionComponent {
         isInitialized: this.isInitialized
       }
     );
-  }
-
-  /**
-   * Applies custom device configuration to override default DeviceDetection settings
-   * @private
-   */
-  private applyCustomDeviceConfig(): void {
-    if (!this.deviceSpecs || Object.keys(this.config.customDeviceConfig).length === 0) {
-      this.debugLog('🚫 applyCustomDeviceConfig skipped:', {
-        deviceSpecs: this.deviceSpecs,
-        customConfigLength: Object.keys(this.config.customDeviceConfig).length
-      });
-      return;
-    }
-
-    this.debugLog('🔧 BEFORE custom config:', {
-      originalDeviceSpecs: { ...this.deviceSpecs },
-      customConfig: this.config.customDeviceConfig
-    });
-
-    // Create a modified deviceSpecs object with custom overrides
-    const customSpecs: DeviceSpecs = {
-      ...this.deviceSpecs,
-      // Override with custom values if provided
-      sensitivity: this.config.customDeviceConfig.sensitivity ?? this.deviceSpecs.sensitivity,
-      noiseGate: this.config.customDeviceConfig.noiseGate ?? this.deviceSpecs.noiseGate,
-      divisor: this.config.customDeviceConfig.divisor ?? this.deviceSpecs.divisor,
-      gainCompensation: this.config.customDeviceConfig.gainCompensation ?? this.deviceSpecs.gainCompensation,
-      noiseThreshold: this.config.customDeviceConfig.noiseThreshold ?? this.deviceSpecs.noiseThreshold,
-      smoothingFactor: this.config.customDeviceConfig.smoothingFactor ?? this.deviceSpecs.smoothingFactor
-    };
-
-    this.debugLog('🔧 AFTER custom config:', {
-      newDeviceSpecs: customSpecs,
-      sensitivityChanged: this.deviceSpecs.sensitivity !== customSpecs.sensitivity
-    });
-
-    // Override deviceSpecs for this component
-    this.deviceSpecs = customSpecs;
-
-    // Apply custom noise gate scaling factor if provided (for mobile test page)
-    if (this.config.customDeviceConfig.noiseGateScalingFactor) {
-      // This will be used by the PitchDetector's volume calculation
-      // Store it in deviceSpecs as a custom property for the PitchDetector to access
-      (this.deviceSpecs as any).customNoiseGateScaling = this.config.customDeviceConfig.noiseGateScalingFactor;
-    }
-
-    // Update device-specific settings based on custom configuration
-    if (this.config.customDeviceConfig.sensitivity && this.deviceSettings) {
-      this.deviceSettings.sensitivityMultiplier = this.config.customDeviceConfig.sensitivity;
-      this.deviceSettings.volumeMultiplier = this.config.customDeviceConfig.sensitivity * 1.5; // Approximate volume scaling
-    }
-
-    this.debugLog('Applied custom device configuration:', {
-      originalSpecs: this.audioManager.getPlatformSpecs(),
-      customSpecs: this.deviceSpecs,
-      customConfig: this.config.customDeviceConfig
-    });
   }
 
   /**
