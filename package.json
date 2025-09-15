@@ -1,6 +1,6 @@
 {
   "name": "@pitchpro/audio-processing",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "High-precision pitch detection and audio processing library for web applications",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
