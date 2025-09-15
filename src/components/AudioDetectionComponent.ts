@@ -864,7 +864,7 @@ export class AudioDetectionComponent {
   private detectAndOptimizeDevice(): void {
     this.deviceSpecs = DeviceDetection.getDeviceSpecs();
     
-    // v1.2.0: iPhone/iPad音量最適化 - 普通の声で100%問題解決
+    // v1.2.0: iPhone/iPad音量最適化 - 段階的調整
     const deviceSettingsMap: Record<string, DeviceSettings> = {
       PC: {
         volumeMultiplier: 3.0,        // ✅ 最適化済み (v1.2.9)
@@ -872,7 +872,7 @@ export class AudioDetectionComponent {
         minVolumeAbsolute: this.deviceSpecs.noiseGate * 0.25  // Based on DeviceDetection noiseGate
       },
       iPhone: {
-        volumeMultiplier: 3.2,        // 📉 調整: 4.5→3.2 (29%削減) 
+        volumeMultiplier: 4.0,        // 📈 再調整: 3.2→4.0 (大きな声で30%→50%程度に改善)
         sensitivityMultiplier: 3.5,
         minVolumeAbsolute: this.deviceSpecs.noiseGate * 0.15  // ノイズゲート最適化
       },
