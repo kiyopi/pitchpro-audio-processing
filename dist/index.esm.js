@@ -4822,29 +4822,43 @@ const j = class j {
     }
   }
   /**
-   * Sets callback functions for audio detection events
-   * 
-   * @param callbacks - Object containing callback functions
-   * @param callbacks.onPitchUpdate - Called when pitch is detected
-   * @param callbacks.onVolumeUpdate - Called when volume changes
-   * @param callbacks.onStateChange - Called when component state changes
-   * @param callbacks.onError - Called when errors occur
-   * @param callbacks.onDeviceDetected - Called when device is detected
-   * 
+   * 音声検出イベント用のコールバック関数を設定します
+   *
+   * @param callbacks - コールバック関数を含むオブジェクト
+   * @param callbacks.onPitchUpdate - ピッチ検出時に呼び出される関数
+   * @param callbacks.onVolumeUpdate - 音量変化時に呼び出される関数
+   * @param callbacks.onStateChange - コンポーネント状態変化時に呼び出される関数
+   * @param callbacks.onError - エラー発生時に呼び出される関数
+   * @param callbacks.onDeviceDetected - デバイス検出時に呼び出される関数
+   *
+   * @remarks
+   * **重要な音量値について**:
+   * - `onPitchUpdate`の`result.volume`は既にデバイス固有の補正が適用済み
+   * - 範囲: 0-100% （最終的なUI表示値）
+   * - デバイス別の内部処理:
+   *   - PC: 生音量 × 3.0
+   *   - iPhone: 生音量 × 7.5
+   *   - iPad: 生音量 × 20.0
+   *
    * @example
    * ```typescript
    * audioDetector.setCallbacks({
    *   onPitchUpdate: (result) => {
-   *     console.log(`${result.note} - ${result.frequency.toFixed(1)}Hz`);
+   *     // result.volume は既に補正済みの最終表示値（0-100%）
+   *     console.log(`${result.note} - ${result.frequency.toFixed(1)}Hz - ${result.volume.toFixed(1)}%`);
+   *     // 例: "A4 - 440.0Hz - 67.5%"
    *   },
    *   onVolumeUpdate: (volume) => {
-   *     console.log(`Volume: ${volume.toFixed(1)}%`);
+   *     // volume も同様に補正済み（0-100%）
+   *     console.log(`音量: ${volume.toFixed(1)}%`);
    *   },
    *   onError: (error) => {
    *     console.error('Detection error:', error.message);
    *   }
    * });
    * ```
+   *
+   * @see {@link _getProcessedResult} 音量補正の詳細処理
    */
   setCallbacks(e) {
     this.callbacks = { ...this.callbacks, ...e }, this.debugLog("Callbacks updated");
@@ -5238,6 +5252,40 @@ const j = class j {
    * @param rawResult PitchDetectorからの生の検出結果
    * @returns デバイス最適化が適用された処理済み結果、またはnull
    * @private
+   */
+  /**
+   * 生の検出結果にデバイス固有の音量補正を適用します
+   *
+   * @remarks
+   * このメソッドがPitchProの音量調整の核心部分です。以下の処理を行います：
+   *
+   * 1. **デバイス固有の音量補正**: volumeMultiplierによる音量調整
+   *    - PC: 3.0x（v1.2.9確定）
+   *    - iPhone: 7.5x（v1.2.9確定）
+   *    - iPad: 20.0x（v1.2.9確定）
+   *
+   * 2. **範囲制限**: 最終音量を0-100%の範囲に制限
+   *
+   * 3. **デバッグログ**: モバイルデバイスでの音量調整過程を記録
+   *
+   * @param rawResult - PitchDetectorから取得した生の検出結果
+   * @returns 音量補正が適用された最終的な検出結果
+   *
+   * @example
+   * ```typescript
+   * // PitchDetectorからの生結果
+   * const rawResult = { frequency: 440, note: 'A4', volume: 15.2 };
+   *
+   * // iPhone (volumeMultiplier: 7.5) での処理
+   * const processed = this._getProcessedResult(rawResult);
+   * // → { frequency: 440, note: 'A4', volume: 100 } (15.2 * 7.5 = 114 → 100に制限)
+   *
+   * // PC (volumeMultiplier: 3.0) での処理
+   * // → { frequency: 440, note: 'A4', volume: 45.6 } (15.2 * 3.0 = 45.6)
+   * ```
+   *
+   * @since v1.2.0 デバイス固有音量調整システム導入
+   * @see {@link detectAndOptimizeDevice} デバイス設定の決定方法
    */
   _getProcessedResult(e) {
     var o, n, r;
