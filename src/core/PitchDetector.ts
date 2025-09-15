@@ -707,7 +707,7 @@ export class PitchDetector {
     
     // デバッグ：SCALING_FACTOR計算の詳細
     if (IS_DEBUG_MODE) {
-      console.log(`[Debug] SCALING_FACTOR計算:`);
+      console.log(`[Debug] 🔄 SCALING_FACTOR計算 (v20250915-02):`);
       console.log(`  platformSpecs.sensitivity=${platformSpecs.sensitivity}`);
       console.log(`  this.deviceSpecs=${JSON.stringify(this.deviceSpecs)}`);
       console.log(`  deviceSpecsSensitivity=${deviceSpecsSensitivity}`);
