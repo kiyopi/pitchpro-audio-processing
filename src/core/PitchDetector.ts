@@ -423,6 +423,7 @@ export class PitchDetector {
    * ```
    */
   setCustomDeviceSpecs(customSpecs: DeviceSpecs): void {
+    const oldSpecs = this.deviceSpecs;
     this.deviceSpecs = customSpecs;
     
     // Log the change for debugging
@@ -433,6 +434,15 @@ export class PitchDetector {
       customProperties: Object.keys(customSpecs).filter(key => 
         !['deviceType', 'sensitivity', 'noiseGate', 'divisor', 'gainCompensation', 'noiseThreshold', 'smoothingFactor'].includes(key)
       )
+    });
+    
+    // 🔍 詳細なデバッグ情報
+    console.log('🔍 [PitchDetector] DeviceSpecs change details:', {
+      oldSensitivity: oldSpecs?.sensitivity,
+      newSensitivity: customSpecs.sensitivity,
+      changed: oldSpecs?.sensitivity !== customSpecs.sensitivity,
+      fullOldSpecs: oldSpecs,
+      fullNewSpecs: customSpecs
     });
   }
 
@@ -690,14 +700,19 @@ export class PitchDetector {
     
     // 音量計算用定数定義（デバイス固有・感度調整済み）
     // カスタムdeviceSpecsがある場合はそれを優先し、なければAudioManagerから取得
-    const currentSensitivity = this.deviceSpecs?.sensitivity ?? this.audioManager.getSensitivity();
+    const audioManagerSensitivity = this.audioManager.getSensitivity();
+    const deviceSpecsSensitivity = this.deviceSpecs?.sensitivity;
+    const currentSensitivity = deviceSpecsSensitivity ?? audioManagerSensitivity;
     const SCALING_FACTOR = 400 / (platformSpecs.sensitivity * currentSensitivity); // 実際の感度設定を反映
     
     // デバッグ：SCALING_FACTOR計算の詳細
     if (IS_DEBUG_MODE) {
       console.log(`[Debug] SCALING_FACTOR計算:`);
       console.log(`  platformSpecs.sensitivity=${platformSpecs.sensitivity}`);
-      console.log(`  currentSensitivity=${currentSensitivity}`);
+      console.log(`  this.deviceSpecs=${JSON.stringify(this.deviceSpecs)}`);
+      console.log(`  deviceSpecsSensitivity=${deviceSpecsSensitivity}`);
+      console.log(`  audioManagerSensitivity=${audioManagerSensitivity}`);
+      console.log(`  currentSensitivity=${currentSensitivity} (選択: ${deviceSpecsSensitivity ? 'deviceSpecs' : 'audioManager'})`);
       console.log(`  計算: 400 / (${platformSpecs.sensitivity} * ${currentSensitivity}) = ${SCALING_FACTOR}`);
     }
     // カスタムNOISE_GATE_SCALING_FACTORがあればそれを使用、なければデフォルト値
