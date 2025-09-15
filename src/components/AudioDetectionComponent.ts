@@ -545,10 +545,6 @@ export class AudioDetectionComponent {
       }
 
       this.stopUIUpdates();
-
-      // v1.2.12: 停止時にUI要素をリセット（音量バーを0に戻す）
-      this.resetDisplayElements();
-
       this.updateState('stopped');
       this.debugLog('Detection stopped');
     } catch (error) {

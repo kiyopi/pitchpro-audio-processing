@@ -616,15 +616,22 @@
             
             stopTest() {
                 if (this.audioDetector) {
-                    // v1.2.12: stopDetection()が自動的にUIをリセットするように改善
-                    this.audioDetector.stopDetection();
+                    // 設計原則に従い、停止とUIリセットを分離
+                    this.audioDetector.stopDetection();  // 検出停止（UIは最後の値を保持）
 
-                    // 念のため手動でもリセット（バックアップ）
-                    this.elements.volumeBar.style.width = '0%';
-                    this.elements.volumeText.textContent = '0%';
-                    this.elements.frequencyValue.textContent = '0Hz';
-                    this.elements.noteValue.textContent = '-';
-                    this.elements.scalingFactor.textContent = '0';
+                    // UIリセットは明示的に実行（reset設計思想に基づく）
+                    if (typeof this.audioDetector.resetDisplayElements === 'function') {
+                        this.audioDetector.resetDisplayElements();  // UIを0にリセット
+                        this.addLogEntry('info', 'UI reset using resetDisplayElements()');
+                    } else {
+                        // フォールバック：手動でリセット
+                        this.elements.volumeBar.style.width = '0%';
+                        this.elements.volumeText.textContent = '0%';
+                        this.elements.frequencyValue.textContent = '0Hz';
+                        this.elements.noteValue.textContent = '-';
+                        this.elements.scalingFactor.textContent = '0';
+                        this.addLogEntry('info', 'UI reset manually (fallback)');
+                    }
                 }
 
                 this.isRunning = false;
@@ -632,7 +639,7 @@
                 this.elements.stopTest.classList.add('hidden');
                 this.setStatus('ready', '準備完了 - 設定を調整してテストを開始');
 
-                this.addLogEntry('info', 'Volume test stopped - UI reset complete');
+                this.addLogEntry('info', 'Volume test stopped - following start()/reset() design pattern');
             }
             
             updateDisplay(result) {

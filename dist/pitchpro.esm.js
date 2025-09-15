@@ -4896,7 +4896,7 @@ const j = class j {
    */
   stopDetection() {
     try {
-      this.pitchDetector && this.pitchDetector.stopDetection(), this.stopUIUpdates(), this.resetDisplayElements(), this.updateState("stopped"), this.debugLog("Detection stopped");
+      this.pitchDetector && this.pitchDetector.stopDetection(), this.stopUIUpdates(), this.updateState("stopped"), this.debugLog("Detection stopped");
     } catch (e) {
       const t = this.createStructuredError(e, "stop_detection");
       this.handleError(t, "stop_detection");
