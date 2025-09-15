@@ -308,16 +308,48 @@
         </div>
     </div>
 
-    <!-- PitchPro UMDライブラリ - キャッシュ回避用バージョン番号付き -->
-    <script src="../dist/pitchpro.umd.js?v=20250915-02"></script>
+    <!-- PitchPro UMDライブラリ - 強制キャッシュ回避 -->
     <script>
-        // ライブラリが正常に読み込まれているかチェック
-        if (typeof PitchPro === 'undefined') {
-            console.error('❌ PitchPro library not loaded. Trying alternative paths...');
-            document.body.innerHTML = '<div style="text-align:center;padding:50px;color:red;">❌ PitchPro library loading failed<br>Please check the library path</div>';
-        } else {
-            console.log('✅ PitchPro library loaded successfully');
+        // 強制キャッシュ回避用タイムスタンプ
+        const timestamp = new Date().getTime();
+        const script = document.createElement('script');
+        script.src = `../dist/pitchpro.umd.js?v=20250915-02&t=${timestamp}`;
+        script.onload = function() {
+            console.log('✅ PitchPro library loaded with timestamp:', timestamp);
+        };
+        script.onerror = function() {
+            console.error('❌ Failed to load PitchPro library');
+        };
+        document.head.appendChild(script);
+    </script>
+    <script>
+        // ライブラリ読み込み待機機能
+        function waitForPitchPro() {
+            return new Promise((resolve, reject) => {
+                let attempts = 0;
+                const maxAttempts = 50; // 5秒間待機
+                
+                const checkLibrary = () => {
+                    attempts++;
+                    if (typeof PitchPro !== 'undefined') {
+                        console.log('✅ PitchPro library loaded successfully after', attempts * 100, 'ms');
+                        resolve();
+                    } else if (attempts >= maxAttempts) {
+                        console.error('❌ PitchPro library not loaded after', maxAttempts * 100, 'ms');
+                        reject(new Error('Library loading timeout'));
+                    } else {
+                        setTimeout(checkLibrary, 100);
+                    }
+                };
+                
+                checkLibrary();
+            });
         }
+        
+        // ライブラリ読み込み確認
+        waitForPitchPro().catch(error => {
+            document.body.innerHTML = '<div style="text-align:center;padding:50px;color:red;">❌ PitchPro library loading failed<br>Please refresh the page</div>';
+        });
     </script>
     
     <script>
