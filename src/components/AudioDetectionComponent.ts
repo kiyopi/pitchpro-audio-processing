@@ -864,22 +864,22 @@ export class AudioDetectionComponent {
   private detectAndOptimizeDevice(): void {
     this.deviceSpecs = DeviceDetection.getDeviceSpecs();
     
-    // v1.1.8: Use DeviceDetection optimized values instead of hardcoded settings
+    // v1.2.0: iPhone/iPad音量最適化 - 普通の声で100%問題解決
     const deviceSettingsMap: Record<string, DeviceSettings> = {
       PC: {
-        volumeMultiplier: 3.0,
+        volumeMultiplier: 3.0,        // ✅ 最適化済み (v1.2.9)
         sensitivityMultiplier: 2.5,
         minVolumeAbsolute: this.deviceSpecs.noiseGate * 0.25  // Based on DeviceDetection noiseGate
       },
       iPhone: {
-        volumeMultiplier: 4.5,
+        volumeMultiplier: 3.2,        // 📉 調整: 4.5→3.2 (29%削減) 
         sensitivityMultiplier: 3.5,
-        minVolumeAbsolute: this.deviceSpecs.noiseGate * 0.27  // Based on DeviceDetection noiseGate
+        minVolumeAbsolute: this.deviceSpecs.noiseGate * 0.15  // ノイズゲート最適化
       },
       iPad: {
-        volumeMultiplier: 7.0,
+        volumeMultiplier: 3.5,        // 📉 調整: 7.0→3.5 (50%削減)
         sensitivityMultiplier: 5.0,
-        minVolumeAbsolute: this.deviceSpecs.noiseGate * 0.28  // Based on DeviceDetection noiseGate
+        minVolumeAbsolute: this.deviceSpecs.noiseGate * 0.15  // ノイズゲート最適化
       }
     };
 
@@ -1096,7 +1096,13 @@ export class AudioDetectionComponent {
     const processedResult = { ...rawResult };
 
     // デバイスごとの補正係数を適用
-    const finalVolume = rawResult.volume * (this.deviceSettings?.volumeMultiplier ?? 1.0);
+    const volumeMultiplier = this.deviceSettings?.volumeMultiplier ?? 1.0;
+    const finalVolume = rawResult.volume * volumeMultiplier;
+    
+    // v1.2.0: デバッグログ追加 - iPhone/iPad音量調整の効果確認
+    if (this.deviceSpecs?.deviceType !== 'PC' && rawResult.volume > 0.1) {
+      console.log(`📱 [VolumeAdjustment] Device: ${this.deviceSpecs?.deviceType}, Raw: ${rawResult.volume.toFixed(2)}%, Multiplier: ${volumeMultiplier}, Final: ${Math.min(100, Math.max(0, finalVolume)).toFixed(2)}%`);
+    }
     
     // 最終的な音量を0-100の範囲に丸めて、結果オブジェクトを更新
     processedResult.volume = Math.min(100, Math.max(0, finalVolume));
