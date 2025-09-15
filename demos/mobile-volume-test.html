@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>📱 PitchPro モバイル音量調整テスト v1.2.0.10-iPad音量20.0調整</title>
+    <title>🖥️ PitchPro PC音量調整テスト v1.2.0.11-PC volumeMultiplier 3.0</title>
     <style>
         * { 
             box-sizing: border-box; 
@@ -241,8 +241,8 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>📱 PitchPro モバイル調整</h1>
-            <p>v1.2.0.10 iPad音量復旧 (volumeMultiplier: 20.0) 🎯50%→67%目標</p>
+            <h1>🖥️ PitchPro PC音量調整</h1>
+            <p>v1.2.0.11 PC音量テスト (volumeMultiplier: 3.0) 🎯適正レベル確認</p>
         </div>
         
         <div id="device-info" class="device-info">
@@ -316,7 +316,7 @@
         // 強制キャッシュ回避用タイムスタンプ
         const timestamp = new Date().getTime();
         const script = document.createElement('script');
-        script.src = `../dist/pitchpro.umd.js?v=20250915-07&t=${timestamp}&r=${Math.random()}&force=${Date.now()}`;
+        script.src = `../dist/pitchpro.umd.js?v=20250915-11&t=${timestamp}&r=${Math.random()}&force=${Date.now()}`;
         script.onload = function() {
             console.log('✅ PitchPro library loaded with timestamp:', timestamp);
         };
