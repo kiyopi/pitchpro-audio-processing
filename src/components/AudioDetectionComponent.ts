@@ -450,6 +450,12 @@ export class AudioDetectionComponent {
 
       await this.pitchDetector.initialize();
 
+      // 🔧 初期化後に再度カスタム設定を確実に適用
+      if (Object.keys(this.config.customDeviceConfig).length > 0 && this.deviceSpecs) {
+        this.pitchDetector.setCustomDeviceSpecs(this.deviceSpecs);
+        this.debugLog('🔄 Re-applied custom device specs after PitchDetector initialization');
+      }
+
       // ⭐ Register PitchDetector and AudioDetectionComponent with MicrophoneController for unified management
       if (this.micController && this.pitchDetector) {
         this.micController.registerDetector(this.pitchDetector);

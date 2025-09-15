@@ -689,7 +689,8 @@ export class PitchDetector {
     const adjustedRms = rms * platformSpecs.gainCompensation;
     
     // 音量計算用定数定義（デバイス固有・感度調整済み）
-    const currentSensitivity = this.audioManager.getSensitivity();
+    // カスタムdeviceSpecsがある場合はそれを優先し、なければAudioManagerから取得
+    const currentSensitivity = this.deviceSpecs?.sensitivity ?? this.audioManager.getSensitivity();
     const SCALING_FACTOR = 400 / (platformSpecs.sensitivity * currentSensitivity); // 実際の感度設定を反映
     
     // デバッグ：SCALING_FACTOR計算の詳細
