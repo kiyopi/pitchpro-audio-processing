@@ -877,7 +877,7 @@ export class AudioDetectionComponent {
         minVolumeAbsolute: this.deviceSpecs.noiseGate * 0.15  // ノイズゲート最適化
       },
       iPad: {
-        volumeMultiplier: 10.0,       // 📈 調整: 7.0→10.0 (30%→43%目標)
+        volumeMultiplier: 15.0,       // 📈 調整: 10.0→15.0 (48%→72%目標)
         sensitivityMultiplier: 5.0,
         minVolumeAbsolute: this.deviceSpecs.noiseGate * 0.15  // ノイズゲート最適化
       }
