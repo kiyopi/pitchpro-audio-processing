@@ -123,7 +123,7 @@ export class DeviceDetection {
         
       case 'iPhone':
         return {
-          sensitivity: 3.5,        // Optimized sensitivity for iPhone microphones (テスト導出値)
+          sensitivity: 20.0,       // 🔧 v1.2.0: モバイルテスト導出値 (3.5→20.0) - 普通の声で50-60%
           noiseGate: 0.03,         // v1.1.8: Increased noise gate to filter out background noise
           divisor: 4.0,            // Keep original divisor
           gainCompensation: 1.5,   // Keep original gain compensation

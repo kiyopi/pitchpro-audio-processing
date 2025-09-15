@@ -67,8 +67,8 @@ const A = class A {
         };
       case "iPhone":
         return {
-          sensitivity: 3.5,
-          // Optimized sensitivity for iPhone microphones (テスト導出値)
+          sensitivity: 20,
+          // 🔧 v1.2.0: モバイルテスト導出値 (3.5→20.0) - 普通の声で50-60%
           noiseGate: 0.03,
           // v1.1.8: Increased noise gate to filter out background noise
           divisor: 4,
@@ -1176,7 +1176,7 @@ P.prototype._transform4 = function() {
     var m = o >>> 2;
     for (n = 0; n < t; n += o)
       for (var u = n + m, d = n, f = 0; d < u; d += 2, f += i) {
-        const g = d, y = g + m, p = y + m, S = p + m, w = e[g], v = e[g + 1], b = e[y], N = e[y + 1], _ = e[p], O = e[p + 1], z = e[S], J = e[S + 1], $ = w, X = v, L = h[f], H = c * h[f + 1], U = b * L - N * H, V = b * H + N * L, Y = h[2 * f], K = c * h[2 * f + 1], Z = _ * Y - O * K, ee = _ * K + O * Y, te = h[3 * f], ie = c * h[3 * f + 1], se = z * te - J * ie, oe = z * ie + J * te, ne = $ + Z, B = X + ee, M = $ - Z, D = X - ee, E = U + se, G = V + oe, T = c * (U - se), q = c * (V - oe), ce = ne + E, fe = B + G, ge = ne - E, pe = B - G, ve = M + q, ye = D - T, Se = M - q, Ce = D + T;
+        const g = d, y = g + m, p = y + m, S = p + m, w = e[g], v = e[g + 1], b = e[y], N = e[y + 1], _ = e[p], O = e[p + 1], z = e[S], J = e[S + 1], L = w, X = v, $ = h[f], H = c * h[f + 1], U = b * $ - N * H, V = b * H + N * $, Y = h[2 * f], K = c * h[2 * f + 1], Z = _ * Y - O * K, ee = _ * K + O * Y, te = h[3 * f], ie = c * h[3 * f + 1], se = z * te - J * ie, oe = z * ie + J * te, ne = L + Z, B = X + ee, M = L - Z, D = X - ee, E = U + se, G = V + oe, T = c * (U - se), q = c * (V - oe), ce = ne + E, fe = B + G, ge = ne - E, pe = B - G, ve = M + q, ye = D - T, Se = M - q, Ce = D + T;
         e[g] = ce, e[g + 1] = fe, e[y] = ve, e[y + 1] = ye, e[p] = ge, e[p + 1] = pe, e[S] = Se, e[S + 1] = Ce;
       }
   }
@@ -1186,8 +1186,8 @@ P.prototype._singleTransform2 = function(e, t, s) {
   i[e] = h, i[e + 1] = m, i[e + 2] = u, i[e + 3] = d;
 };
 P.prototype._singleTransform4 = function(e, t, s) {
-  const i = this._out, o = this._data, n = this._inv ? -1 : 1, r = s * 2, a = s * 3, c = o[t], h = o[t + 1], m = o[t + s], u = o[t + s + 1], d = o[t + r], f = o[t + r + 1], g = o[t + a], y = o[t + a + 1], p = c + d, S = h + f, w = c - d, v = h - f, b = m + g, N = u + y, _ = n * (m - g), O = n * (u - y), z = p + b, J = S + N, $ = w + O, X = v - _, L = p - b, H = S - N, U = w - O, V = v + _;
-  i[e] = z, i[e + 1] = J, i[e + 2] = $, i[e + 3] = X, i[e + 4] = L, i[e + 5] = H, i[e + 6] = U, i[e + 7] = V;
+  const i = this._out, o = this._data, n = this._inv ? -1 : 1, r = s * 2, a = s * 3, c = o[t], h = o[t + 1], m = o[t + s], u = o[t + s + 1], d = o[t + r], f = o[t + r + 1], g = o[t + a], y = o[t + a + 1], p = c + d, S = h + f, w = c - d, v = h - f, b = m + g, N = u + y, _ = n * (m - g), O = n * (u - y), z = p + b, J = S + N, L = w + O, X = v - _, $ = p - b, H = S - N, U = w - O, V = v + _;
+  i[e] = z, i[e + 1] = J, i[e + 2] = L, i[e + 3] = X, i[e + 4] = $, i[e + 5] = H, i[e + 6] = U, i[e + 7] = V;
 };
 P.prototype._realTransform4 = function() {
   var e = this._out, t = this._csize, s = this._width, i = 1 << s, o = t / i << 1, n, r, a = this._bitrev;
@@ -1207,15 +1207,15 @@ P.prototype._realTransform4 = function() {
     var m = o >>> 1, u = m >>> 1, d = u >>> 1;
     for (n = 0; n < t; n += o)
       for (var f = 0, g = 0; f <= d; f += 2, g += i) {
-        var y = n + f, p = y + u, S = p + u, w = S + u, v = e[y], b = e[y + 1], N = e[p], _ = e[p + 1], O = e[S], z = e[S + 1], J = e[w], $ = e[w + 1], X = v, L = b, H = h[g], U = c * h[g + 1], V = N * H - _ * U, Y = N * U + _ * H, K = h[2 * g], Z = c * h[2 * g + 1], ee = O * K - z * Z, te = O * Z + z * K, ie = h[3 * g], se = c * h[3 * g + 1], oe = J * ie - $ * se, ne = J * se + $ * ie, B = X + ee, M = L + te, D = X - ee, E = L - te, G = V + oe, T = Y + ne, q = c * (V - oe), ce = c * (Y - ne), fe = B + G, ge = M + T, pe = D + ce, ve = E - q;
+        var y = n + f, p = y + u, S = p + u, w = S + u, v = e[y], b = e[y + 1], N = e[p], _ = e[p + 1], O = e[S], z = e[S + 1], J = e[w], L = e[w + 1], X = v, $ = b, H = h[g], U = c * h[g + 1], V = N * H - _ * U, Y = N * U + _ * H, K = h[2 * g], Z = c * h[2 * g + 1], ee = O * K - z * Z, te = O * Z + z * K, ie = h[3 * g], se = c * h[3 * g + 1], oe = J * ie - L * se, ne = J * se + L * ie, B = X + ee, M = $ + te, D = X - ee, E = $ - te, G = V + oe, T = Y + ne, q = c * (V - oe), ce = c * (Y - ne), fe = B + G, ge = M + T, pe = D + ce, ve = E - q;
         if (e[y] = fe, e[y + 1] = ge, e[p] = pe, e[p + 1] = ve, f === 0) {
           var ye = B - G, Se = M - T;
           e[S] = ye, e[S + 1] = Se;
           continue;
         }
         if (f !== d) {
-          var Ce = D, Ie = -E, Ne = B, Re = -M, Pe = -c * ce, _e = -c * q, qe = -c * T, ke = -c * G, Oe = Ce + Pe, ze = Ie + _e, $e = Ne + ke, Le = Re - qe, Ae = n + u - f, we = n + m - f;
-          e[Ae] = Oe, e[Ae + 1] = ze, e[we] = $e, e[we + 1] = Le;
+          var Ce = D, Ie = -E, Ne = B, Re = -M, Pe = -c * ce, _e = -c * q, qe = -c * T, ke = -c * G, Oe = Ce + Pe, ze = Ie + _e, Le = Ne + ke, $e = Re - qe, Ae = n + u - f, we = n + m - f;
+          e[Ae] = Oe, e[Ae + 1] = ze, e[we] = Le, e[we + 1] = $e;
         }
       }
   }
@@ -1877,8 +1877,8 @@ class Ke {
    * redundant calculations and efficient buffer operations
    */
   detectPitch() {
-    var L, H, U, V, Y, K, Z, ee, te, ie, se, oe, ne, B;
-    const e = typeof process < "u" && ((L = process.env) == null ? void 0 : L.NODE_ENV) === "development" || typeof window < "u", t = performance.now();
+    var $, H, U, V, Y, K, Z, ee, te, ie, se, oe, ne, B;
+    const e = typeof process < "u" && (($ = process.env) == null ? void 0 : $.NODE_ENV) === "development" || typeof window < "u", t = performance.now();
     if (!this.frameRateLimiter.shouldProcess()) {
       this.animationFrame = requestAnimationFrame(() => this.detectPitch());
       return;
@@ -1960,8 +1960,8 @@ class Ke {
       cents: this.currentFrequency > 0 ? this.frequencyToCents(this.currentFrequency) : void 0
     };
     this.processAudioData(z), this.updateVisuals(z);
-    const $ = performance.now() - t;
-    this.frameRateLimiter.getStats().frameDrops === 0 && this.frameRateLimiter.recoverPerformance(), typeof process < "u" && ((B = process.env) == null ? void 0 : B.NODE_ENV) === "development" && $ > 16.67 && console.warn(`[PitchDetector] Frame processing took ${$.toFixed(2)}ms (>16.67ms threshold)`), this.animationFrame = requestAnimationFrame(() => this.detectPitch());
+    const L = performance.now() - t;
+    this.frameRateLimiter.getStats().frameDrops === 0 && this.frameRateLimiter.recoverPerformance(), typeof process < "u" && ((B = process.env) == null ? void 0 : B.NODE_ENV) === "development" && L > 16.67 && console.warn(`[PitchDetector] Frame processing took ${L.toFixed(2)}ms (>16.67ms threshold)`), this.animationFrame = requestAnimationFrame(() => this.detectPitch());
   }
   /**
    * Harmonic correction system with configurable parameters
@@ -5346,8 +5346,17 @@ const j = class j {
    * @private
    */
   applyCustomDeviceConfig() {
-    if (!this.deviceSpecs || Object.keys(this.config.customDeviceConfig).length === 0)
+    if (!this.deviceSpecs || Object.keys(this.config.customDeviceConfig).length === 0) {
+      this.debugLog("🚫 applyCustomDeviceConfig skipped:", {
+        deviceSpecs: this.deviceSpecs,
+        customConfigLength: Object.keys(this.config.customDeviceConfig).length
+      });
       return;
+    }
+    this.debugLog("🔧 BEFORE custom config:", {
+      originalDeviceSpecs: { ...this.deviceSpecs },
+      customConfig: this.config.customDeviceConfig
+    });
     const e = {
       ...this.deviceSpecs,
       // Override with custom values if provided
@@ -5358,7 +5367,10 @@ const j = class j {
       noiseThreshold: this.config.customDeviceConfig.noiseThreshold ?? this.deviceSpecs.noiseThreshold,
       smoothingFactor: this.config.customDeviceConfig.smoothingFactor ?? this.deviceSpecs.smoothingFactor
     };
-    this.deviceSpecs = e, this.config.customDeviceConfig.noiseGateScalingFactor && (this.deviceSpecs.customNoiseGateScaling = this.config.customDeviceConfig.noiseGateScalingFactor), this.config.customDeviceConfig.sensitivity && this.deviceSettings && (this.deviceSettings.sensitivityMultiplier = this.config.customDeviceConfig.sensitivity, this.deviceSettings.volumeMultiplier = this.config.customDeviceConfig.sensitivity * 1.5), this.debugLog("Applied custom device configuration:", {
+    this.debugLog("🔧 AFTER custom config:", {
+      newDeviceSpecs: e,
+      sensitivityChanged: this.deviceSpecs.sensitivity !== e.sensitivity
+    }), this.deviceSpecs = e, this.config.customDeviceConfig.noiseGateScalingFactor && (this.deviceSpecs.customNoiseGateScaling = this.config.customDeviceConfig.noiseGateScalingFactor), this.config.customDeviceConfig.sensitivity && this.deviceSettings && (this.deviceSettings.sensitivityMultiplier = this.config.customDeviceConfig.sensitivity, this.deviceSettings.volumeMultiplier = this.config.customDeviceConfig.sensitivity * 1.5), this.debugLog("Applied custom device configuration:", {
       originalSpecs: this.audioManager.getPlatformSpecs(),
       customSpecs: this.deviceSpecs,
       customConfig: this.config.customDeviceConfig

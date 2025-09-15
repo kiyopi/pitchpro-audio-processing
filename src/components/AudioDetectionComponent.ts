@@ -1271,8 +1271,17 @@ export class AudioDetectionComponent {
    */
   private applyCustomDeviceConfig(): void {
     if (!this.deviceSpecs || Object.keys(this.config.customDeviceConfig).length === 0) {
+      this.debugLog('🚫 applyCustomDeviceConfig skipped:', {
+        deviceSpecs: this.deviceSpecs,
+        customConfigLength: Object.keys(this.config.customDeviceConfig).length
+      });
       return;
     }
+
+    this.debugLog('🔧 BEFORE custom config:', {
+      originalDeviceSpecs: { ...this.deviceSpecs },
+      customConfig: this.config.customDeviceConfig
+    });
 
     // Create a modified deviceSpecs object with custom overrides
     const customSpecs: DeviceSpecs = {
@@ -1285,6 +1294,11 @@ export class AudioDetectionComponent {
       noiseThreshold: this.config.customDeviceConfig.noiseThreshold ?? this.deviceSpecs.noiseThreshold,
       smoothingFactor: this.config.customDeviceConfig.smoothingFactor ?? this.deviceSpecs.smoothingFactor
     };
+
+    this.debugLog('🔧 AFTER custom config:', {
+      newDeviceSpecs: customSpecs,
+      sensitivityChanged: this.deviceSpecs.sensitivity !== customSpecs.sensitivity
+    });
 
     // Override deviceSpecs for this component
     this.deviceSpecs = customSpecs;
