@@ -23,9 +23,9 @@ const A = class A {
    * Analyze user agent string and determine device specifications
    */
   static analyzeUserAgent(e) {
-    const t = /iPhone/.test(e), i = /iPad/.test(e), s = /Macintosh/.test(e) && "ontouchend" in document, o = /iPad|iPhone|iPod/.test(e), n = /iPad|iPhone|iPod/.test(navigator.platform || ""), r = t || i || s || o || n;
+    const t = /iPhone/.test(e), s = /iPad/.test(e), i = /Macintosh/.test(e) && "ontouchend" in document, o = /iPad|iPhone|iPod/.test(e), n = /iPad|iPhone|iPod/.test(navigator.platform || ""), r = t || s || i || o || n;
     let a = "PC";
-    t ? a = "iPhone" : i || s ? a = "iPad" : r && (a = A.detectIOSDeviceType());
+    t ? a = "iPhone" : s || i ? a = "iPad" : r && (a = A.detectIOSDeviceType());
     const c = A.getDeviceOptimizations(a, r);
     return {
       deviceType: a,
@@ -42,8 +42,8 @@ const A = class A {
    * Detect iOS device type when specific detection fails
    */
   static detectIOSDeviceType() {
-    const e = window.screen.width, t = window.screen.height, i = Math.max(e, t), s = Math.min(e, t);
-    return i >= 768 || i >= 700 && s >= 500 ? "iPad" : "iPhone";
+    const e = window.screen.width, t = window.screen.height, s = Math.max(e, t), i = Math.min(e, t);
+    return s >= 768 || s >= 700 && i >= 500 ? "iPad" : "iPhone";
   }
   /**
    * Get device-specific optimization parameters
@@ -232,8 +232,8 @@ A.cachedSpecs = null;
 let ce = A;
 var W = /* @__PURE__ */ ((l) => (l.AUDIO_CONTEXT_ERROR = "AUDIO_CONTEXT_ERROR", l.MICROPHONE_ACCESS_DENIED = "MICROPHONE_ACCESS_DENIED", l.PITCH_DETECTION_ERROR = "PITCH_DETECTION_ERROR", l.BUFFER_OVERFLOW = "BUFFER_OVERFLOW", l.INVALID_SAMPLE_RATE = "INVALID_SAMPLE_RATE", l.DEVICE_NOT_SUPPORTED = "DEVICE_NOT_SUPPORTED", l.PROCESSING_TIMEOUT = "PROCESSING_TIMEOUT", l))(W || {});
 class F extends Error {
-  constructor(e, t, i) {
-    super(e), this.name = "PitchProError", this.code = t, this.timestamp = /* @__PURE__ */ new Date(), this.context = i, Error.captureStackTrace && Error.captureStackTrace(this, F);
+  constructor(e, t, s) {
+    super(e), this.name = "PitchProError", this.code = t, this.timestamp = /* @__PURE__ */ new Date(), this.context = s, Error.captureStackTrace && Error.captureStackTrace(this, F);
   }
   toJSON() {
     return {
@@ -257,15 +257,15 @@ class be extends F {
   }
 }
 class Ve extends F {
-  constructor(e, t, i, s) {
+  constructor(e, t, s, i) {
     super(
       e,
       "MICROPHONE_ACCESS_DENIED",
       {
         healthStatus: t,
-        recoveryAttempts: i,
+        recoveryAttempts: s,
         timestamp: Date.now(),
-        ...s
+        ...i
       }
     ), this.name = "MicrophoneHealthError";
   }
@@ -433,8 +433,8 @@ class I {
    * @param context - Additional context information
    */
   static logError(e, t) {
-    const i = this.getUserFriendlyMessage(e), s = this.getTechnicalDetails(e);
-    console.group(`🚨 [PitchPro Error] ${i.title}`), console.log("👤 User Message:", i.message), console.log("📋 Suggested Actions:", i.actions), console.log("⚠️ Severity:", i.severity), console.log("🔄 Can Retry:", i.canRetry), console.log("🔧 Error Code:", s.errorCode), console.log("⏰ Timestamp:", s.timestamp), t && console.log("📍 Context:", t), s.context && Object.keys(s.context).length > 0 && console.log("🔍 Additional Context:", s.context), s.stackTrace && console.log("📜 Stack Trace:", s.stackTrace), console.groupEnd();
+    const s = this.getUserFriendlyMessage(e), i = this.getTechnicalDetails(e);
+    console.group(`🚨 [PitchPro Error] ${s.title}`), console.log("👤 User Message:", s.message), console.log("📋 Suggested Actions:", s.actions), console.log("⚠️ Severity:", s.severity), console.log("🔄 Can Retry:", s.canRetry), console.log("🔧 Error Code:", i.errorCode), console.log("⏰ Timestamp:", i.timestamp), t && console.log("📍 Context:", t), i.context && Object.keys(i.context).length > 0 && console.log("🔍 Additional Context:", i.context), i.stackTrace && console.log("📜 Stack Trace:", i.stackTrace), console.groupEnd();
   }
   /**
    * Creates recovery suggestions based on error type and context
@@ -444,7 +444,7 @@ class I {
    * @returns Recovery strategy object
    */
   static getRecoveryStrategy(e, t) {
-    const i = this.getUserFriendlyMessage(e), s = i.actions.slice(0, 2), o = i.actions.slice(2);
+    const s = this.getUserFriendlyMessage(e), i = s.actions.slice(0, 2), o = s.actions.slice(2);
     let n = [];
     return t === "iPhone" || t === "iPad" ? n = [
       "感度を高めに設定（7.0x推奨）",
@@ -462,7 +462,7 @@ class I {
       "ハードウェアアクセラレーションを有効化",
       "外部ノイズの少ない環境で使用"
     ], {
-      immediate: s,
+      immediate: i,
       fallback: o,
       preventive: n
     };
@@ -534,21 +534,21 @@ class xe {
    * ```
    */
   async initialize() {
-    var e, t, i;
+    var e, t, s;
     if (this.initPromise)
       return this.initPromise;
     if (this.isInitialized && this.audioContext && this.mediaStream) {
-      const s = this.checkMediaStreamHealth();
-      if (s.healthy)
+      const i = this.checkMediaStreamHealth();
+      if (i.healthy)
         return this.refCount++, {
           audioContext: this.audioContext,
           mediaStream: this.mediaStream,
           sourceNode: this.sourceNode
         };
-      console.warn("⚠️ [AudioManager] Unhealthy MediaStream detected - force re-initialization:", s), console.log("🔄 [AudioManager] Unhealthy MediaStream details:", {
+      console.warn("⚠️ [AudioManager] Unhealthy MediaStream detected - force re-initialization:", i), console.log("🔄 [AudioManager] Unhealthy MediaStream details:", {
         mediaStreamActive: (e = this.mediaStream) == null ? void 0 : e.active,
         trackCount: (t = this.mediaStream) == null ? void 0 : t.getTracks().length,
-        trackStates: (i = this.mediaStream) == null ? void 0 : i.getTracks().map((o) => ({
+        trackStates: (s = this.mediaStream) == null ? void 0 : s.getTracks().map((o) => ({
           kind: o.kind,
           readyState: o.readyState,
           enabled: o.enabled,
@@ -558,10 +558,10 @@ class xe {
     }
     this.initPromise = this._doInitialize();
     try {
-      const s = await this.initPromise;
-      return this.initPromise = null, s;
-    } catch (s) {
-      throw this.initPromise = null, s;
+      const i = await this.initPromise;
+      return this.initPromise = null, i;
+    } catch (i) {
+      throw this.initPromise = null, i;
     }
   }
   /**
@@ -613,11 +613,11 @@ class xe {
           }
         };
         console.log("🎤 [AudioManager] Getting MediaStream with Safari-compatible settings:", t), this.mediaStream = await navigator.mediaDevices.getUserMedia(t), console.log("✅ [AudioManager] MediaStream acquisition complete");
-        const i = this.mediaStream.getAudioTracks()[0];
-        if (i && typeof i.getConstraints == "function" && typeof i.getSettings == "function")
+        const s = this.mediaStream.getAudioTracks()[0];
+        if (s && typeof s.getConstraints == "function" && typeof s.getSettings == "function")
           try {
-            const s = i.getConstraints(), o = i.getSettings();
-            console.log("🔍 [DIAGNOSTIC] Requested autoGainControl:", t.audio && t.audio.autoGainControl), console.log("🔍 [DIAGNOSTIC] Actually applied constraints:", s), console.log("🔍 [DIAGNOSTIC] Actual MediaStream settings:", o), o.autoGainControl === !0 ? (console.warn("⚠️ [DIAGNOSTIC] CRITICAL: Browser ignored autoGainControl: false setting!"), console.warn("⚠️ [DIAGNOSTIC] This explains the gain drift issues - browser is automatically adjusting gain")) : console.log("✅ [DIAGNOSTIC] autoGainControl successfully disabled by browser");
+            const i = s.getConstraints(), o = s.getSettings();
+            console.log("🔍 [DIAGNOSTIC] Requested autoGainControl:", t.audio && t.audio.autoGainControl), console.log("🔍 [DIAGNOSTIC] Actually applied constraints:", i), console.log("🔍 [DIAGNOSTIC] Actual MediaStream settings:", o), o.autoGainControl === !0 ? (console.warn("⚠️ [DIAGNOSTIC] CRITICAL: Browser ignored autoGainControl: false setting!"), console.warn("⚠️ [DIAGNOSTIC] This explains the gain drift issues - browser is automatically adjusting gain")) : console.log("✅ [DIAGNOSTIC] autoGainControl successfully disabled by browser");
           } catch {
             console.log("ℹ️ [DIAGNOSTIC] MediaTrack constraint inspection not available in this environment");
           }
@@ -668,13 +668,13 @@ class xe {
     }
     this.removeAnalyser(e);
     const {
-      fftSize: i = 2048,
-      smoothingTimeConstant: s = 0.8,
+      fftSize: s = 2048,
+      smoothingTimeConstant: i = 0.8,
       minDecibels: o = -90,
       maxDecibels: n = -10,
       useFilters: r = !0
     } = t, a = this.audioContext.createAnalyser();
-    a.fftSize = Math.min(i, 2048), a.smoothingTimeConstant = Math.max(s, 0.7), a.minDecibels = Math.max(o, -80), a.maxDecibels = Math.min(n, -10);
+    a.fftSize = Math.min(s, 2048), a.smoothingTimeConstant = Math.max(i, 0.7), a.minDecibels = Math.max(o, -80), a.maxDecibels = Math.min(n, -10);
     let c = this.gainNode || this.sourceNode;
     if (r) {
       const h = this._createFilterChain();
@@ -688,21 +688,21 @@ class xe {
    */
   _createFilterChain() {
     if (!this.audioContext) {
-      const s = new Q(
+      const i = new Q(
         "AudioContextが利用できません。ブラウザでオーディオ機能が無効になっているか、デバイスがサポートされていません。",
         {
           operation: "_createFilterChain",
           audioContextState: "null"
         }
       );
-      throw I.logError(s, "Filter chain creation"), s;
+      throw I.logError(i, "Filter chain creation"), i;
     }
     const e = this.audioContext.createBiquadFilter();
     e.type = "highpass", e.frequency.setValueAtTime(80, this.audioContext.currentTime), e.Q.setValueAtTime(0.7, this.audioContext.currentTime);
     const t = this.audioContext.createBiquadFilter();
     t.type = "lowpass", t.frequency.setValueAtTime(800, this.audioContext.currentTime), t.Q.setValueAtTime(0.7, this.audioContext.currentTime);
-    const i = this.audioContext.createBiquadFilter();
-    return i.type = "notch", i.frequency.setValueAtTime(60, this.audioContext.currentTime), i.Q.setValueAtTime(10, this.audioContext.currentTime), { highpass: e, lowpass: t, notch: i };
+    const s = this.audioContext.createBiquadFilter();
+    return s.type = "notch", s.frequency.setValueAtTime(60, this.audioContext.currentTime), s.Q.setValueAtTime(10, this.audioContext.currentTime), { highpass: e, lowpass: t, notch: s };
   }
   /**
    * Removes a specific analyser and its associated filter chain
@@ -739,19 +739,19 @@ class xe {
    * audioManager.setSensitivity(0.5);
    * ```
    */
-  async _verifyGainChange(e, t = 200, i = 20) {
-    const s = Date.now();
-    for (; Date.now() - s < t; ) {
+  async _verifyGainChange(e, t = 200, s = 20) {
+    const i = Date.now();
+    for (; Date.now() - i < t; ) {
       if (this.gainNode && Math.abs(this.gainNode.gain.value - e) <= 0.1)
         return !0;
-      await new Promise((o) => setTimeout(o, i));
+      await new Promise((o) => setTimeout(o, s));
     }
     return !1;
   }
   setSensitivity(e) {
-    var i;
+    var s;
     const t = Math.max(0.1, Math.min(10, e));
-    this.gainNode ? (this.gainNode.gain.setValueAtTime(t, ((i = this.audioContext) == null ? void 0 : i.currentTime) || 0), this.currentSensitivity = t, (async () => {
+    this.gainNode ? (this.gainNode.gain.setValueAtTime(t, ((s = this.audioContext) == null ? void 0 : s.currentTime) || 0), this.currentSensitivity = t, (async () => {
       var o;
       if (await this._verifyGainChange(t))
         console.log(`✅ [AudioManager] Gain setting verified: ${(o = this.gainNode) == null ? void 0 : o.gain.value.toFixed(1)}x (expected: ${t.toFixed(1)}x)`);
@@ -911,18 +911,18 @@ class xe {
       this.removeAnalyser(t);
     if (this.mediaStream) {
       const t = this.mediaStream.getTracks();
-      console.log(`🛑 [AudioManager] Stopping MediaStream: ${t.length} tracks`), t.forEach((i, s) => {
+      console.log(`🛑 [AudioManager] Stopping MediaStream: ${t.length} tracks`), t.forEach((s, i) => {
         try {
-          i.readyState !== "ended" ? (i.stop(), console.log(`🛑 [AudioManager] Track ${s} stop complete`)) : console.log(`⚠️ [AudioManager] Track ${s} already ended`);
+          s.readyState !== "ended" ? (s.stop(), console.log(`🛑 [AudioManager] Track ${i} stop complete`)) : console.log(`⚠️ [AudioManager] Track ${i} already ended`);
         } catch (o) {
           const n = new F(
-            `メディアトラック ${s} の停止中にエラーが発生しました: ${o.message}`,
+            `メディアトラック ${i} の停止中にエラーが発生しました: ${o.message}`,
             W.AUDIO_CONTEXT_ERROR,
             {
               operation: "track_cleanup",
-              trackIndex: s,
+              trackIndex: i,
               originalError: o.message,
-              trackState: i.readyState
+              trackState: s.readyState
             }
           );
           I.logError(n, "Media track cleanup");
@@ -933,7 +933,7 @@ class xe {
       try {
         this.audioContext.close(), console.log("🛑 [AudioManager] AudioContext close complete");
       } catch (t) {
-        const i = new Q(
+        const s = new Q(
           `AudioContextの終了中にエラーが発生しました: ${t.message}`,
           {
             operation: "audioContext_cleanup",
@@ -941,7 +941,7 @@ class xe {
             originalError: t.message
           }
         );
-        I.logError(i, "AudioContext cleanup");
+        I.logError(s, "AudioContext cleanup");
       }
       this.audioContext = null;
     }
@@ -956,7 +956,7 @@ class xe {
    * @returns Structured PitchProError with context
    */
   _createStructuredError(e, t) {
-    var i, s;
+    var s, i;
     return e.message.includes("Permission denied") || e.message.includes("NotAllowedError") || e.message.includes("permission") ? new be(
       "マイクへのアクセス許可が拒否されました。ブラウザの設定でマイクアクセスを許可してください。",
       {
@@ -970,8 +970,8 @@ class xe {
       {
         operation: t,
         originalError: e.message,
-        audioContextState: ((i = this.audioContext) == null ? void 0 : i.state) || "none",
-        sampleRate: ((s = this.audioContext) == null ? void 0 : s.sampleRate) || "unknown",
+        audioContextState: ((s = this.audioContext) == null ? void 0 : s.state) || "none",
+        sampleRate: ((i = this.audioContext) == null ? void 0 : i.sampleRate) || "unknown",
         deviceSpecs: this.getPlatformSpecs()
       }
     ) : new F(
@@ -1029,11 +1029,11 @@ class xe {
    * ```
    */
   checkMediaStreamHealth() {
-    var s, o, n, r, a, c, h, m;
+    var i, o, n, r, a, c, h, m;
     if (!this.mediaStream)
       return {
         mediaStreamActive: !1,
-        audioContextState: ((s = this.audioContext) == null ? void 0 : s.state) || "none",
+        audioContextState: ((i = this.audioContext) == null ? void 0 : i.state) || "none",
         trackStates: [],
         healthy: !1
       };
@@ -1065,7 +1065,7 @@ class xe {
         })),
         healthy: !1
       };
-    const i = e.map((u) => ({
+    const s = e.map((u) => ({
       kind: u.kind,
       enabled: u.enabled,
       readyState: u.readyState,
@@ -1074,22 +1074,22 @@ class xe {
     return t.readyState === "ended" ? {
       mediaStreamActive: this.mediaStream.active,
       audioContextState: ((a = this.audioContext) == null ? void 0 : a.state) || "none",
-      trackStates: i,
+      trackStates: s,
       healthy: !1
     } : t.muted ? {
       mediaStreamActive: this.mediaStream.active,
       audioContextState: ((c = this.audioContext) == null ? void 0 : c.state) || "none",
-      trackStates: i,
+      trackStates: s,
       healthy: !1
     } : this.mediaStream.active && t.readyState !== "live" ? {
       mediaStreamActive: this.mediaStream.active,
       audioContextState: ((h = this.audioContext) == null ? void 0 : h.state) || "none",
-      trackStates: i,
+      trackStates: s,
       healthy: !1
     } : {
       mediaStreamActive: this.mediaStream.active,
       audioContextState: ((m = this.audioContext) == null ? void 0 : m.state) || "none",
-      trackStates: i,
+      trackStates: s,
       healthy: !0,
       refCount: this.refCount
     };
@@ -1107,9 +1107,9 @@ function P(l) {
     e[t] = Math.cos(a), e[t + 1] = -Math.sin(a);
   }
   this.table = e;
-  for (var i = 0, s = 1; this.size > s; s <<= 1)
-    i++;
-  this._width = i % 2 === 0 ? i - 1 : i, this._bitrev = new Array(1 << this._width);
+  for (var s = 0, i = 1; this.size > i; i <<= 1)
+    s++;
+  this._width = s % 2 === 0 ? s - 1 : s, this._bitrev = new Array(1 << this._width);
   for (var o = 0; o < this._bitrev.length; o++) {
     this._bitrev[o] = 0;
     for (var n = 0; n < this._width; n += 2) {
@@ -1121,9 +1121,9 @@ function P(l) {
 }
 var Ge = P;
 P.prototype.fromComplexArray = function(e, t) {
-  for (var i = t || new Array(e.length >>> 1), s = 0; s < e.length; s += 2)
-    i[s >>> 1] = e[s];
-  return i;
+  for (var s = t || new Array(e.length >>> 1), i = 0; i < e.length; i += 2)
+    s[i >>> 1] = e[i];
+  return s;
 };
 P.prototype.createComplexArray = function() {
   const e = new Array(this._csize);
@@ -1132,13 +1132,13 @@ P.prototype.createComplexArray = function() {
   return e;
 };
 P.prototype.toComplexArray = function(e, t) {
-  for (var i = t || this.createComplexArray(), s = 0; s < i.length; s += 2)
-    i[s] = e[s >>> 1], i[s + 1] = 0;
-  return i;
+  for (var s = t || this.createComplexArray(), i = 0; i < s.length; i += 2)
+    s[i] = e[i >>> 1], s[i + 1] = 0;
+  return s;
 };
 P.prototype.completeSpectrum = function(e) {
-  for (var t = this._csize, i = t >>> 1, s = 2; s < i; s += 2)
-    e[t - s] = e[s], e[t - s + 1] = -e[s + 1];
+  for (var t = this._csize, s = t >>> 1, i = 2; i < s; i += 2)
+    e[t - i] = e[i], e[t - i + 1] = -e[i + 1];
 };
 P.prototype.transform = function(e, t) {
   if (e === t)
@@ -1154,79 +1154,79 @@ P.prototype.inverseTransform = function(e, t) {
   if (e === t)
     throw new Error("Input and output buffers must be different");
   this._out = e, this._data = t, this._inv = 1, this._transform4();
-  for (var i = 0; i < e.length; i++)
-    e[i] /= this.size;
+  for (var s = 0; s < e.length; s++)
+    e[s] /= this.size;
   this._out = null, this._data = null;
 };
 P.prototype._transform4 = function() {
-  var e = this._out, t = this._csize, i = this._width, s = 1 << i, o = t / s << 1, n, r, a = this._bitrev;
+  var e = this._out, t = this._csize, s = this._width, i = 1 << s, o = t / i << 1, n, r, a = this._bitrev;
   if (o === 4)
     for (n = 0, r = 0; n < t; n += o, r++) {
       const g = a[r];
-      this._singleTransform2(n, g, s);
+      this._singleTransform2(n, g, i);
     }
   else
     for (n = 0, r = 0; n < t; n += o, r++) {
       const g = a[r];
-      this._singleTransform4(n, g, s);
+      this._singleTransform4(n, g, i);
     }
   var c = this._inv ? -1 : 1, h = this.table;
-  for (s >>= 2; s >= 2; s >>= 2) {
-    o = t / s << 1;
+  for (i >>= 2; i >= 2; i >>= 2) {
+    o = t / i << 1;
     var m = o >>> 2;
     for (n = 0; n < t; n += o)
-      for (var u = n + m, d = n, f = 0; d < u; d += 2, f += s) {
-        const g = d, y = g + m, p = y + m, S = p + m, w = e[g], v = e[g + 1], b = e[y], N = e[y + 1], _ = e[p], O = e[p + 1], z = e[S], J = e[S + 1], $ = w, X = v, L = h[f], H = c * h[f + 1], U = b * L - N * H, V = b * H + N * L, Y = h[2 * f], K = c * h[2 * f + 1], Z = _ * Y - O * K, ee = _ * K + O * Y, te = h[3 * f], ie = c * h[3 * f + 1], se = z * te - J * ie, oe = z * ie + J * te, ne = $ + Z, B = X + ee, M = $ - Z, D = X - ee, E = U + se, G = V + oe, T = c * (U - se), q = c * (V - oe), ae = ne + E, fe = B + G, ge = ne - E, pe = B - G, ve = M + q, ye = D - T, Se = M - q, Ce = D + T;
+      for (var u = n + m, d = n, f = 0; d < u; d += 2, f += i) {
+        const g = d, y = g + m, p = y + m, S = p + m, w = e[g], v = e[g + 1], b = e[y], N = e[y + 1], _ = e[p], O = e[p + 1], z = e[S], J = e[S + 1], L = w, X = v, $ = h[f], H = c * h[f + 1], U = b * $ - N * H, V = b * H + N * $, Y = h[2 * f], K = c * h[2 * f + 1], Z = _ * Y - O * K, ee = _ * K + O * Y, te = h[3 * f], ie = c * h[3 * f + 1], se = z * te - J * ie, oe = z * ie + J * te, ne = L + Z, B = X + ee, M = L - Z, D = X - ee, E = U + se, G = V + oe, T = c * (U - se), q = c * (V - oe), ae = ne + E, fe = B + G, ge = ne - E, pe = B - G, ve = M + q, ye = D - T, Se = M - q, Ce = D + T;
         e[g] = ae, e[g + 1] = fe, e[y] = ve, e[y + 1] = ye, e[p] = ge, e[p + 1] = pe, e[S] = Se, e[S + 1] = Ce;
       }
   }
 };
-P.prototype._singleTransform2 = function(e, t, i) {
-  const s = this._out, o = this._data, n = o[t], r = o[t + 1], a = o[t + i], c = o[t + i + 1], h = n + a, m = r + c, u = n - a, d = r - c;
-  s[e] = h, s[e + 1] = m, s[e + 2] = u, s[e + 3] = d;
+P.prototype._singleTransform2 = function(e, t, s) {
+  const i = this._out, o = this._data, n = o[t], r = o[t + 1], a = o[t + s], c = o[t + s + 1], h = n + a, m = r + c, u = n - a, d = r - c;
+  i[e] = h, i[e + 1] = m, i[e + 2] = u, i[e + 3] = d;
 };
-P.prototype._singleTransform4 = function(e, t, i) {
-  const s = this._out, o = this._data, n = this._inv ? -1 : 1, r = i * 2, a = i * 3, c = o[t], h = o[t + 1], m = o[t + i], u = o[t + i + 1], d = o[t + r], f = o[t + r + 1], g = o[t + a], y = o[t + a + 1], p = c + d, S = h + f, w = c - d, v = h - f, b = m + g, N = u + y, _ = n * (m - g), O = n * (u - y), z = p + b, J = S + N, $ = w + O, X = v - _, L = p - b, H = S - N, U = w - O, V = v + _;
-  s[e] = z, s[e + 1] = J, s[e + 2] = $, s[e + 3] = X, s[e + 4] = L, s[e + 5] = H, s[e + 6] = U, s[e + 7] = V;
+P.prototype._singleTransform4 = function(e, t, s) {
+  const i = this._out, o = this._data, n = this._inv ? -1 : 1, r = s * 2, a = s * 3, c = o[t], h = o[t + 1], m = o[t + s], u = o[t + s + 1], d = o[t + r], f = o[t + r + 1], g = o[t + a], y = o[t + a + 1], p = c + d, S = h + f, w = c - d, v = h - f, b = m + g, N = u + y, _ = n * (m - g), O = n * (u - y), z = p + b, J = S + N, L = w + O, X = v - _, $ = p - b, H = S - N, U = w - O, V = v + _;
+  i[e] = z, i[e + 1] = J, i[e + 2] = L, i[e + 3] = X, i[e + 4] = $, i[e + 5] = H, i[e + 6] = U, i[e + 7] = V;
 };
 P.prototype._realTransform4 = function() {
-  var e = this._out, t = this._csize, i = this._width, s = 1 << i, o = t / s << 1, n, r, a = this._bitrev;
+  var e = this._out, t = this._csize, s = this._width, i = 1 << s, o = t / i << 1, n, r, a = this._bitrev;
   if (o === 4)
     for (n = 0, r = 0; n < t; n += o, r++) {
       const Me = a[r];
-      this._singleRealTransform2(n, Me >>> 1, s >>> 1);
+      this._singleRealTransform2(n, Me >>> 1, i >>> 1);
     }
   else
     for (n = 0, r = 0; n < t; n += o, r++) {
       const Me = a[r];
-      this._singleRealTransform4(n, Me >>> 1, s >>> 1);
+      this._singleRealTransform4(n, Me >>> 1, i >>> 1);
     }
   var c = this._inv ? -1 : 1, h = this.table;
-  for (s >>= 2; s >= 2; s >>= 2) {
-    o = t / s << 1;
+  for (i >>= 2; i >= 2; i >>= 2) {
+    o = t / i << 1;
     var m = o >>> 1, u = m >>> 1, d = u >>> 1;
     for (n = 0; n < t; n += o)
-      for (var f = 0, g = 0; f <= d; f += 2, g += s) {
-        var y = n + f, p = y + u, S = p + u, w = S + u, v = e[y], b = e[y + 1], N = e[p], _ = e[p + 1], O = e[S], z = e[S + 1], J = e[w], $ = e[w + 1], X = v, L = b, H = h[g], U = c * h[g + 1], V = N * H - _ * U, Y = N * U + _ * H, K = h[2 * g], Z = c * h[2 * g + 1], ee = O * K - z * Z, te = O * Z + z * K, ie = h[3 * g], se = c * h[3 * g + 1], oe = J * ie - $ * se, ne = J * se + $ * ie, B = X + ee, M = L + te, D = X - ee, E = L - te, G = V + oe, T = Y + ne, q = c * (V - oe), ae = c * (Y - ne), fe = B + G, ge = M + T, pe = D + ae, ve = E - q;
+      for (var f = 0, g = 0; f <= d; f += 2, g += i) {
+        var y = n + f, p = y + u, S = p + u, w = S + u, v = e[y], b = e[y + 1], N = e[p], _ = e[p + 1], O = e[S], z = e[S + 1], J = e[w], L = e[w + 1], X = v, $ = b, H = h[g], U = c * h[g + 1], V = N * H - _ * U, Y = N * U + _ * H, K = h[2 * g], Z = c * h[2 * g + 1], ee = O * K - z * Z, te = O * Z + z * K, ie = h[3 * g], se = c * h[3 * g + 1], oe = J * ie - L * se, ne = J * se + L * ie, B = X + ee, M = $ + te, D = X - ee, E = $ - te, G = V + oe, T = Y + ne, q = c * (V - oe), ae = c * (Y - ne), fe = B + G, ge = M + T, pe = D + ae, ve = E - q;
         if (e[y] = fe, e[y + 1] = ge, e[p] = pe, e[p + 1] = ve, f === 0) {
           var ye = B - G, Se = M - T;
           e[S] = ye, e[S + 1] = Se;
           continue;
         }
         if (f !== d) {
-          var Ce = D, Ie = -E, Ne = B, Re = -M, Pe = -c * ae, _e = -c * q, qe = -c * T, ke = -c * G, Oe = Ce + Pe, ze = Ie + _e, $e = Ne + ke, Le = Re - qe, Ae = n + u - f, we = n + m - f;
-          e[Ae] = Oe, e[Ae + 1] = ze, e[we] = $e, e[we + 1] = Le;
+          var Ce = D, Ie = -E, Ne = B, Re = -M, Pe = -c * ae, _e = -c * q, qe = -c * T, ke = -c * G, Oe = Ce + Pe, ze = Ie + _e, Le = Ne + ke, $e = Re - qe, Ae = n + u - f, we = n + m - f;
+          e[Ae] = Oe, e[Ae + 1] = ze, e[we] = Le, e[we + 1] = $e;
         }
       }
   }
 };
-P.prototype._singleRealTransform2 = function(e, t, i) {
-  const s = this._out, o = this._data, n = o[t], r = o[t + i], a = n + r, c = n - r;
-  s[e] = a, s[e + 1] = 0, s[e + 2] = c, s[e + 3] = 0;
+P.prototype._singleRealTransform2 = function(e, t, s) {
+  const i = this._out, o = this._data, n = o[t], r = o[t + s], a = n + r, c = n - r;
+  i[e] = a, i[e + 1] = 0, i[e + 2] = c, i[e + 3] = 0;
 };
-P.prototype._singleRealTransform4 = function(e, t, i) {
-  const s = this._out, o = this._data, n = this._inv ? -1 : 1, r = i * 2, a = i * 3, c = o[t], h = o[t + i], m = o[t + r], u = o[t + a], d = c + m, f = c - m, g = h + u, y = n * (h - u), p = d + g, S = f, w = -y, v = d - g, b = f, N = y;
-  s[e] = p, s[e + 1] = 0, s[e + 2] = S, s[e + 3] = w, s[e + 4] = v, s[e + 5] = 0, s[e + 6] = b, s[e + 7] = N;
+P.prototype._singleRealTransform4 = function(e, t, s) {
+  const i = this._out, o = this._data, n = this._inv ? -1 : 1, r = s * 2, a = s * 3, c = o[t], h = o[t + s], m = o[t + r], u = o[t + a], d = c + m, f = c - m, g = h + u, y = n * (h - u), p = d + g, S = f, w = -y, v = d - g, b = f, N = y;
+  i[e] = p, i[e + 1] = 0, i[e + 2] = S, i[e + 3] = w, i[e + 4] = v, i[e + 5] = 0, i[e + 6] = b, i[e + 7] = N;
 };
 const je = /* @__PURE__ */ Be(Ge);
 class le {
@@ -1315,29 +1315,29 @@ class le {
       throw new Error(
         `Input must have length ${this._inputLength} but had length ${e.length}`
       );
-    for (let s = 0; s < e.length; s++)
-      this._paddedInputBuffer[s] = e[s];
-    for (let s = e.length; s < this._paddedInputBuffer.length; s++)
-      this._paddedInputBuffer[s] = 0;
+    for (let i = 0; i < e.length; i++)
+      this._paddedInputBuffer[i] = e[i];
+    for (let i = e.length; i < this._paddedInputBuffer.length; i++)
+      this._paddedInputBuffer[i] = 0;
     this._fft.realTransform(this._transformBuffer, this._paddedInputBuffer), this._fft.completeSpectrum(this._transformBuffer);
-    const i = this._transformBuffer;
-    for (let s = 0; s < i.length; s += 2)
-      i[s] = i[s] * i[s] + i[s + 1] * i[s + 1], i[s + 1] = 0;
+    const s = this._transformBuffer;
+    for (let i = 0; i < s.length; i += 2)
+      s[i] = s[i] * s[i] + s[i + 1] * s[i + 1], s[i + 1] = 0;
     this._fft.inverseTransform(this._inverseBuffer, this._transformBuffer);
-    for (let s = 0; s < e.length; s++)
-      t[s] = this._inverseBuffer[2 * s];
+    for (let i = 0; i < e.length; i++)
+      t[i] = this._inverseBuffer[2 * i];
     return t;
   }
 }
 function Qe(l) {
   const e = [];
-  let t = !1, i = -1 / 0, s = -1;
+  let t = !1, s = -1 / 0, i = -1;
   for (let o = 1; o < l.length - 1; o++)
-    l[o - 1] <= 0 && l[o] > 0 ? (t = !0, s = o, i = l[o]) : l[o - 1] > 0 && l[o] <= 0 ? (t = !1, s !== -1 && e.push(s)) : t && l[o] > i && (i = l[o], s = o);
+    l[o - 1] <= 0 && l[o] > 0 ? (t = !0, i = o, s = l[o]) : l[o - 1] > 0 && l[o] <= 0 ? (t = !1, i !== -1 && e.push(i)) : t && l[o] > s && (s = l[o], i = o);
   return e;
 }
 function We(l, e) {
-  const [t, i, s] = [l - 1, l, l + 1], [o, n, r] = [e[t], e[i], e[s]], a = o / 2 - n + r / 2, c = -(o / 2) * (i + s) + n * (t + s) - r / 2 * (t + i), h = o * i * s / 2 - n * t * s + r * t * i / 2, m = -c / (2 * a), u = a * m * m + c * m + h;
+  const [t, s, i] = [l - 1, l, l + 1], [o, n, r] = [e[t], e[s], e[i]], a = o / 2 - n + r / 2, c = -(o / 2) * (s + i) + n * (t + i) - r / 2 * (t + s), h = o * s * i / 2 - n * t * i + r * t * s / 2, m = -c / (2 * a), u = a * m * m + c * m + h;
   return [m, u];
 }
 let Je = class ue {
@@ -1475,11 +1475,11 @@ let Je = class ue {
   findPitch(e, t) {
     if (this._belowMinimumVolume(e)) return [0, 0];
     this._nsdf(e);
-    const i = Qe(this._nsdfBuffer);
-    if (i.length === 0)
+    const s = Qe(this._nsdfBuffer);
+    if (s.length === 0)
       return [0, 0];
-    const s = Math.max(...i.map((a) => this._nsdfBuffer[a])), o = i.find(
-      (a) => this._nsdfBuffer[a] >= this._clarityThreshold * s
+    const i = Math.max(...s.map((a) => this._nsdfBuffer[a])), o = s.find(
+      (a) => this._nsdfBuffer[a] >= this._clarityThreshold * i
     ), [n, r] = We(
       // @ts-expect-error resultIndex is guaranteed to be defined
       o,
@@ -1498,8 +1498,8 @@ let Je = class ue {
   _belowMinimumVolume(e) {
     if (this._minVolumeAbsolute === 0) return !1;
     let t = 0;
-    for (let i = 0; i < e.length; i++)
-      t += e[i] ** 2;
+    for (let s = 0; s < e.length; s++)
+      t += e[s] ** 2;
     return Math.sqrt(t / e.length) < this._minVolumeAbsolute;
   }
   /**
@@ -1511,11 +1511,11 @@ let Je = class ue {
    */
   _nsdf(e) {
     this._autocorrelator.autocorrelate(e, this._nsdfBuffer);
-    let t = 2 * this._nsdfBuffer[0], i;
-    for (i = 0; i < this._nsdfBuffer.length && t > 0; i++)
-      this._nsdfBuffer[i] = 2 * this._nsdfBuffer[i] / t, t -= e[i] ** 2 + e[e.length - i - 1] ** 2;
-    for (; i < this._nsdfBuffer.length; i++)
-      this._nsdfBuffer[i] = 0;
+    let t = 2 * this._nsdfBuffer[0], s;
+    for (s = 0; s < this._nsdfBuffer.length && t > 0; s++)
+      this._nsdfBuffer[s] = 2 * this._nsdfBuffer[s] / t, t -= e[s] ** 2 + e[e.length - s - 1] ** 2;
+    for (; s < this._nsdfBuffer.length; s++)
+      this._nsdfBuffer[s] = 0;
   }
 };
 function Xe(l) {
@@ -1746,7 +1746,7 @@ class Ke {
       sensitivity: e.sensitivity,
       noiseGate: e.noiseGate,
       customProperties: Object.keys(e).filter(
-        (i) => !["deviceType", "sensitivity", "noiseGate", "divisor", "gainCompensation", "noiseThreshold", "smoothingFactor"].includes(i)
+        (s) => !["deviceType", "sensitivity", "noiseGate", "divisor", "gainCompensation", "noiseThreshold", "smoothingFactor"].includes(s)
       )
     }), console.log("🔍 [PitchDetector] DeviceSpecs change details:", {
       oldSensitivity: t == null ? void 0 : t.sensitivity,
@@ -1785,7 +1785,7 @@ class Ke {
    * ```
    */
   async initialize() {
-    var e, t, i, s, o;
+    var e, t, s, i, o;
     try {
       this.componentState = "initializing", this.lastError = null, console.log("🎙️ [PitchDetector] Starting initialization via AudioManager"), await this.audioManager.initialize(), this.deviceSpecs = this.audioManager.getPlatformSpecs(), console.log("📱 [PitchDetector] Device specs initialized:", this.deviceSpecs.deviceType), console.log("✅ [PitchDetector] AudioManager resources acquired");
       const n = `pitch-detector-filtered-${Date.now()}`;
@@ -1803,7 +1803,7 @@ class Ke {
         minDecibels: -90,
         maxDecibels: -10,
         useFilters: !1
-      }), this.analyserIds.push(r), console.log("✅ [PitchDetector] Analysers created:", this.analyserIds), this.pitchDetector = Je.forFloat32Array(this.analyser.fftSize), typeof process < "u" && ((e = process.env) == null ? void 0 : e.NODE_ENV) === "development" && console.log(`[Debug] Pitchyインスタンス作成: ${!!this.pitchDetector}, FFTサイズ: ${this.analyser.fftSize}`), this.componentState = "ready", this.isInitialized = !0, (i = (t = this.callbacks).onStateChange) == null || i.call(t, this.componentState), console.log("✅ [PitchDetector] Initialization complete");
+      }), this.analyserIds.push(r), console.log("✅ [PitchDetector] Analysers created:", this.analyserIds), this.pitchDetector = Je.forFloat32Array(this.analyser.fftSize), typeof process < "u" && ((e = process.env) == null ? void 0 : e.NODE_ENV) === "development" && console.log(`[Debug] Pitchyインスタンス作成: ${!!this.pitchDetector}, FFTサイズ: ${this.analyser.fftSize}`), this.componentState = "ready", this.isInitialized = !0, (s = (t = this.callbacks).onStateChange) == null || s.call(t, this.componentState), console.log("✅ [PitchDetector] Initialization complete");
     } catch (n) {
       const r = n instanceof F ? n : new Q(
         "PitchDetector initialization failed",
@@ -1813,7 +1813,7 @@ class Ke {
           deviceSpecs: this.deviceSpecs
         }
       );
-      throw console.error("❌ [PitchDetector] Initialization error:", r.toJSON()), this.componentState = "error", this.lastError = r, this.isInitialized = !1, (o = (s = this.callbacks).onError) == null || o.call(s, r), n;
+      throw console.error("❌ [PitchDetector] Initialization error:", r.toJSON()), this.componentState = "error", this.lastError = r, this.isInitialized = !1, (o = (i = this.callbacks).onError) == null || o.call(i, r), n;
     }
   }
   /**
@@ -1834,7 +1834,7 @@ class Ke {
    * ```
    */
   startDetection() {
-    var e, t, i, s, o, n;
+    var e, t, s, i, o, n;
     if (this.componentState !== "ready") {
       const r = new Error(`Cannot start detection: component state is ${this.componentState}`);
       return (t = (e = this.callbacks).onError) == null || t.call(e, r), !1;
@@ -1850,7 +1850,7 @@ class Ke {
           isInitialized: this.isInitialized
         }
       );
-      return I.logError(r, "Pitch detection startup"), this.componentState = "error", (s = (i = this.callbacks).onError) == null || s.call(i, r), !1;
+      return I.logError(r, "Pitch detection startup"), this.componentState = "error", (i = (s = this.callbacks).onError) == null || i.call(s, r), !1;
     }
     return this.componentState = "detecting", this.isDetecting = !0, (n = (o = this.callbacks).onStateChange) == null || n.call(o, this.componentState), this.detectPitch(), !0;
   }
@@ -1877,8 +1877,8 @@ class Ke {
    * redundant calculations and efficient buffer operations
    */
   detectPitch() {
-    var L, H, U, V, Y, K, Z, ee, te, ie, se, oe, ne, B;
-    const e = typeof process < "u" && ((L = process.env) == null ? void 0 : L.NODE_ENV) === "development" || typeof window < "u", t = performance.now();
+    var $, H, U, V, Y, K, Z, ee, te, ie, se, oe, ne, B;
+    const e = typeof process < "u" && (($ = process.env) == null ? void 0 : $.NODE_ENV) === "development" || typeof window < "u", t = performance.now();
     if (!this.frameRateLimiter.shouldProcess()) {
       this.animationFrame = requestAnimationFrame(() => this.detectPitch());
       return;
@@ -1889,15 +1889,15 @@ class Ke {
       console.log(`[Debug] AudioManager状態: context=${M.audioContextState}, stream=${M.mediaStreamActive}`);
     }
     if (!this.isDetecting || !this.analyser || !this.rawAnalyser || !this.pitchDetector || !this.deviceSpecs) return;
-    const i = this.analyser.fftSize, s = new Float32Array(i), o = new Float32Array(this.rawAnalyser.fftSize);
-    if (this.analyser.getFloatTimeDomainData(s), this.rawAnalyser.getFloatTimeDomainData(o), typeof process < "u" && ((U = process.env) == null ? void 0 : U.NODE_ENV) === "development") {
-      const M = s.filter((E) => Math.abs(E) > 1e-4).length, D = Math.max(...s.map((E) => Math.abs(E)));
-      console.log(`[Debug] バッファー分析: 非ゼロ値=${M}/${i}, 最大値=${D.toFixed(6)}`);
+    const s = this.analyser.fftSize, i = new Float32Array(s), o = new Float32Array(this.rawAnalyser.fftSize);
+    if (this.analyser.getFloatTimeDomainData(i), this.rawAnalyser.getFloatTimeDomainData(o), typeof process < "u" && ((U = process.env) == null ? void 0 : U.NODE_ENV) === "development") {
+      const M = i.filter((E) => Math.abs(E) > 1e-4).length, D = Math.max(...i.map((E) => Math.abs(E)));
+      console.log(`[Debug] バッファー分析: 非ゼロ値=${M}/${s}, 最大値=${D.toFixed(6)}`);
     }
     let n = 0;
-    for (let M = 0; M < i; M++)
-      n += Math.abs(s[M]);
-    const r = Math.sqrt(n / i);
+    for (let M = 0; M < s; M++)
+      n += Math.abs(i[M]);
+    const r = Math.sqrt(n / s);
     typeof process < "u" && ((V = process.env) == null ? void 0 : V.NODE_ENV) === "development" && console.log(`[Debug] RMS計算: sum=${n.toFixed(6)}, rms=${r.toFixed(6)}`);
     const a = this.deviceSpecs, c = r * a.gainCompensation, h = this.audioManager.getSensitivity(), m = (Y = this.deviceSpecs) == null ? void 0 : Y.sensitivity, u = m ?? h, d = 400 / (a.sensitivity * u);
     e && (console.log("[Debug] 🔄 SCALING_FACTOR計算 (v20250915-02):"), console.log(`  platformSpecs.sensitivity=${a.sensitivity}`), console.log(`  this.deviceSpecs=${JSON.stringify(this.deviceSpecs)}`), console.log(`  deviceSpecsSensitivity=${m}`), console.log(`  audioManagerSensitivity=${h}`), console.log(`  currentSensitivity=${u} (選択: ${m ? "deviceSpecs" : "audioManager"})`), console.log(`  計算: 400 / (${a.sensitivity} * ${u}) = ${d}`));
@@ -1916,13 +1916,13 @@ class Ke {
       const M = ((Z = this.analyser.context) == null ? void 0 : Z.sampleRate) || 44100;
       let D = 0, E = 0;
       try {
-        const T = this.pitchDetector.findPitch(s, M);
+        const T = this.pitchDetector.findPitch(i, M);
         D = T[0] || 0, E = T[1] || 0;
       } catch (T) {
         const q = new Ee(
           "Pitch detection algorithm failed",
           {
-            bufferLength: s.length,
+            bufferLength: i.length,
             sampleRate: M,
             volume: this.currentVolume,
             originalError: T instanceof Error ? T.message : String(T)
@@ -1935,7 +1935,7 @@ class Ke {
           return;
         }
       }
-      typeof process < "u" && ((ie = process.env) == null ? void 0 : ie.NODE_ENV) === "development" && (console.log(`[Debug] Pitchy結果: pitch=${(D == null ? void 0 : D.toFixed(1)) || "null"}, clarity=${(E == null ? void 0 : E.toFixed(3)) || "null"}, volume=${(se = this.currentVolume) == null ? void 0 : se.toFixed(1)}%, sampleRate=${M.toString()}`), console.log(`[Debug] Pitchyバッファー: 最初5要素=${Array.from(s.slice(0, 5)).map((T) => T.toFixed(6)).join(", ")}`));
+      typeof process < "u" && ((ie = process.env) == null ? void 0 : ie.NODE_ENV) === "development" && (console.log(`[Debug] Pitchy結果: pitch=${(D == null ? void 0 : D.toFixed(1)) || "null"}, clarity=${(E == null ? void 0 : E.toFixed(3)) || "null"}, volume=${(se = this.currentVolume) == null ? void 0 : se.toFixed(1)}%, sampleRate=${M.toString()}`), console.log(`[Debug] Pitchyバッファー: 最初5要素=${Array.from(i.slice(0, 5)).map((T) => T.toFixed(6)).join(", ")}`));
       const G = D >= 65 && D <= 1200;
       if (typeof process < "u" && ((oe = process.env) == null ? void 0 : oe.NODE_ENV) === "development" && console.log(`[Debug] 判定条件: pitch=${!!D}, clarity=${E == null ? void 0 : E.toFixed(3)}>${this.config.clarityThreshold}, volume=${(ne = this.currentVolume) == null ? void 0 : ne.toFixed(1)}>${this.config.minVolumeAbsolute}, range=${G}`), D && E > this.config.clarityThreshold && this.currentVolume > this.config.minVolumeAbsolute && G) {
         let T = D;
@@ -1960,8 +1960,8 @@ class Ke {
       cents: this.currentFrequency > 0 ? this.frequencyToCents(this.currentFrequency) : void 0
     };
     this.processAudioData(z), this.updateVisuals(z);
-    const $ = performance.now() - t;
-    this.frameRateLimiter.getStats().frameDrops === 0 && this.frameRateLimiter.recoverPerformance(), typeof process < "u" && ((B = process.env) == null ? void 0 : B.NODE_ENV) === "development" && $ > 16.67 && console.warn(`[PitchDetector] Frame processing took ${$.toFixed(2)}ms (>16.67ms threshold)`), this.animationFrame = requestAnimationFrame(() => this.detectPitch());
+    const L = performance.now() - t;
+    this.frameRateLimiter.getStats().frameDrops === 0 && this.frameRateLimiter.recoverPerformance(), typeof process < "u" && ((B = process.env) == null ? void 0 : B.NODE_ENV) === "development" && L > 16.67 && console.warn(`[PitchDetector] Frame processing took ${L.toFixed(2)}ms (>16.67ms threshold)`), this.animationFrame = requestAnimationFrame(() => this.detectPitch());
   }
   /**
    * Harmonic correction system with configurable parameters
@@ -1979,14 +1979,14 @@ class Ke {
     var m, u;
     if (!this.harmonicConfig.enabled)
       return this.previousFrequency = e, e;
-    const i = performance.now();
+    const s = performance.now();
     if (this.harmonicHistory = this.harmonicHistory.filter(
-      (d) => i - d.timestamp < this.harmonicConfig.historyWindow
-    ), this.harmonicHistory.push({ frequency: e, confidence: t, timestamp: i }), this.harmonicHistory.length < 8)
+      (d) => s - d.timestamp < this.harmonicConfig.historyWindow
+    ), this.harmonicHistory.push({ frequency: e, confidence: t, timestamp: s }), this.harmonicHistory.length < 8)
       return this.previousFrequency = e, e;
-    const s = this.harmonicHistory.reduce((d, f) => d + f.frequency, 0) / this.harmonicHistory.length, o = e * 2, n = e / 2, r = Math.abs(e - s), a = Math.abs(o - s), c = Math.abs(n - s);
+    const i = this.harmonicHistory.reduce((d, f) => d + f.frequency, 0) / this.harmonicHistory.length, o = e * 2, n = e / 2, r = Math.abs(e - i), a = Math.abs(o - i), c = Math.abs(n - i);
     let h = e;
-    return c < r && c < a ? (h = n, typeof process < "u" && ((m = process.env) == null ? void 0 : m.NODE_ENV) === "development" && console.log(`🔧 [PitchDetector] Octave correction DOWN: ${e.toFixed(1)}Hz → ${h.toFixed(1)}Hz (avg: ${s.toFixed(1)}Hz)`)) : a < r && a < c && (h = o, typeof process < "u" && ((u = process.env) == null ? void 0 : u.NODE_ENV) === "development" && console.log(`🔧 [PitchDetector] Octave correction UP: ${e.toFixed(1)}Hz → ${h.toFixed(1)}Hz (avg: ${s.toFixed(1)}Hz)`)), this.previousFrequency = h, h;
+    return c < r && c < a ? (h = n, typeof process < "u" && ((m = process.env) == null ? void 0 : m.NODE_ENV) === "development" && console.log(`🔧 [PitchDetector] Octave correction DOWN: ${e.toFixed(1)}Hz → ${h.toFixed(1)}Hz (avg: ${i.toFixed(1)}Hz)`)) : a < r && a < c && (h = o, typeof process < "u" && ((u = process.env) == null ? void 0 : u.NODE_ENV) === "development" && console.log(`🔧 [PitchDetector] Octave correction UP: ${e.toFixed(1)}Hz → ${h.toFixed(1)}Hz (avg: ${i.toFixed(1)}Hz)`)), this.previousFrequency = h, h;
   }
   /**
    * Reset harmonic correction history and frequency tracking
@@ -2019,7 +2019,7 @@ class Ke {
   frequencyToNoteAndOctave(e) {
     const t = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
     if (e <= 0) return { note: "--", octave: null };
-    const s = Math.round(12 * Math.log2(e / 440)), o = (s + 9 + 120) % 12, n = Math.floor((s + 9) / 12) + 4;
+    const i = Math.round(12 * Math.log2(e / 440)), o = (i + 9 + 120) % 12, n = Math.floor((i + 9) / 12) + 4;
     return { note: t[o], octave: n };
   }
   /**
@@ -2041,7 +2041,7 @@ class Ke {
    * ```
    */
   frequencyToCents(e) {
-    const i = 12 * Math.log2(e / 440), s = Math.round(i), o = (i - s) * 100;
+    const s = 12 * Math.log2(e / 440), i = Math.round(s), o = (s - i) * 100;
     return Math.round(o);
   }
   /**
@@ -2057,8 +2057,8 @@ class Ke {
   processSilenceDetection(e) {
     if (!this.silenceDetectionConfig.enabled)
       return;
-    const t = Date.now(), i = this.silenceDetectionConfig.minVolumeThreshold || 0.01;
-    if (e < i)
+    const t = Date.now(), s = this.silenceDetectionConfig.minVolumeThreshold || 0.01;
+    if (e < s)
       this.isSilent || (this.isSilent = !0, this.silenceStartTime = t, this.hasWarned = !1, console.log("🔇 [PitchDetector] Silence detected, starting timer"), this.silenceDetectionConfig.warningThreshold && (this.silenceWarningTimer = window.setTimeout(() => {
         this.handleSilenceWarning();
       }, this.silenceDetectionConfig.warningThreshold)), this.silenceDetectionConfig.timeoutThreshold && (this.silenceTimeoutTimer = window.setTimeout(() => {
@@ -2219,8 +2219,8 @@ class Ke {
    * @param result - Complete pitch detection result to process
    */
   processAudioData(e) {
-    var t, i;
-    (i = (t = this.callbacks).onPitchUpdate) == null || i.call(t, e);
+    var t, s;
+    (s = (t = this.callbacks).onPitchUpdate) == null || s.call(t, e);
   }
   /**
    * Update visual elements with lower priority rendering
@@ -2470,7 +2470,7 @@ class st {
     if (!this.config.useFilters)
       return t && e.connect(t), e;
     if (!this.highpassFilter || !this.lowpassFilter || !this.notchFilter) {
-      const i = new F(
+      const s = new F(
         "ノイズフィルターが正しく初期化されていません。コンストラクタでuseFilters: trueで初期化してください。",
         W.AUDIO_CONTEXT_ERROR,
         {
@@ -2481,23 +2481,23 @@ class st {
           hasNotchFilter: !!this.notchFilter
         }
       );
-      throw I.logError(i, "NoiseFilter connection"), i;
+      throw I.logError(s, "NoiseFilter connection"), s;
     }
     try {
       return this.disconnect(), this.inputNode = e, this.outputNode = t || null, e.connect(this.highpassFilter), this.highpassFilter.connect(this.lowpassFilter), this.lowpassFilter.connect(this.notchFilter), t && this.notchFilter.connect(t), this.isConnected = !0, console.log("🔗 [NoiseFilter] Filter chain connected"), this.notchFilter;
-    } catch (i) {
-      const s = new Q(
+    } catch (s) {
+      const i = new Q(
         "ノイズフィルターの接続に失敗しました。オーディオノードの接続状態を確認してください。",
         {
           operation: "connect",
-          originalError: i.message,
+          originalError: s.message,
           hasInputNode: !!this.inputNode,
           hasOutputNode: !!this.outputNode,
           isConnected: this.isConnected,
           filterConfig: this.config
         }
       );
-      throw I.logError(s, "NoiseFilter audio connection"), console.error("❌ [NoiseFilter] Connection failed:", s.toJSON()), s;
+      throw I.logError(i, "NoiseFilter audio connection"), console.error("❌ [NoiseFilter] Connection failed:", i.toJSON()), i;
     }
   }
   /**
@@ -2550,19 +2550,19 @@ class st {
     const t = this.audioContext.currentTime;
     try {
       e.highpassFreq !== void 0 && this.highpassFilter && (this.highpassFilter.frequency.setValueAtTime(e.highpassFreq, t), this.config.highpassFreq = e.highpassFreq), e.lowpassFreq !== void 0 && this.lowpassFilter && (this.lowpassFilter.frequency.setValueAtTime(e.lowpassFreq, t), this.config.lowpassFreq = e.lowpassFreq), e.notchFreq !== void 0 && this.notchFilter && (this.notchFilter.frequency.setValueAtTime(e.notchFreq, t), this.config.notchFreq = e.notchFreq), e.highpassQ !== void 0 && this.highpassFilter && (this.highpassFilter.Q.setValueAtTime(e.highpassQ, t), this.config.highpassQ = e.highpassQ), e.lowpassQ !== void 0 && this.lowpassFilter && (this.lowpassFilter.Q.setValueAtTime(e.lowpassQ, t), this.config.lowpassQ = e.lowpassQ), e.notchQ !== void 0 && this.notchFilter && (this.notchFilter.Q.setValueAtTime(e.notchQ, t), this.config.notchQ = e.notchQ), console.log("🔧 [NoiseFilter] Filter parameters updated:", e);
-    } catch (i) {
-      const s = new F(
+    } catch (s) {
+      const i = new F(
         "フィルターパラメータの更新に失敗しました。指定した値が範囲外であるか、フィルターが無効になっている可能性があります。",
         W.INVALID_SAMPLE_RATE,
         {
           operation: "updateFrequencies",
-          originalError: i.message,
+          originalError: s.message,
           requestedParams: e,
           currentConfig: this.config,
           audioContextTime: this.audioContext.currentTime
         }
       );
-      throw I.logError(s, "NoiseFilter parameter update"), console.error("❌ [NoiseFilter] Parameter update failed:", s.toJSON()), s;
+      throw I.logError(i, "NoiseFilter parameter update"), console.error("❌ [NoiseFilter] Parameter update failed:", i.toJSON()), i;
     }
   }
   /**
@@ -2584,19 +2584,19 @@ class st {
     if (!this.config.useFilters || !this.highpassFilter || !this.lowpassFilter || !this.notchFilter)
       return { magnitude: 1, phase: 0 };
     try {
-      const t = new Float32Array([e]), i = new Float32Array(1), s = new Float32Array(1);
-      this.highpassFilter.getFrequencyResponse(t, i, s);
-      const o = i[0];
-      this.lowpassFilter.getFrequencyResponse(t, i, s);
-      const n = i[0];
-      this.notchFilter.getFrequencyResponse(t, i, s);
-      const r = i[0];
+      const t = new Float32Array([e]), s = new Float32Array(1), i = new Float32Array(1);
+      this.highpassFilter.getFrequencyResponse(t, s, i);
+      const o = s[0];
+      this.lowpassFilter.getFrequencyResponse(t, s, i);
+      const n = s[0];
+      this.notchFilter.getFrequencyResponse(t, s, i);
+      const r = s[0];
       return {
         magnitude: o * n * r,
-        phase: s[0]
+        phase: i[0]
       };
     } catch (t) {
-      const i = new F(
+      const s = new F(
         "フィルター応答の計算に失敗しました。デフォルト値を返します。",
         W.PROCESSING_TIMEOUT,
         {
@@ -2606,7 +2606,7 @@ class st {
           useFilters: this.config.useFilters
         }
       );
-      return I.logError(i, "Filter response calculation"), console.warn("⚠️ [NoiseFilter] Filter response calculation failed:", i.toJSON()), { magnitude: 1, phase: 0 };
+      return I.logError(s, "Filter response calculation"), console.warn("⚠️ [NoiseFilter] Filter response calculation failed:", s.toJSON()), { magnitude: 1, phase: 0 };
     }
   }
   /**
@@ -2714,8 +2714,8 @@ class st {
 }
 var de = /* @__PURE__ */ ((l) => (l[l.DEBUG = 0] = "DEBUG", l[l.INFO = 1] = "INFO", l[l.WARN = 2] = "WARN", l[l.ERROR = 3] = "ERROR", l[l.SILENT = 4] = "SILENT", l))(de || {});
 class he {
-  constructor(e = 1, t = "", i = {}) {
-    this.listeners = [], this.level = e, this.prefix = t, this.context = i;
+  constructor(e = 1, t = "", s = {}) {
+    this.listeners = [], this.level = e, this.prefix = t, this.context = s;
   }
   /**
    * Set the minimum log level
@@ -2740,7 +2740,7 @@ class he {
    * Create a child logger with additional context
    */
   child(e, t = {}) {
-    const i = this.prefix ? `${this.prefix}:${e}` : e, s = { ...this.context, ...t }, o = new he(this.level, i, s);
+    const s = this.prefix ? `${this.prefix}:${e}` : e, i = { ...this.context, ...t }, o = new he(this.level, s, i);
     return o.addListener((n) => {
       this.listeners.forEach((r) => r(n));
     }), o;
@@ -2766,31 +2766,31 @@ class he {
   /**
    * Log an error message
    */
-  error(e, t, i) {
-    const s = t ? {
+  error(e, t, s) {
+    const i = t ? {
       errorName: t.name,
       errorMessage: t.message,
       stack: t.stack,
-      ...i
-    } : i;
-    this.log(3, e, s);
+      ...s
+    } : s;
+    this.log(3, e, i);
   }
   /**
    * Core logging method
    */
-  log(e, t, i) {
+  log(e, t, s) {
     if (e < this.level)
       return;
-    const s = {
+    const i = {
       level: e,
       message: t,
-      context: { ...this.context, ...i },
+      context: { ...this.context, ...s },
       timestamp: Date.now(),
       prefix: this.prefix
     };
-    this.logToConsole(s), this.listeners.forEach((o) => {
+    this.logToConsole(i), this.listeners.forEach((o) => {
       try {
-        o(s);
+        o(i);
       } catch (n) {
         console.error("Logger listener error:", n);
       }
@@ -2800,7 +2800,7 @@ class he {
    * Format and output to console
    */
   logToConsole(e) {
-    const t = new Date(e.timestamp).toISOString(), i = de[e.level], s = e.prefix ? `[${e.prefix}]` : "", o = `${t} ${i} ${s} ${e.message}`, n = this.getConsoleMethod(e.level);
+    const t = new Date(e.timestamp).toISOString(), s = de[e.level], i = e.prefix ? `[${e.prefix}]` : "", o = `${t} ${s} ${i} ${e.message}`, n = this.getConsoleMethod(e.level);
     e.context && Object.keys(e.context).length > 0 ? n(o, e.context) : n(o);
   }
   /**
@@ -2896,13 +2896,13 @@ class Ze {
   removeAllTrackedEventListeners() {
     this.logger.debug("Removing all tracked event listeners", {
       count: this.eventListeners.size
-    }), this.eventListeners.forEach(({ target: e, listener: t, eventName: i }, s) => {
+    }), this.eventListeners.forEach(({ target: e, listener: t, eventName: s }, i) => {
       try {
-        e.removeEventListener(i, t);
+        e.removeEventListener(s, t);
       } catch (o) {
         this.logger.warn("Failed to remove event listener", {
-          eventName: i,
-          key: s,
+          eventName: s,
+          key: i,
           error: o.message
         });
       }
@@ -2912,7 +2912,7 @@ class Ze {
    * Acquire microphone resources (with reference counting)
    */
   async acquire() {
-    var e, t, i, s;
+    var e, t, s, i;
     this.refCount++, console.log(`🎤 [MicrophoneLifecycleManager] Acquiring resources (refCount: ${this.refCount})`);
     try {
       if (!this.isActive) {
@@ -2921,7 +2921,7 @@ class Ze {
       }
       return this.updateActivity(), await this.audioManager.initialize();
     } catch (o) {
-      throw console.error("❌ [MicrophoneLifecycleManager] Failed to acquire resources:", o), this.refCount = Math.max(0, this.refCount - 1), (s = (i = this.callbacks).onError) == null || s.call(i, o), o;
+      throw console.error("❌ [MicrophoneLifecycleManager] Failed to acquire resources:", o), this.refCount = Math.max(0, this.refCount - 1), (i = (s = this.callbacks).onError) == null || i.call(s, o), o;
     }
   }
   /**
@@ -2946,14 +2946,14 @@ class Ze {
       this.isPageVisible = !document.hidden, this.handleVisibilityChange();
     }, t = () => {
       this.updateActivity();
-    }, i = () => {
-      this.forceRelease();
     }, s = () => {
+      this.forceRelease();
+    }, i = () => {
       this.isPageVisible = !0, this.handleVisibilityChange();
     }, o = () => {
       this.isPageVisible = !1, this.handleVisibilityChange();
     };
-    document.addEventListener("visibilitychange", e), document.addEventListener("mousemove", t), document.addEventListener("keydown", t), document.addEventListener("click", t), document.addEventListener("scroll", t), document.addEventListener("touchstart", t), window.addEventListener("beforeunload", i), window.addEventListener("unload", i), window.addEventListener("focus", s), window.addEventListener("blur", o), this.eventListeners.set("visibilitychange", { target: document, listener: e, eventName: "visibilitychange" }), this.eventListeners.set("mousemove", { target: document, listener: t, eventName: "mousemove" }), this.eventListeners.set("keydown", { target: document, listener: t, eventName: "keydown" }), this.eventListeners.set("click", { target: document, listener: t, eventName: "click" }), this.eventListeners.set("scroll", { target: document, listener: t, eventName: "scroll" }), this.eventListeners.set("touchstart", { target: document, listener: t, eventName: "touchstart" }), this.eventListeners.set("beforeunload", { target: window, listener: i, eventName: "beforeunload" }), this.eventListeners.set("unload", { target: window, listener: i, eventName: "unload" }), this.eventListeners.set("focus", { target: window, listener: s, eventName: "focus" }), this.eventListeners.set("blur", { target: window, listener: o, eventName: "blur" }), console.log("👂 [MicrophoneLifecycleManager] Event listeners setup complete");
+    document.addEventListener("visibilitychange", e), document.addEventListener("mousemove", t), document.addEventListener("keydown", t), document.addEventListener("click", t), document.addEventListener("scroll", t), document.addEventListener("touchstart", t), window.addEventListener("beforeunload", s), window.addEventListener("unload", s), window.addEventListener("focus", i), window.addEventListener("blur", o), this.eventListeners.set("visibilitychange", { target: document, listener: e, eventName: "visibilitychange" }), this.eventListeners.set("mousemove", { target: document, listener: t, eventName: "mousemove" }), this.eventListeners.set("keydown", { target: document, listener: t, eventName: "keydown" }), this.eventListeners.set("click", { target: document, listener: t, eventName: "click" }), this.eventListeners.set("scroll", { target: document, listener: t, eventName: "scroll" }), this.eventListeners.set("touchstart", { target: document, listener: t, eventName: "touchstart" }), this.eventListeners.set("beforeunload", { target: window, listener: s, eventName: "beforeunload" }), this.eventListeners.set("unload", { target: window, listener: s, eventName: "unload" }), this.eventListeners.set("focus", { target: window, listener: i, eventName: "focus" }), this.eventListeners.set("blur", { target: window, listener: o, eventName: "blur" }), console.log("👂 [MicrophoneLifecycleManager] Event listeners setup complete");
   }
   /**
    * Handle page visibility changes
@@ -2999,7 +2999,7 @@ class Ze {
    * Perform comprehensive health check
    */
   async performHealthCheck() {
-    var e, t, i, s;
+    var e, t, s, i;
     if (this.isActive)
       try {
         const o = this.audioManager.checkMediaStreamHealth();
@@ -3052,7 +3052,7 @@ class Ze {
           operation: "performHealthCheck",
           isActive: this.isActive,
           attempts: this.autoRecoveryAttempts
-        }), (s = (i = this.callbacks).onError) == null || s.call(i, o);
+        }), (i = (s = this.callbacks).onError) == null || i.call(s, o);
       }
   }
   /**
@@ -3074,8 +3074,8 @@ class Ze {
    */
   dispatchCustomEvent(e, t) {
     if (typeof window > "u") return;
-    const i = new CustomEvent(e, { detail: t });
-    window.dispatchEvent(i);
+    const s = new CustomEvent(e, { detail: t });
+    window.dispatchEvent(s);
   }
   /**
    * Get current status
@@ -3301,16 +3301,16 @@ class et {
   show(e) {
     if (!this.container)
       return console.warn("⚠️ [ErrorNotificationSystem] Container not available - cannot show notification"), "";
-    const t = `notification-${++this.notificationCounter}`, i = this.createNotificationElement(t, e);
+    const t = `notification-${++this.notificationCounter}`, s = this.createNotificationElement(t, e);
     if (this.notifications.size >= this.maxNotifications) {
-      const s = Array.from(this.notifications.keys())[0];
-      this.remove(s);
+      const i = Array.from(this.notifications.keys())[0];
+      this.remove(i);
     }
-    if (this.container.appendChild(i), this.notifications.set(t, i), e.autoHide !== !1) {
-      const s = e.duration || this.defaultDuration;
+    if (this.container.appendChild(s), this.notifications.set(t, s), e.autoHide !== !1) {
+      const i = e.duration || this.defaultDuration;
       setTimeout(() => {
         this.remove(t);
-      }, s);
+      }, i);
     }
     return console.log(`📢 [ErrorNotificationSystem] Notification shown: ${e.type} - ${e.title}`), t;
   }
@@ -3318,32 +3318,32 @@ class et {
    * Create notification DOM element
    */
   createNotificationElement(e, t) {
-    const i = document.createElement("div");
-    i.className = [
+    const s = document.createElement("div");
+    s.className = [
       this.cssClasses.notification,
       this.cssClasses[t.type],
       t.priority ? this.cssClasses[t.priority] : ""
-    ].filter(Boolean).join(" "), i["data-notification-id"] = e;
-    const s = document.createElement("div");
-    s.className = this.cssClasses.title, s.textContent = t.title, i.appendChild(s);
+    ].filter(Boolean).join(" "), s["data-notification-id"] = e;
+    const i = document.createElement("div");
+    i.className = this.cssClasses.title, i.textContent = t.title, s.appendChild(i);
     const o = document.createElement("div");
-    if (o.className = this.cssClasses.message, o.textContent = t.message, i.appendChild(o), t.details && t.details.length > 0) {
+    if (o.className = this.cssClasses.message, o.textContent = t.message, s.appendChild(o), t.details && t.details.length > 0) {
       const r = document.createElement("div");
       r.className = this.cssClasses.details;
       const a = document.createElement("ul");
       a.style.margin = "0", a.style.paddingLeft = "16px", t.details.forEach((c) => {
         const h = document.createElement("li");
         h.textContent = c, a.appendChild(h);
-      }), r.appendChild(a), i.appendChild(r);
+      }), r.appendChild(a), s.appendChild(r);
     }
     if (t.solution) {
       const r = document.createElement("div");
-      r.className = this.cssClasses.solution, r.textContent = t.solution, i.appendChild(r);
+      r.className = this.cssClasses.solution, r.textContent = t.solution, s.appendChild(r);
     }
     const n = document.createElement("button");
     return n.className = this.cssClasses.closeButton, n.innerHTML = "×", n.setAttribute("aria-label", "Close notification"), n.addEventListener("click", () => {
       this.remove(e);
-    }), i.appendChild(n), i;
+    }), s.appendChild(n), s;
   }
   /**
    * Remove a specific notification
@@ -3363,7 +3363,7 @@ class et {
   /**
    * Show error notification (convenience method)
    */
-  showError(e, t, i = {}) {
+  showError(e, t, s = {}) {
     return this.show({
       type: "error",
       title: e,
@@ -3371,13 +3371,13 @@ class et {
       priority: "high",
       autoHide: !1,
       // Errors should be manually dismissed
-      ...i
+      ...s
     });
   }
   /**
    * Show warning notification (convenience method)
    */
-  showWarning(e, t, i = {}) {
+  showWarning(e, t, s = {}) {
     return this.show({
       type: "warning",
       title: e,
@@ -3385,13 +3385,13 @@ class et {
       priority: "medium",
       duration: 8e3,
       // Longer duration for warnings
-      ...i
+      ...s
     });
   }
   /**
    * Show success notification (convenience method)
    */
-  showSuccess(e, t, i = {}) {
+  showSuccess(e, t, s = {}) {
     return this.show({
       type: "success",
       title: e,
@@ -3399,19 +3399,19 @@ class et {
       priority: "low",
       duration: 3e3,
       // Shorter duration for success messages
-      ...i
+      ...s
     });
   }
   /**
    * Show info notification (convenience method)
    */
-  showInfo(e, t, i = {}) {
+  showInfo(e, t, s = {}) {
     return this.show({
       type: "info",
       title: e,
       message: t,
       priority: "low",
-      ...i
+      ...s
     });
   }
   /**
@@ -3522,12 +3522,12 @@ class tt {
    * ```
    */
   constructor(e = {}) {
-    var t, i, s, o, n, r, a, c, h, m, u;
+    var t, s, i, o, n, r, a, c, h, m, u;
     this.currentState = "uninitialized", this.isPermissionGranted = !1, this.lastError = null, this.eventCallbacks = {}, this.deviceSpecs = null, this.pitchDetector = null, this.audioDetectionComponent = null, this.config = {
       audioManager: {
         sampleRate: ((t = e.audioManager) == null ? void 0 : t.sampleRate) ?? 44100,
-        echoCancellation: ((i = e.audioManager) == null ? void 0 : i.echoCancellation) ?? !1,
-        noiseSuppression: ((s = e.audioManager) == null ? void 0 : s.noiseSuppression) ?? !1,
+        echoCancellation: ((s = e.audioManager) == null ? void 0 : s.echoCancellation) ?? !1,
+        noiseSuppression: ((i = e.audioManager) == null ? void 0 : i.noiseSuppression) ?? !1,
         autoGainControl: ((o = e.audioManager) == null ? void 0 : o.autoGainControl) ?? !1
       },
       lifecycle: e.lifecycle ?? {},
@@ -3650,7 +3650,7 @@ class tt {
    * ```
    */
   async initialize() {
-    var e, t, i, s;
+    var e, t, s, i;
     try {
       this.updateState("initializing"), console.log("🎤 [MicrophoneController] Starting initialization");
       const o = await this.lifecycleManager.acquire();
@@ -3659,7 +3659,7 @@ class tt {
       throw this.logger.error("Initialization failed", o, {
         operation: "initialize",
         currentState: this.currentState
-      }), this.isPermissionGranted = !1, this.handleError(o, "initialization"), (s = (i = this.eventCallbacks).onPermissionChange) == null || s.call(i, !1), this.dispatchCustomEvent("pitchpro:microphoneDenied", { error: o }), o;
+      }), this.isPermissionGranted = !1, this.handleError(o, "initialization"), (i = (s = this.eventCallbacks).onPermissionChange) == null || i.call(s, !1), this.dispatchCustomEvent("pitchpro:microphoneDenied", { error: o }), o;
     }
   }
   /**
@@ -3733,11 +3733,11 @@ class tt {
    * ```
    */
   setSensitivity(e) {
-    var s, o;
+    var i, o;
     const t = this.audioManager.getSensitivity();
     this.audioManager.setSensitivity(e);
-    const i = this.audioManager.getSensitivity();
-    t !== i && (console.log(`🔧 [MicrophoneController] Sensitivity changed: ${t}x → ${i}x`), (o = (s = this.eventCallbacks).onSensitivityChange) == null || o.call(s, i), this.dispatchCustomEvent("pitchpro:sensitivityChanged", { sensitivity: i }));
+    const s = this.audioManager.getSensitivity();
+    t !== s && (console.log(`🔧 [MicrophoneController] Sensitivity changed: ${t}x → ${s}x`), (o = (i = this.eventCallbacks).onSensitivityChange) == null || o.call(i, s), this.dispatchCustomEvent("pitchpro:sensitivityChanged", { sensitivity: s }));
   }
   /**
    * Gets current microphone sensitivity multiplier
@@ -4005,11 +4005,11 @@ class tt {
     const t = Date.now();
     try {
       !this.isReady() && !this.isActive() && await this.initialize();
-      const i = this.audioManager.createAnalyser("microphone-test", {
+      const s = this.audioManager.createAnalyser("microphone-test", {
         fftSize: 1024,
         smoothingTimeConstant: 0.8
       });
-      let s = 0, o = null;
+      let i = 0, o = null;
       const n = t + e;
       await new Promise((h) => {
         const m = () => {
@@ -4017,13 +4017,13 @@ class tt {
             h();
             return;
           }
-          const u = i.fftSize, d = new Float32Array(u);
-          i.getFloatTimeDomainData(d);
+          const u = s.fftSize, d = new Float32Array(u);
+          s.getFloatTimeDomainData(d);
           let f = 0;
           for (let p = 0; p < u; p++)
             f += Math.abs(d[p]);
           const y = Math.sqrt(f / u) * 100;
-          if (y > s && (s = y), y > 5) {
+          if (y > i && (i = y), y > 5) {
             let p = 0, S = 0;
             for (let w = 1; w < u / 2; w++) {
               const v = Math.abs(d[w]);
@@ -4035,21 +4035,21 @@ class tt {
         };
         m();
       }), this.audioManager.removeAnalyser("microphone-test");
-      const r = Date.now() - t, a = s > 1, c = o ? o.toFixed(0) : "none";
-      return console.log(`🧪 [MicrophoneController] Microphone test complete: volume=${s.toFixed(2)}, frequency=${c}, duration=${r}ms`), {
+      const r = Date.now() - t, a = i > 1, c = o ? o.toFixed(0) : "none";
+      return console.log(`🧪 [MicrophoneController] Microphone test complete: volume=${i.toFixed(2)}, frequency=${c}, duration=${r}ms`), {
         success: a,
-        volume: s,
+        volume: i,
         frequency: o,
         duration: r
       };
-    } catch (i) {
-      const s = Date.now() - t, o = this._createStructuredError(i, "microphone_test");
+    } catch (s) {
+      const i = Date.now() - t, o = this._createStructuredError(s, "microphone_test");
       return I.logError(o, "Microphone functionality test"), console.error("❌ [MicrophoneController] Microphone test failed:", o.toJSON()), {
         success: !1,
         volume: 0,
         frequency: null,
-        duration: s,
-        error: i
+        duration: i,
+        error: s
       };
     }
   }
@@ -4057,31 +4057,31 @@ class tt {
    * Update internal state and notify
    */
   updateState(e) {
-    var t, i;
+    var t, s;
     if (this.currentState !== e) {
-      const s = this.currentState;
-      this.currentState = e, console.log(`🔄 [MicrophoneController] State changed: ${s} → ${e}`), (i = (t = this.eventCallbacks).onStateChange) == null || i.call(t, e);
+      const i = this.currentState;
+      this.currentState = e, console.log(`🔄 [MicrophoneController] State changed: ${i} → ${e}`), (s = (t = this.eventCallbacks).onStateChange) == null || s.call(t, e);
     }
   }
   /**
    * Handle errors with notification system
    */
   handleError(e, t) {
-    var s, o;
-    const i = e instanceof F ? e : this._createStructuredError(e, t);
-    I.logError(i, `MicrophoneController ${t}`), console.error(`❌ [MicrophoneController] Error in ${t}:`, i.toJSON()), this.lastError = e, this.updateState("error"), this.errorSystem && (t === "initialization" || t === "lifecycle" ? this.errorSystem.showMicrophoneError(e, t) : this.errorSystem.showError(
+    var i, o;
+    const s = e instanceof F ? e : this._createStructuredError(e, t);
+    I.logError(s, `MicrophoneController ${t}`), console.error(`❌ [MicrophoneController] Error in ${t}:`, s.toJSON()), this.lastError = e, this.updateState("error"), this.errorSystem && (t === "initialization" || t === "lifecycle" ? this.errorSystem.showMicrophoneError(e, t) : this.errorSystem.showError(
       "マイクエラー",
       `${t}でエラーが発生しました: ${e.message}`,
       { priority: "medium" }
-    )), (o = (s = this.eventCallbacks).onError) == null || o.call(s, e);
+    )), (o = (i = this.eventCallbacks).onError) == null || o.call(i, e);
   }
   /**
    * Dispatch custom DOM event
    */
   dispatchCustomEvent(e, t) {
     if (typeof window > "u") return;
-    const i = new CustomEvent(e, { detail: t });
-    window.dispatchEvent(i);
+    const s = new CustomEvent(e, { detail: t });
+    window.dispatchEvent(s);
   }
   /**
    * Add event listener for microphone events
@@ -4213,12 +4213,12 @@ const C = class C {
         midi: 0,
         frequency: 0
       };
-    const i = C.frequencyToMidi(e), s = t ? C.FLAT_NOTE_NAMES : C.NOTE_NAMES, o = (i - 12) % 12, n = Math.floor((i - 12) / 12);
+    const s = C.frequencyToMidi(e), i = t ? C.FLAT_NOTE_NAMES : C.NOTE_NAMES, o = (s - 12) % 12, n = Math.floor((s - 12) / 12);
     return {
-      name: s[o] + n,
+      name: i[o] + n,
       octave: n,
-      midi: i,
-      frequency: C.midiToFrequency(i)
+      midi: s,
+      frequency: C.midiToFrequency(s)
     };
   }
   /**
@@ -4244,8 +4244,8 @@ const C = class C {
    */
   static frequencyToCents(e) {
     if (e <= 0) return 0;
-    const t = 12 * Math.log2(e / C.A4_FREQUENCY) + C.A4_MIDI_NUMBER, i = Math.round(t), s = (t - i) * 100;
-    return Math.round(s);
+    const t = 12 * Math.log2(e / C.A4_FREQUENCY) + C.A4_MIDI_NUMBER, s = Math.round(t), i = (t - s) * 100;
+    return Math.round(i);
   }
   /**
    * Converts cents to frequency ratio for interval calculations
@@ -4346,8 +4346,8 @@ const C = class C {
    */
   static getInterval(e, t) {
     if (e <= 0 || t <= 0) return 0;
-    const i = C.frequencyToMidi(e), s = C.frequencyToMidi(t);
-    return Math.abs(s - i);
+    const s = C.frequencyToMidi(e), i = C.frequencyToMidi(t);
+    return Math.abs(i - s);
   }
   /**
    * Calculates the signed interval between two frequencies with direction
@@ -4373,8 +4373,8 @@ const C = class C {
    */
   static getSignedInterval(e, t) {
     if (e <= 0 || t <= 0) return 0;
-    const i = C.frequencyToMidi(e);
-    return C.frequencyToMidi(t) - i;
+    const s = C.frequencyToMidi(e);
+    return C.frequencyToMidi(t) - s;
   }
   /**
    * Provides comprehensive musical interval information and analysis
@@ -4415,9 +4415,9 @@ const C = class C {
       10: "Minor Seventh",
       11: "Major Seventh",
       12: "Perfect Octave"
-    }, i = (e % 12 + 12) % 12, s = Math.floor(e / 12), o = t[i] || "Unknown";
+    }, s = (e % 12 + 12) % 12, i = Math.floor(e / 12), o = t[s] || "Unknown";
     return {
-      name: s > 0 ? `${o} + ${s} octave(s)` : o,
+      name: i > 0 ? `${o} + ${i} octave(s)` : o,
       semitones: e,
       cents: e * 100,
       ratio: Math.pow(2, e / 12)
@@ -4532,12 +4532,12 @@ const C = class C {
    * ```
    */
   static generateChromaticScale(e, t = 1) {
-    const i = [];
-    for (let s = 0; s < 12 * t; s++) {
-      const o = e * Math.pow(2, s / 12);
-      i.push(o);
+    const s = [];
+    for (let i = 0; i < 12 * t; i++) {
+      const o = e * Math.pow(2, i / 12);
+      s.push(o);
     }
-    return i;
+    return s;
   }
   /**
    * Generates major scale frequencies from a base frequency
@@ -4560,7 +4560,7 @@ const C = class C {
    * ```
    */
   static generateMajorScale(e) {
-    return [0, 2, 4, 5, 7, 9, 11, 12].map((i) => e * Math.pow(2, i / 12));
+    return [0, 2, 4, 5, 7, 9, 11, 12].map((s) => e * Math.pow(2, s / 12));
   }
   /**
    * Generates natural minor scale frequencies from a base frequency
@@ -4583,7 +4583,7 @@ const C = class C {
    * ```
    */
   static generateMinorScale(e) {
-    return [0, 2, 3, 5, 7, 8, 10, 12].map((i) => e * Math.pow(2, i / 12));
+    return [0, 2, 3, 5, 7, 8, 10, 12].map((s) => e * Math.pow(2, s / 12));
   }
   /**
    * Calculates harmonic series frequencies for a given fundamental
@@ -4606,10 +4606,10 @@ const C = class C {
    * ```
    */
   static findHarmonics(e, t = 8) {
-    const i = [];
-    for (let s = 1; s <= t; s++)
-      i.push(e * s);
-    return i;
+    const s = [];
+    for (let i = 1; i <= t; i++)
+      s.push(e * i);
+    return s;
   }
   /**
    * Analyzes whether a frequency is a harmonic of a fundamental frequency
@@ -4637,11 +4637,11 @@ const C = class C {
    * // { isHarmonic: false, harmonicNumber: null, exactFrequency: null }
    * ```
    */
-  static isHarmonic(e, t, i = 0.05) {
+  static isHarmonic(e, t, s = 0.05) {
     if (t <= 0 || e <= 0)
       return { isHarmonic: !1, harmonicNumber: null, exactFrequency: null };
-    const s = e / t, o = Math.round(s);
-    return o >= 1 && Math.abs(s - o) <= i ? {
+    const i = e / t, o = Math.round(i);
+    return o >= 1 && Math.abs(i - o) <= s ? {
       isHarmonic: !0,
       harmonicNumber: o,
       exactFrequency: t * o
@@ -4665,9 +4665,9 @@ const C = class C {
   static scientificPitchToFrequency(e) {
     const t = e.match(/^([A-G][#b]?)(-?\d+)$/);
     if (!t) return 0;
-    const [, i, s] = t, o = parseInt(s, 10);
+    const [, s, i] = t, o = parseInt(i, 10);
     let n = 0;
-    const r = i[0], a = i.slice(1);
+    const r = s[0], a = s.slice(1);
     n = {
       C: 0,
       D: 2,
@@ -4813,7 +4813,7 @@ const j = class j {
    * ```
    */
   async initialize() {
-    var e;
+    var e, t;
     if (this.isInitialized) {
       this.debugLog("Already initialized");
       return;
@@ -4833,15 +4833,15 @@ const j = class j {
           enabled: this.config.debug
         }
       }), this.micController.setCallbacks({
-        onStateChange: (t) => {
-          this.debugLog("MicrophoneController state:", t);
+        onStateChange: (i) => {
+          this.debugLog("MicrophoneController state:", i);
         },
-        onError: (t) => {
-          this.handleError(t, "microphone_controller");
+        onError: (i) => {
+          this.handleError(i, "microphone_controller");
         },
-        onDeviceChange: (t) => {
-          var i, s;
-          this.deviceSpecs = t, (s = (i = this.callbacks).onDeviceDetected) == null || s.call(i, t);
+        onDeviceChange: (i) => {
+          var o, n;
+          this.deviceSpecs = i, (n = (o = this.callbacks).onDeviceDetected) == null || n.call(o, i);
         }
       }), await this.micController.initialize(), this.pitchDetector = new Ke(this.audioManager, {
         clarityThreshold: this.config.clarityThreshold,
@@ -4851,18 +4851,25 @@ const j = class j {
         // v1.1.8: Use DeviceDetection smoothing
         deviceOptimization: this.config.deviceOptimization
       }), Object.keys(this.config.customDeviceConfig).length > 0 && (this.applyCustomDeviceConfig(), this.pitchDetector && this.deviceSpecs && (this.pitchDetector.setCustomDeviceSpecs(this.deviceSpecs), this.debugLog("🔧 Applied custom device specs to PitchDetector")), this.debugLog("Custom device configuration applied:", this.config.customDeviceConfig)), this.pitchDetector.setCallbacks({
-        onPitchUpdate: (t) => {
-          this.handlePitchUpdate(t);
+        onPitchUpdate: (i) => {
+          this.handlePitchUpdate(i);
         },
-        onError: (t) => {
-          this.handleError(t, "pitch_detector");
+        onError: (i) => {
+          this.handleError(i, "pitch_detector");
         },
-        onStateChange: (t) => {
-          this.debugLog("PitchDetector state:", t);
+        onStateChange: (i) => {
+          this.debugLog("PitchDetector state:", i);
         }
-      }), await this.pitchDetector.initialize(), Object.keys(this.config.customDeviceConfig).length > 0 && this.deviceSpecs && (this.pitchDetector.setCustomDeviceSpecs(this.deviceSpecs), this.debugLog("🔄 Re-applied custom device specs after PitchDetector initialization")), this.micController && this.pitchDetector && (this.micController.registerDetector(this.pitchDetector), this.micController.registerAudioDetectionComponent(this), this.debugLog("✅ PitchDetector and AudioDetectionComponent registered with MicrophoneController for unified management")), this.cacheUIElements(), this.micController && (Object.keys(this.config.customDeviceConfig).length > 0 && this.config.customDeviceConfig.sensitivity ? (this.micController.setSensitivity(this.config.customDeviceConfig.sensitivity), this.debugLog("🎯 Applied custom sensitivity to AudioManager:", this.config.customDeviceConfig.sensitivity)) : this.deviceSettings && (this.micController.setSensitivity(this.deviceSettings.sensitivityMultiplier), this.debugLog("Applied device-specific sensitivity:", this.deviceSettings.sensitivityMultiplier))), this.isInitialized = !0, this.updateState("ready"), this.debugLog("Initialization complete");
-    } catch (t) {
-      const i = this.createStructuredError(t, "initialization");
+      }), await this.pitchDetector.initialize();
+      const s = Object.keys(this.config.customDeviceConfig).length > 0;
+      this.debugLog("🔍 Custom config check:", {
+        hasCustomConfig: s,
+        customDeviceConfig: this.config.customDeviceConfig,
+        deviceSpecs: this.deviceSpecs,
+        deviceSpecsSensitivity: (t = this.deviceSpecs) == null ? void 0 : t.sensitivity
+      }), s && this.deviceSpecs && (this.debugLog("🔄 Applying custom device specs to PitchDetector:", this.deviceSpecs), this.pitchDetector.setCustomDeviceSpecs(this.deviceSpecs), this.debugLog("✅ Custom device specs applied to PitchDetector")), this.micController && this.pitchDetector && (this.micController.registerDetector(this.pitchDetector), this.micController.registerAudioDetectionComponent(this), this.debugLog("✅ PitchDetector and AudioDetectionComponent registered with MicrophoneController for unified management")), this.cacheUIElements(), this.micController && (Object.keys(this.config.customDeviceConfig).length > 0 && this.config.customDeviceConfig.sensitivity ? (this.micController.setSensitivity(this.config.customDeviceConfig.sensitivity), this.debugLog("🎯 Applied custom sensitivity to AudioManager:", this.config.customDeviceConfig.sensitivity)) : this.deviceSettings && (this.micController.setSensitivity(this.deviceSettings.sensitivityMultiplier), this.debugLog("Applied device-specific sensitivity:", this.deviceSettings.sensitivityMultiplier))), this.isInitialized = !0, this.updateState("ready"), this.debugLog("Initialization complete");
+    } catch (s) {
+      const i = this.createStructuredError(s, "initialization");
       throw I.logError(i, "AudioDetectionComponent initialization"), this.lastError = i, this.updateState("error"), i;
     }
   }
@@ -4973,15 +4980,15 @@ const j = class j {
         if (this.uiElements.volumeBar && this.config.volumeBarSelector) {
           const t = document.querySelector(this.config.volumeBarSelector);
           if (t && t === this.uiElements.volumeBar) {
-            const i = Math.min(100, Math.max(0, e.volume));
-            this.uiElements.volumeBar instanceof HTMLProgressElement ? this.uiElements.volumeBar.value = i : this.uiElements.volumeBar.style.width = `${i}%`;
+            const s = Math.min(100, Math.max(0, e.volume));
+            this.uiElements.volumeBar instanceof HTMLProgressElement ? this.uiElements.volumeBar.value = s : this.uiElements.volumeBar.style.width = `${s}%`;
           }
         }
         if (this.uiElements.volumeText && this.config.volumeTextSelector) {
           const t = document.querySelector(this.config.volumeTextSelector);
           if (t && t === this.uiElements.volumeText) {
-            const i = Math.min(100, Math.max(0, e.volume));
-            this.uiElements.volumeText.textContent = `${i.toFixed(1)}%`;
+            const s = Math.min(100, Math.max(0, e.volume));
+            this.uiElements.volumeText.textContent = `${s.toFixed(1)}%`;
           }
         }
         if (this.uiElements.frequency && this.config.frequencySelector) {
@@ -4993,8 +5000,8 @@ const j = class j {
           if (t && t === this.uiElements.note)
             if (e.frequency && e.frequency > 0) {
               this.noteResetTimer && (clearTimeout(this.noteResetTimer), this.noteResetTimer = null);
-              const i = R.frequencyToNote(e.frequency);
-              this.debugLog(`Updating note display: ${this.uiElements.note.id || "unknown-id"} with note: ${i.name} (selector: ${this.config.noteSelector})`), this.uiElements.note.textContent = i.name;
+              const s = R.frequencyToNote(e.frequency);
+              this.debugLog(`Updating note display: ${this.uiElements.note.id || "unknown-id"} with note: ${s.name} (selector: ${this.config.noteSelector})`), this.uiElements.note.textContent = s.name;
             } else
               this.noteResetTimer || (this.noteResetTimer = window.setTimeout(() => {
                 this.uiElements.note && (this.debugLog(`Resetting note display: ${this.uiElements.note.id || "unknown-id"} to "-" (delayed, selector: ${this.config.noteSelector})`), this.uiElements.note.textContent = "-"), this.noteResetTimer = null;
@@ -5200,22 +5207,22 @@ const j = class j {
         this.config.frequencySelector,
         this.config.noteSelector
       ];
-      document.querySelectorAll('[id*="freq"]:not(.frequency-group):not(.frequency-box), [id*="frequency"]:not(.frequency-group):not(.frequency-box), [id*="pitch"]:not(.frequency-group):not(.frequency-box)').forEach((i) => {
-        const s = i.textContent || "";
-        (s.includes("Hz") || s.match(/^\d+\.?\d*$/)) && (i.classList.contains("frequency-display") || i.id.includes("freq-")) && (i.textContent = "0.0 Hz");
-      }), e.forEach((i) => {
-        if (i) {
-          const s = document.querySelector(i);
-          if (s) {
-            if (this.debugLog(`Processing selector: ${i}, element found: ${!!s}`), i.includes("volume-bar"))
-              s instanceof HTMLProgressElement ? s.value = 0 : s.style.width = "0%";
-            else if (i.includes("volume-text"))
-              s.textContent = "0.0%";
-            else if (i.includes("frequency"))
-              s.textContent = "0.0 Hz", s.innerHTML = "0.0 Hz", s.setAttribute("data-frequency", "0"), s.style.display !== "none" && (s.style.opacity = "0.99", s.offsetHeight, s.style.opacity = "");
-            else if (i.includes("note")) {
-              const o = s.textContent, n = s.innerHTML;
-              this.debugLog(`Resetting note element: ${i}, textContent: "${o}", innerHTML: "${n}"`), s.textContent = "-", s.innerHTML = "-", s.style.opacity = "0.99", s.offsetHeight, s.style.opacity = "", this.debugLog(`Note reset complete: ${i}, new textContent: "${s.textContent}", new innerHTML: "${s.innerHTML}"`);
+      document.querySelectorAll('[id*="freq"]:not(.frequency-group):not(.frequency-box), [id*="frequency"]:not(.frequency-group):not(.frequency-box), [id*="pitch"]:not(.frequency-group):not(.frequency-box)').forEach((s) => {
+        const i = s.textContent || "";
+        (i.includes("Hz") || i.match(/^\d+\.?\d*$/)) && (s.classList.contains("frequency-display") || s.id.includes("freq-")) && (s.textContent = "0.0 Hz");
+      }), e.forEach((s) => {
+        if (s) {
+          const i = document.querySelector(s);
+          if (i) {
+            if (this.debugLog(`Processing selector: ${s}, element found: ${!!i}`), s.includes("volume-bar"))
+              i instanceof HTMLProgressElement ? i.value = 0 : i.style.width = "0%";
+            else if (s.includes("volume-text"))
+              i.textContent = "0.0%";
+            else if (s.includes("frequency"))
+              i.textContent = "0.0 Hz", i.innerHTML = "0.0 Hz", i.setAttribute("data-frequency", "0"), i.style.display !== "none" && (i.style.opacity = "0.99", i.offsetHeight, i.style.opacity = "");
+            else if (s.includes("note")) {
+              const o = i.textContent, n = i.innerHTML;
+              this.debugLog(`Resetting note element: ${s}, textContent: "${o}", innerHTML: "${n}"`), i.textContent = "-", i.innerHTML = "-", i.style.opacity = "0.99", i.offsetHeight, i.style.opacity = "", this.debugLog(`Note reset complete: ${s}, new textContent: "${i.textContent}", new innerHTML: "${i.innerHTML}"`);
             }
           }
         }
@@ -5229,9 +5236,9 @@ const j = class j {
    * @private
    */
   handlePitchUpdate(e) {
-    var i, s, o, n;
+    var s, i, o, n;
     const t = this._getProcessedResult(e);
-    t && ((s = (i = this.callbacks).onPitchUpdate) == null || s.call(i, t), (n = (o = this.callbacks).onVolumeUpdate) == null || n.call(o, t.volume));
+    t && ((i = (s = this.callbacks).onPitchUpdate) == null || i.call(s, t), (n = (o = this.callbacks).onVolumeUpdate) == null || n.call(o, t.volume));
   }
   /**
    * Starts UI update timer
@@ -5272,24 +5279,24 @@ const j = class j {
   _getProcessedResult(e) {
     var o, n;
     if (!e) return null;
-    const t = { ...e }, i = ((o = this.deviceSettings) == null ? void 0 : o.volumeMultiplier) ?? 1, s = e.volume * i;
+    const t = { ...e }, s = ((o = this.deviceSettings) == null ? void 0 : o.volumeMultiplier) ?? 1, i = e.volume * s;
     return this.config.debug && e.volume > 0 && console.log("🔍 [AudioDetectionComponent] Volume conversion:", {
       original: e.volume.toFixed(2) + "%",
-      multiplier: i.toFixed(1) + "x",
-      beforeClamp: s.toFixed(2) + "%",
-      afterClamp: Math.min(100, Math.max(0, s)).toFixed(2) + "%",
+      multiplier: s.toFixed(1) + "x",
+      beforeClamp: i.toFixed(2) + "%",
+      afterClamp: Math.min(100, Math.max(0, i)).toFixed(2) + "%",
       device: ((n = this.deviceSpecs) == null ? void 0 : n.deviceType) || "Unknown"
-    }), t.volume = Math.min(100, Math.max(0, s)), t;
+    }), t.volume = Math.min(100, Math.max(0, i)), t;
   }
   /**
    * Updates component state and notifies callbacks
    * @private
    */
   updateState(e) {
-    var t, i;
+    var t, s;
     if (this.currentState !== e) {
-      const s = this.currentState;
-      this.currentState = e, this.debugLog(`State changed: ${s} → ${e}`), (i = (t = this.callbacks).onStateChange) == null || i.call(t, e);
+      const i = this.currentState;
+      this.currentState = e, this.debugLog(`State changed: ${i} → ${e}`), (s = (t = this.callbacks).onStateChange) == null || s.call(t, e);
     }
   }
   /**
@@ -5297,9 +5304,9 @@ const j = class j {
    * @private
    */
   handleError(e, t) {
-    var s, o;
-    const i = e instanceof F ? e : this.createStructuredError(e, t);
-    this.lastError = i, this.updateState("error"), (o = (s = this.callbacks).onError) == null || o.call(s, i), this.debugLog("Error handled:", i.toJSON());
+    var i, o;
+    const s = e instanceof F ? e : this.createStructuredError(e, t);
+    this.lastError = s, this.updateState("error"), (o = (i = this.callbacks).onError) == null || o.call(i, s), this.debugLog("Error handled:", s.toJSON());
   }
   /**
    * Creates structured error with context information
@@ -5382,16 +5389,16 @@ class ct {
    * Apply harmonic correction to detected frequency
    */
   correctFrequency(e, t = 1) {
-    const i = Date.now();
-    this.cleanHistory(i), this.addToHistory(e, t, i);
-    const s = this.analyzeHarmonics(e);
-    return s.confidence >= this.config.minConfidenceThreshold ? {
-      correctedFreq: s.correctedFrequency,
-      confidence: s.confidence,
-      correctionApplied: Math.abs(s.correctedFrequency - e) > 1
+    const s = Date.now();
+    this.cleanHistory(s), this.addToHistory(e, t, s);
+    const i = this.analyzeHarmonics(e);
+    return i.confidence >= this.config.minConfidenceThreshold ? {
+      correctedFreq: i.correctedFrequency,
+      confidence: i.confidence,
+      correctionApplied: Math.abs(i.correctedFrequency - e) > 1
     } : {
       correctedFreq: e,
-      confidence: s.confidence,
+      confidence: i.confidence,
       correctionApplied: !1
     };
   }
@@ -5404,32 +5411,32 @@ class ct {
         correctedFrequency: e,
         confidence: 0.1
       };
-    const t = this.historyBuffer.slice(-10).map((o) => o.frequency), i = this.findFundamentalCandidates(e);
-    let s = {
+    const t = this.historyBuffer.slice(-10).map((o) => o.frequency), s = this.findFundamentalCandidates(e);
+    let i = {
       frequency: e,
       confidence: 0.1,
       harmonicNumber: 1
     };
-    for (const o of i) {
+    for (const o of s) {
       const n = this.calculateHarmonicConfidence(
         o.fundamental,
         o.harmonicNumber,
         t
       );
-      n > s.confidence && (s = {
+      n > i.confidence && (i = {
         frequency: o.fundamental,
         confidence: n,
         harmonicNumber: o.harmonicNumber
       });
     }
-    return s.harmonicNumber > 1 && s.confidence > this.config.minConfidenceThreshold ? {
-      correctedFrequency: s.frequency,
-      confidence: s.confidence,
-      harmonicNumber: s.harmonicNumber,
-      fundamentalCandidate: s.frequency
+    return i.harmonicNumber > 1 && i.confidence > this.config.minConfidenceThreshold ? {
+      correctedFrequency: i.frequency,
+      confidence: i.confidence,
+      harmonicNumber: i.harmonicNumber,
+      fundamentalCandidate: i.frequency
     } : {
       correctedFrequency: e,
-      confidence: s.confidence
+      confidence: i.confidence
     };
   }
   /**
@@ -5437,15 +5444,15 @@ class ct {
    */
   findFundamentalCandidates(e) {
     const t = [];
-    for (let i = 2; i <= this.config.maxHarmonicNumber; i++) {
-      const s = e / i;
-      if (s < 60) continue;
-      const o = s * i, n = Math.abs(1200 * Math.log2(e / o));
+    for (let s = 2; s <= this.config.maxHarmonicNumber; s++) {
+      const i = e / s;
+      if (i < 60) continue;
+      const o = i * s, n = Math.abs(1200 * Math.log2(e / o));
       if (n <= this.config.harmonicToleranceCents) {
         const r = 1 - n / this.config.harmonicToleranceCents;
         t.push({
-          fundamental: s,
-          harmonicNumber: i,
+          fundamental: i,
+          harmonicNumber: s,
           likelihood: r
         });
       }
@@ -5454,42 +5461,42 @@ class ct {
       fundamental: e,
       harmonicNumber: 1,
       likelihood: 0.5
-    }), t.sort((i, s) => s.likelihood - i.likelihood);
+    }), t.sort((s, i) => i.likelihood - s.likelihood);
   }
   /**
    * Calculate confidence that a frequency pattern represents a harmonic series
    */
-  calculateHarmonicConfidence(e, t, i) {
-    if (i.length < 3) return 0.1;
-    let s = 0, o = 0;
-    for (const a of i) {
+  calculateHarmonicConfidence(e, t, s) {
+    if (s.length < 3) return 0.1;
+    let i = 0, o = 0;
+    for (const a of s) {
       let c = Math.round(a / e);
       c < 1 && (c = 1);
       const h = e * c, m = Math.abs(1200 * Math.log2(a / h));
       if (m <= this.config.harmonicToleranceCents * 2) {
         const u = 1 - m / (this.config.harmonicToleranceCents * 2);
-        s += u, o++;
+        i += u, o++;
       }
     }
     if (o === 0) return 0.1;
-    const n = s / o, r = Math.min(o / i.length, 1);
+    const n = i / o, r = Math.min(o / s.length, 1);
     return Math.min(n * this.config.stabilityWeight + r * (1 - this.config.stabilityWeight), 1);
   }
   /**
    * Add frequency detection to history
    */
-  addToHistory(e, t, i) {
-    const s = Math.min(t, 1);
+  addToHistory(e, t, s) {
+    const i = Math.min(t, 1);
     let o = 0.5;
     if (this.historyBuffer.length > 0) {
       const r = this.historyBuffer[this.historyBuffer.length - 1].frequency, a = Math.max(e, r) / Math.min(e, r);
       o = Math.max(0, 1 - (a - 1) * 5);
     }
-    const n = s * this.config.volumeWeight + o * (1 - this.config.volumeWeight);
+    const n = i * this.config.volumeWeight + o * (1 - this.config.volumeWeight);
     this.historyBuffer.push({
       frequency: e,
       confidence: n,
-      timestamp: i,
+      timestamp: s,
       volume: t
     }), this.historyBuffer.length > 50 && this.historyBuffer.shift();
   }
@@ -5498,7 +5505,7 @@ class ct {
    */
   cleanHistory(e) {
     const t = e - this.config.historyWindowMs;
-    this.historyBuffer = this.historyBuffer.filter((i) => i.timestamp > t);
+    this.historyBuffer = this.historyBuffer.filter((s) => s.timestamp > t);
   }
   /**
    * Reset correction history
@@ -5517,11 +5524,11 @@ class ct {
         frequencyRange: null,
         stabilityScore: 0
       };
-    const e = this.historyBuffer.map((h) => h.frequency), t = this.historyBuffer.map((h) => h.confidence), i = t.reduce((h, m) => h + m, 0) / t.length, s = Math.min(...e), o = Math.max(...e), n = e.reduce((h, m) => h + m, 0) / e.length, r = e.reduce((h, m) => h + Math.pow(m - n, 2), 0) / e.length, a = Math.sqrt(r) / n, c = Math.max(0, 1 - a);
+    const e = this.historyBuffer.map((h) => h.frequency), t = this.historyBuffer.map((h) => h.confidence), s = t.reduce((h, m) => h + m, 0) / t.length, i = Math.min(...e), o = Math.max(...e), n = e.reduce((h, m) => h + m, 0) / e.length, r = e.reduce((h, m) => h + Math.pow(m - n, 2), 0) / e.length, a = Math.sqrt(r) / n, c = Math.max(0, 1 - a);
     return {
       historyLength: this.historyBuffer.length,
-      averageConfidence: i,
-      frequencyRange: { min: s, max: o },
+      averageConfidence: s,
+      frequencyRange: { min: i, max: o },
       stabilityScore: c
     };
   }
@@ -5553,10 +5560,10 @@ class lt {
   /**
    * Analyze voice characteristics from audio data
    */
-  analyzeVoice(e, t, i, s) {
+  analyzeVoice(e, t, s, i) {
     const o = Date.now();
-    this.addToBuffer(e, t, i, o), this.cleanBuffer(o);
-    const n = this.calculateStability(), r = this.detectVibrato(), a = s ? this.analyzeBreathiness(s) : null, c = this.analyzeConsistency(), h = this.calculateOverallQuality(n, r, a, c), m = this.generateRecommendations(
+    this.addToBuffer(e, t, s, o), this.cleanBuffer(o);
+    const n = this.calculateStability(), r = this.detectVibrato(), a = i ? this.analyzeBreathiness(i) : null, c = this.analyzeConsistency(), h = this.calculateOverallQuality(n, r, a, c), m = this.generateRecommendations(
       h,
       n,
       r,
@@ -5578,7 +5585,7 @@ class lt {
     const t = this.analysisBuffer.map((a) => a.frequency).filter((a) => a > 0);
     if (t.length < 5)
       return 0.3;
-    const i = t.reduce((a, c) => a + c, 0) / t.length, s = t.reduce((a, c) => a + Math.pow(c - i, 2), 0) / t.length, r = Math.sqrt(s) / i * 1200;
+    const s = t.reduce((a, c) => a + c, 0) / t.length, i = t.reduce((a, c) => a + Math.pow(c - s, 2), 0) / t.length, r = Math.sqrt(i) / s * 1200;
     return Math.max(0, Math.min(1, 1 - r / 100));
   }
   /**
@@ -5590,20 +5597,20 @@ class lt {
     const e = this.analysisBuffer.map((u) => u.frequency).filter((u) => u > 0);
     if (e.length < 20)
       return { detected: !1, rate: null, depth: null, regularity: null };
-    const t = this.smoothFrequencies(e, 3), i = this.findExtrema(t);
-    if (i.length < 4)
+    const t = this.smoothFrequencies(e, 3), s = this.findExtrema(t);
+    if (s.length < 4)
       return { detected: !1, rate: null, depth: null, regularity: null };
-    const s = (this.analysisBuffer[this.analysisBuffer.length - 1].timestamp - this.analysisBuffer[0].timestamp) / 1e3, n = i.length / 2 / s, r = [];
-    for (let u = 0; u < i.length - 1; u++) {
-      const d = t[i[u].index], f = t[i[u + 1].index];
+    const i = (this.analysisBuffer[this.analysisBuffer.length - 1].timestamp - this.analysisBuffer[0].timestamp) / 1e3, n = s.length / 2 / i, r = [];
+    for (let u = 0; u < s.length - 1; u++) {
+      const d = t[s[u].index], f = t[s[u + 1].index];
       if (d > 0 && f > 0) {
         const g = Math.abs(1200 * Math.log2(d / f));
         r.push(g);
       }
     }
     const a = r.length > 0 ? r.reduce((u, d) => u + d, 0) / r.length : 0, c = [];
-    for (let u = 0; u < i.length - 2; u += 2) {
-      const d = i[u + 2].index - i[u].index;
+    for (let u = 0; u < s.length - 2; u += 2) {
+      const d = s[u + 2].index - s[u].index;
       c.push(d);
     }
     let h = 0;
@@ -5622,9 +5629,9 @@ class lt {
    * Analyze breathiness from spectral data
    */
   analyzeBreathiness(e) {
-    const t = Math.floor(e.length * 0.1), i = e.slice(Math.floor(e.length * 0.7)), s = e.slice(0, t * 2).reduce((r, a) => r + a * a, 0), o = i.reduce((r, a) => r + a * a, 0);
-    if (s === 0) return 1;
-    const n = o / s;
+    const t = Math.floor(e.length * 0.1), s = e.slice(Math.floor(e.length * 0.7)), i = e.slice(0, t * 2).reduce((r, a) => r + a * a, 0), o = s.reduce((r, a) => r + a * a, 0);
+    if (i === 0) return 1;
+    const n = o / i;
     return Math.min(1, n);
   }
   /**
@@ -5632,74 +5639,74 @@ class lt {
    */
   analyzeConsistency() {
     if (this.analysisBuffer.length < 10) return 0.5;
-    const e = this.analysisBuffer.map((o) => o.volume), t = this.analysisBuffer.map((o) => o.clarity), i = this.calculateConsistencyScore(e), s = this.calculateConsistencyScore(t);
-    return (i + s) / 2;
+    const e = this.analysisBuffer.map((o) => o.volume), t = this.analysisBuffer.map((o) => o.clarity), s = this.calculateConsistencyScore(e), i = this.calculateConsistencyScore(t);
+    return (s + i) / 2;
   }
   /**
    * Calculate consistency score for an array of values
    */
   calculateConsistencyScore(e) {
     if (e.length < 3) return 0.5;
-    const t = e.reduce((o, n) => o + n, 0) / e.length, i = e.reduce((o, n) => o + Math.pow(n - t, 2), 0) / e.length, s = Math.sqrt(i) / (t || 1);
-    return Math.max(0, Math.min(1, 1 - s));
+    const t = e.reduce((o, n) => o + n, 0) / e.length, s = e.reduce((o, n) => o + Math.pow(n - t, 2), 0) / e.length, i = Math.sqrt(s) / (t || 1);
+    return Math.max(0, Math.min(1, 1 - i));
   }
   /**
    * Calculate overall voice quality
    */
-  calculateOverallQuality(e, t, i, s) {
+  calculateOverallQuality(e, t, s, i) {
     const o = {
       stability: 0.4,
       consistency: 0.3,
       breathiness: 0.2,
       vibrato: 0.1
     };
-    let n = e * o.stability + s * o.consistency;
-    return i !== null ? n += (1 - Math.min(i, 1)) * o.breathiness : n += 0.7 * o.breathiness, t.detected && t.regularity > 0.7 ? n += 0.9 * o.vibrato : t.detected ? n += 0.6 * o.vibrato : n += 0.5 * o.vibrato, n >= 0.85 ? re.EXCELLENT : n >= 0.7 ? re.GOOD : n >= 0.5 ? re.FAIR : re.POOR;
+    let n = e * o.stability + i * o.consistency;
+    return s !== null ? n += (1 - Math.min(s, 1)) * o.breathiness : n += 0.7 * o.breathiness, t.detected && t.regularity > 0.7 ? n += 0.9 * o.vibrato : t.detected ? n += 0.6 * o.vibrato : n += 0.5 * o.vibrato, n >= 0.85 ? re.EXCELLENT : n >= 0.7 ? re.GOOD : n >= 0.5 ? re.FAIR : re.POOR;
   }
   /**
    * Generate recommendations based on analysis
    */
-  generateRecommendations(e, t, i, s, o) {
+  generateRecommendations(e, t, s, i, o) {
     const n = [];
-    return t < 0.5 ? (n.push("音程の安定性を向上させるため、ゆっくりとした発声練習を行ってください"), n.push("腹式呼吸を意識して、息の流れを一定に保つ練習をしてください")) : t < 0.7 && n.push("音程の微調整練習で、より正確なピッチコントロールを目指しましょう"), o < 0.5 && (n.push("音量と音質の一貫性を保つため、定期的な発声練習を継続してください"), n.push("録音を聞き返して、自分の声の特徴を把握しましょう")), s !== null && s > 0.6 && (n.push("声の息漏れが気になります。発声時の喉の締まりを意識してください"), n.push("ハミング練習で、クリアな声質を目指しましょう")), i.detected ? i.regularity < 0.5 ? n.push("ビブラートの規則性を改善するため、メトロノームに合わせた練習をしてください") : i.rate > 7.5 && n.push("ビブラートの速度が速すぎます。よりゆったりとしたビブラートを練習してください") : (e === re.GOOD || e === re.EXCELLENT) && n.push("美しいビブラートの習得に挑戦してみましょう"), e === re.POOR ? (n.push("基礎的な発声練習から始めることをお勧めします"), n.push("専門的な指導を受けることを検討してください")) : e === re.EXCELLENT && n.push("素晴らしい声質です。この状態を維持する練習を続けてください"), n;
+    return t < 0.5 ? (n.push("音程の安定性を向上させるため、ゆっくりとした発声練習を行ってください"), n.push("腹式呼吸を意識して、息の流れを一定に保つ練習をしてください")) : t < 0.7 && n.push("音程の微調整練習で、より正確なピッチコントロールを目指しましょう"), o < 0.5 && (n.push("音量と音質の一貫性を保つため、定期的な発声練習を継続してください"), n.push("録音を聞き返して、自分の声の特徴を把握しましょう")), i !== null && i > 0.6 && (n.push("声の息漏れが気になります。発声時の喉の締まりを意識してください"), n.push("ハミング練習で、クリアな声質を目指しましょう")), s.detected ? s.regularity < 0.5 ? n.push("ビブラートの規則性を改善するため、メトロノームに合わせた練習をしてください") : s.rate > 7.5 && n.push("ビブラートの速度が速すぎます。よりゆったりとしたビブラートを練習してください") : (e === re.GOOD || e === re.EXCELLENT) && n.push("美しいビブラートの習得に挑戦してみましょう"), e === re.POOR ? (n.push("基礎的な発声練習から始めることをお勧めします"), n.push("専門的な指導を受けることを検討してください")) : e === re.EXCELLENT && n.push("素晴らしい声質です。この状態を維持する練習を続けてください"), n;
   }
   /**
    * Smooth frequency data using moving average
    */
   smoothFrequencies(e, t) {
-    const i = [];
-    for (let s = 0; s < e.length; s++) {
+    const s = [];
+    for (let i = 0; i < e.length; i++) {
       let o = 0, n = 0;
-      const r = Math.max(0, s - Math.floor(t / 2)), a = Math.min(e.length, s + Math.floor(t / 2) + 1);
+      const r = Math.max(0, i - Math.floor(t / 2)), a = Math.min(e.length, i + Math.floor(t / 2) + 1);
       for (let c = r; c < a; c++)
         o += e[c], n++;
-      i.push(o / n);
+      s.push(o / n);
     }
-    return i;
+    return s;
   }
   /**
    * Find local extrema (peaks and valleys) in frequency data
    */
   findExtrema(e) {
     const t = [];
-    for (let i = 1; i < e.length - 1; i++) {
-      const s = e[i - 1], o = e[i], n = e[i + 1];
-      o > s && o > n ? t.push({ index: i, value: o, type: "peak" }) : o < s && o < n && t.push({ index: i, value: o, type: "valley" });
+    for (let s = 1; s < e.length - 1; s++) {
+      const i = e[s - 1], o = e[s], n = e[s + 1];
+      o > i && o > n ? t.push({ index: s, value: o, type: "peak" }) : o < i && o < n && t.push({ index: s, value: o, type: "valley" });
     }
     return t;
   }
   /**
    * Add data to analysis buffer
    */
-  addToBuffer(e, t, i, s) {
-    this.analysisBuffer.push({ frequency: e, volume: t, clarity: i, timestamp: s }), this.analysisBuffer.length > 200 && this.analysisBuffer.shift();
+  addToBuffer(e, t, s, i) {
+    this.analysisBuffer.push({ frequency: e, volume: t, clarity: s, timestamp: i }), this.analysisBuffer.length > 200 && this.analysisBuffer.shift();
   }
   /**
    * Clean old data from buffer
    */
   cleanBuffer(e) {
     const t = e - this.config.analysisWindowMs;
-    this.analysisBuffer = this.analysisBuffer.filter((i) => i.timestamp > t);
+    this.analysisBuffer = this.analysisBuffer.filter((s) => s.timestamp > t);
   }
   /**
    * Reset analysis buffer
@@ -5713,12 +5720,12 @@ class lt {
   getBufferStats() {
     if (this.analysisBuffer.length === 0)
       return { entryCount: 0, timeSpanMs: 0, averageVolume: 0, averageClarity: 0 };
-    const e = this.analysisBuffer.map((s) => s.volume), t = this.analysisBuffer.map((s) => s.clarity), i = this.analysisBuffer[this.analysisBuffer.length - 1].timestamp - this.analysisBuffer[0].timestamp;
+    const e = this.analysisBuffer.map((i) => i.volume), t = this.analysisBuffer.map((i) => i.clarity), s = this.analysisBuffer[this.analysisBuffer.length - 1].timestamp - this.analysisBuffer[0].timestamp;
     return {
       entryCount: this.analysisBuffer.length,
-      timeSpanMs: i,
-      averageVolume: e.reduce((s, o) => s + o, 0) / e.length,
-      averageClarity: t.reduce((s, o) => s + o, 0) / t.length
+      timeSpanMs: s,
+      averageVolume: e.reduce((i, o) => i + o, 0) / e.length,
+      averageClarity: t.reduce((i, o) => i + o, 0) / t.length
     };
   }
 }
@@ -5735,41 +5742,41 @@ class ht {
     this.calibrationInProgress = !0;
     try {
       console.log("🎛️ [CalibrationSystem] Starting device calibration");
-      const i = await this.measureBackgroundNoise(e, t), s = await this.calibrateVolumeLevels(e, t), o = await this.measureFrequencyResponse(e, t), n = this.calculateOptimalSettings(
-        i,
+      const s = await this.measureBackgroundNoise(e, t), i = await this.calibrateVolumeLevels(e, t), o = await this.measureFrequencyResponse(e, t), n = this.calculateOptimalSettings(
         s,
+        i,
         o
       );
       return this.calibrationData = {
-        volumeOffset: s.offset,
+        volumeOffset: i.offset,
         frequencyResponse: o,
-        noiseProfile: i,
+        noiseProfile: s,
         optimalSettings: n
       }, this.isCalibrated = !0, this.calibrationInProgress = !1, console.log("✅ [CalibrationSystem] Calibration completed successfully"), {
         success: !0,
         calibrationData: this.calibrationData,
         recommendedSettings: n
       };
-    } catch (i) {
-      return console.error("❌ [CalibrationSystem] Calibration failed:", i), this.calibrationInProgress = !1, {
+    } catch (s) {
+      return console.error("❌ [CalibrationSystem] Calibration failed:", s), this.calibrationInProgress = !1, {
         success: !1,
         calibrationData: null,
         recommendedSettings: this.getDefaultSettings(),
-        error: i
+        error: s
       };
     }
   }
   /**
    * Measure background noise levels
    */
-  async measureBackgroundNoise(e, t, i = 2e3) {
-    return new Promise((s) => {
+  async measureBackgroundNoise(e, t, s = 2e3) {
+    return new Promise((i) => {
       const o = e.createAnalyser();
       o.fftSize = 2048;
       const n = e.createMediaStreamSource(t);
       n.connect(o);
       const r = o.frequencyBinCount, a = new Float32Array(r), c = [], h = Date.now(), m = () => {
-        if (Date.now() - h >= i) {
+        if (Date.now() - h >= s) {
           const u = {};
           for (let d = 0; d < r; d++) {
             const f = d * e.sampleRate / o.fftSize;
@@ -5778,7 +5785,7 @@ class ht {
               g += y[d];
             u[Math.round(f)] = g / c.length;
           }
-          n.disconnect(), s(u);
+          n.disconnect(), i(u);
           return;
         }
         o.getFloatFrequencyData(a), c.push(new Float32Array(a)), setTimeout(m, 100);
@@ -5789,17 +5796,17 @@ class ht {
   /**
    * Calibrate volume levels
    */
-  async calibrateVolumeLevels(e, t, i = 3e3) {
-    return new Promise((s) => {
+  async calibrateVolumeLevels(e, t, s = 3e3) {
+    return new Promise((i) => {
       const o = e.createAnalyser();
       o.fftSize = 1024;
       const n = e.createMediaStreamSource(t);
       n.connect(o);
       const r = o.fftSize, a = new Float32Array(r), c = [], h = Date.now(), m = () => {
-        if (Date.now() - h >= i) {
+        if (Date.now() - h >= s) {
           c.sort((w, v) => w - v);
           const f = c[0] || 0, g = c[c.length - 1] || 1, S = 0.3 - (c[Math.floor(c.length / 2)] || 0.5);
-          n.disconnect(), s({
+          n.disconnect(), i({
             offset: S,
             range: { min: f, max: g }
           });
@@ -5818,19 +5825,19 @@ class ht {
   /**
    * Measure frequency response (simplified version)
    */
-  async measureFrequencyResponse(e, t, i = 5e3) {
-    return new Promise((s) => {
+  async measureFrequencyResponse(e, t, s = 5e3) {
+    return new Promise((i) => {
       const o = e.createAnalyser();
       o.fftSize = 4096;
       const n = e.createMediaStreamSource(t);
       n.connect(o);
       const r = o.frequencyBinCount, a = new Float32Array(r), c = {}, h = Date.now(), m = () => {
-        if (Date.now() - h >= i) {
+        if (Date.now() - h >= s) {
           const u = {};
           Object.keys(c).forEach((d) => {
             const f = parseInt(d), g = c[f], y = g.reduce((p, S) => p + S, 0) / g.length;
             u[f] = y;
-          }), n.disconnect(), s(u);
+          }), n.disconnect(), i(u);
           return;
         }
         o.getFloatFrequencyData(a);
@@ -5846,8 +5853,8 @@ class ht {
   /**
    * Calculate optimal settings based on calibration data
    */
-  calculateOptimalSettings(e, t, i) {
-    const s = this.getDefaultSettings(), o = Math.max(0.5, Math.min(2, 1 - t.offset)), n = s.sensitivity * o, a = Object.keys(e).map((v) => parseInt(v)).filter((v) => v >= 100 && v <= 800).map((v) => e[v]), c = a.length > 0 ? a.reduce((v, b) => v + b, 0) / a.length : -60, h = Math.max(-20, c + 10), m = Math.max(s.noiseGate, Math.abs(h) / 1e3), d = Object.keys(i).map((v) => parseInt(v)).sort((v, b) => v - b).map((v) => i[v]), f = d.slice(0, Math.floor(d.length * 0.3)), g = d.slice(
+  calculateOptimalSettings(e, t, s) {
+    const i = this.getDefaultSettings(), o = Math.max(0.5, Math.min(2, 1 - t.offset)), n = i.sensitivity * o, a = Object.keys(e).map((v) => parseInt(v)).filter((v) => v >= 100 && v <= 800).map((v) => e[v]), c = a.length > 0 ? a.reduce((v, b) => v + b, 0) / a.length : -60, h = Math.max(-20, c + 10), m = Math.max(i.noiseGate, Math.abs(h) / 1e3), d = Object.keys(s).map((v) => parseInt(v)).sort((v, b) => v - b).map((v) => s[v]), f = d.slice(0, Math.floor(d.length * 0.3)), g = d.slice(
       Math.floor(d.length * 0.3),
       Math.floor(d.length * 0.7)
     ), y = d.slice(Math.floor(d.length * 0.7)), p = f.reduce((v, b) => v + b, 0) / f.length, S = g.reduce((v, b) => v + b, 0) / g.length, w = y.reduce((v, b) => v + b, 0) / y.length;
@@ -5945,8 +5952,8 @@ class ht {
       const e = `pitchpro_calibration_${this.deviceSpecs.deviceType}`, t = localStorage.getItem(e);
       if (!t)
         return !1;
-      const i = JSON.parse(t), s = 7 * 24 * 60 * 60 * 1e3;
-      return Date.now() - i.timestamp > s ? (console.log("⏰ [CalibrationSystem] Saved calibration is too old, ignoring"), !1) : i.deviceSpecs.deviceType !== this.deviceSpecs.deviceType ? (console.log("📱 [CalibrationSystem] Device type mismatch, ignoring saved calibration"), !1) : (this.calibrationData = i.calibrationData, this.isCalibrated = !0, console.log("📂 [CalibrationSystem] Calibration loaded successfully"), !0);
+      const s = JSON.parse(t), i = 7 * 24 * 60 * 60 * 1e3;
+      return Date.now() - s.timestamp > i ? (console.log("⏰ [CalibrationSystem] Saved calibration is too old, ignoring"), !1) : s.deviceSpecs.deviceType !== this.deviceSpecs.deviceType ? (console.log("📱 [CalibrationSystem] Device type mismatch, ignoring saved calibration"), !1) : (this.calibrationData = s.calibrationData, this.isCalibrated = !0, console.log("📂 [CalibrationSystem] Calibration loaded successfully"), !0);
     } catch (e) {
       return console.error("❌ [CalibrationSystem] Failed to load calibration:", e), !1;
     }
@@ -5957,11 +5964,11 @@ const x = class x {
    * Generate scale from root note
    */
   static generateScale(e, t = "major") {
-    const i = x.SCALE_PATTERNS[t];
-    if (!i)
+    const s = x.SCALE_PATTERNS[t];
+    if (!s)
       throw new Error(`Unknown scale type: ${t}`);
-    return i.map((s) => {
-      const o = e * Math.pow(2, s / 12);
+    return s.map((i) => {
+      const o = e * Math.pow(2, i / 12);
       return R.frequencyToNote(o);
     });
   }
@@ -5969,11 +5976,11 @@ const x = class x {
    * Generate chord from root note
    */
   static generateChord(e, t = "major") {
-    const i = x.CHORD_PATTERNS[t];
-    if (!i)
+    const s = x.CHORD_PATTERNS[t];
+    if (!s)
       throw new Error(`Unknown chord type: ${t}`);
-    return i.map((s) => {
-      const o = e * Math.pow(2, s / 12);
+    return s.map((i) => {
+      const o = e * Math.pow(2, i / 12);
       return R.frequencyToNote(o);
     });
   }
@@ -5983,19 +5990,19 @@ const x = class x {
   static identifyScale(e) {
     if (e.length < 3)
       return [];
-    const t = e.sort((n, r) => n - r), i = t[0], s = t.map(
-      (n) => Math.round(12 * Math.log2(n / i))
+    const t = e.sort((n, r) => n - r), s = t[0], i = t.map(
+      (n) => Math.round(12 * Math.log2(n / s))
     ), o = [];
     return Object.entries(x.SCALE_PATTERNS).forEach(([n, r]) => {
       for (let a = 0; a < 12; a++) {
-        const c = r.map((d) => (d + a) % 12).sort((d, f) => d - f), h = s.map((d) => d % 12).sort((d, f) => d - f);
+        const c = r.map((d) => (d + a) % 12).sort((d, f) => d - f), h = i.map((d) => d % 12).sort((d, f) => d - f);
         let m = 0;
         h.forEach((d) => {
           c.includes(d) && m++;
         });
         const u = m / Math.max(h.length, c.length);
         if (u > 0.5) {
-          const d = i * Math.pow(2, -a / 12);
+          const d = s * Math.pow(2, -a / 12);
           o.push({
             scale: n,
             confidence: u,
@@ -6011,8 +6018,8 @@ const x = class x {
   static identifyChord(e) {
     if (e.length < 2)
       return [];
-    const t = e.sort((s, o) => s - o), i = [];
-    return Object.entries(x.CHORD_PATTERNS).forEach(([s, o]) => {
+    const t = e.sort((i, o) => i - o), s = [];
+    return Object.entries(x.CHORD_PATTERNS).forEach(([i, o]) => {
       for (let n = 0; n < o.length; n++) {
         const r = [
           ...o.slice(n),
@@ -6031,8 +6038,8 @@ const x = class x {
           const d = m / Math.max(h.length, o.length);
           if (d > 0.6) {
             const f = n === 0 ? a : a * Math.pow(2, -o[n] / 12);
-            i.push({
-              chord: s,
+            s.push({
+              chord: i,
               confidence: d,
               root: R.frequencyToNote(f),
               inversion: n > 0 ? n : void 0
@@ -6040,13 +6047,13 @@ const x = class x {
           }
         });
       }
-    }), i.sort((s, o) => o.confidence - s.confidence).slice(0, 3);
+    }), s.sort((i, o) => o.confidence - i.confidence).slice(0, 3);
   }
   /**
    * Get the key signature for a given key
    */
   static getKeySignature(e, t = "major") {
-    const i = ["F", "C", "G", "D", "A", "E", "B"], s = ["B", "E", "A", "D", "G", "C", "F"], o = {
+    const s = ["F", "C", "G", "D", "A", "E", "B"], i = ["B", "E", "A", "D", "G", "C", "F"], o = {
       C: { sharps: 0, flats: 0 },
       G: { sharps: 1, flats: 0 },
       D: { sharps: 2, flats: 0 },
@@ -6086,7 +6093,7 @@ const x = class x {
     }
     if (!n)
       return { sharps: [], flats: [], accidentalCount: 0 };
-    const r = i.slice(0, n.sharps).map((c) => c + "#"), a = s.slice(0, n.flats).map((c) => c + "b");
+    const r = s.slice(0, n.sharps).map((c) => c + "#"), a = i.slice(0, n.flats).map((c) => c + "b");
     return {
       sharps: r,
       flats: a,
@@ -6097,12 +6104,12 @@ const x = class x {
    * Calculate the harmonic series for a fundamental frequency
    */
   static getHarmonicSeries(e, t = 16) {
-    const i = [];
-    for (let s = 1; s <= t; s++) {
-      const o = e * s;
-      i.push(R.frequencyToNote(o));
+    const s = [];
+    for (let i = 1; i <= t; i++) {
+      const o = e * i;
+      s.push(R.frequencyToNote(o));
     }
-    return i;
+    return s;
   }
   /**
    * Calculate just intonation ratios for common intervals
@@ -6128,16 +6135,16 @@ const x = class x {
    * Convert equal temperament interval to just intonation
    */
   static equalTemperamentToJustIntonation(e) {
-    const t = e * 100, i = x.getJustIntonationRatios();
-    let s, o = 1 / 0;
-    return Object.entries(i).forEach(([r, { cents: a }]) => {
+    const t = e * 100, s = x.getJustIntonationRatios();
+    let i, o = 1 / 0;
+    return Object.entries(s).forEach(([r, { cents: a }]) => {
       const c = Math.abs(t - a);
-      c < o && (o = c, s = r);
+      c < o && (o = c, i = r);
     }), {
       ratio: Math.pow(2, e / 12),
       cents: t,
-      closestJustInterval: s,
-      centsDeviation: s ? o : void 0
+      closestJustInterval: i,
+      centsDeviation: i ? o : void 0
     };
   }
   /**
@@ -6147,8 +6154,8 @@ const x = class x {
     if (e.length < 2)
       return [];
     const t = [];
-    for (let i = 1; i < e.length; i++) {
-      const s = e[i - 1], o = e[i], n = R.frequencyToNote(s), r = R.frequencyToNote(o), a = R.getSignedInterval(s, o), c = R.getIntervalInfo(Math.abs(a)), h = a > 0 ? "up" : a < 0 ? "down" : "same";
+    for (let s = 1; s < e.length; s++) {
+      const i = e[s - 1], o = e[s], n = R.frequencyToNote(i), r = R.frequencyToNote(o), a = R.getSignedInterval(i, o), c = R.getIntervalInfo(Math.abs(a)), h = a > 0 ? "up" : a < 0 ? "down" : "same";
       t.push({
         fromNote: n,
         toNote: r,
@@ -6161,12 +6168,12 @@ const x = class x {
   /**
    * Generate chord progressions in a given key
    */
-  static generateChordProgression(e, t = "major", i = [1, 4, 5, 1]) {
-    const s = R.scientificPitchToFrequency(e + "4");
-    if (s === 0)
+  static generateChordProgression(e, t = "major", s = [1, 4, 5, 1]) {
+    const i = R.scientificPitchToFrequency(e + "4");
+    if (i === 0)
       throw new Error(`Invalid key: ${e}`);
-    const o = x.generateScale(s, t === "minor" ? "naturalMinor" : "major"), n = [];
-    return i.forEach((r) => {
+    const o = x.generateScale(i, t === "minor" ? "naturalMinor" : "major"), n = [];
+    return s.forEach((r) => {
       const a = o[(r - 1) % o.length], c = t === "major" ? x.getMajorScaleChordType(r) : x.getMinorScaleChordType(r), h = x.generateChord(a.frequency, c);
       n.push(h);
     }), n;
