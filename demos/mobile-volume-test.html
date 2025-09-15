@@ -310,6 +310,15 @@
 
     <!-- PitchPro UMDライブラリ -->
     <script src="../dist/pitchpro.umd.js"></script>
+    <script>
+        // ライブラリが正常に読み込まれているかチェック
+        if (typeof PitchPro === 'undefined') {
+            console.error('❌ PitchPro library not loaded. Trying alternative paths...');
+            document.body.innerHTML = '<div style="text-align:center;padding:50px;color:red;">❌ PitchPro library loading failed<br>Please check the library path</div>';
+        } else {
+            console.log('✅ PitchPro library loaded successfully');
+        }
+    </script>
     
     <script>
         class MobileVolumeTest {

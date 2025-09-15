@@ -149,6 +149,15 @@
 
     <script src="../dist/pitchpro.umd.js"></script>
     <script>
+        // ライブラリが正常に読み込まれているかチェック
+        if (typeof PitchPro === 'undefined') {
+            console.error('❌ PitchPro library not loaded. Check library path.');
+            document.body.innerHTML = '<div style="text-align:center;padding:50px;color:red;">❌ PitchPro library loading failed</div>';
+        } else {
+            console.log('✅ PitchPro library loaded successfully');
+        }
+    </script>
+    <script>
         let audioDetector = null;
         let isRunning = false;
         
