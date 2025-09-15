@@ -67,8 +67,8 @@ const w = class w {
         };
       case "iPhone":
         return {
-          sensitivity: 20,
-          // 🔧 v1.2.0: モバイルテスト導出値 (3.5→20.0) - 普通の声で50-60%
+          sensitivity: 3.5,
+          // 📱 v1.2.0: 仕様通りの最適値 - CLAUDE.md準拠
           noiseGate: 0.03,
           // v1.1.8: Increased noise gate to filter out background noise
           divisor: 4,
