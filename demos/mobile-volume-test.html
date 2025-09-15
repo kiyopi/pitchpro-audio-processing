@@ -616,15 +616,23 @@
             
             stopTest() {
                 if (this.audioDetector) {
+                    // v1.2.12: stopDetection()が自動的にUIをリセットするように改善
                     this.audioDetector.stopDetection();
+
+                    // 念のため手動でもリセット（バックアップ）
+                    this.elements.volumeBar.style.width = '0%';
+                    this.elements.volumeText.textContent = '0%';
+                    this.elements.frequencyValue.textContent = '0Hz';
+                    this.elements.noteValue.textContent = '-';
+                    this.elements.scalingFactor.textContent = '0';
                 }
-                
+
                 this.isRunning = false;
                 this.elements.startTest.classList.remove('hidden');
                 this.elements.stopTest.classList.add('hidden');
                 this.setStatus('ready', '準備完了 - 設定を調整してテストを開始');
-                
-                this.addLogEntry('info', 'Volume test stopped');
+
+                this.addLogEntry('info', 'Volume test stopped - UI reset complete');
             }
             
             updateDisplay(result) {
