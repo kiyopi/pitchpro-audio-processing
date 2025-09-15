@@ -113,8 +113,8 @@ export class DeviceDetection {
     switch (deviceType) {
       case 'iPad':
         return {
-          sensitivity: 5.0,        // Optimized sensitivity for iPad microphones (テスト導出値)
-          noiseGate: 0.025,        // v1.1.8: Increased noise gate for better noise rejection
+          sensitivity: 5.0,        // 📱 テスト導出最適値: マイク感度 5.0x
+          noiseGate: 0.015,        // 📱 テスト導出最適値: 音量閾値 1.5% (0.015)
           divisor: 4.0,            // Volume calculation divisor
           gainCompensation: 1.5,   // Gain compensation for low-frequency cut
           noiseThreshold: 8.0,     // v1.1.8: Increased noise threshold to prevent ambient noise pickup
@@ -123,9 +123,9 @@ export class DeviceDetection {
         
       case 'iPhone':
         return {
-          sensitivity: 3.5,        // 📱 v1.2.0: 仕様通りの最適値 - CLAUDE.md準拠
-          noiseGate: 0.03,         // v1.1.8: Increased noise gate to filter out background noise
-          divisor: 4.0,            // Keep original divisor
+          sensitivity: 3.5,        // 📱 テスト導出最適値: マイク感度 3.5x
+          noiseGate: 0.015,        // 📱 テスト導出最適値: 音量閾値 1.5% (0.015)
+          divisor: 4.0,            // Keep original divisor  
           gainCompensation: 1.5,   // Keep original gain compensation
           noiseThreshold: 6.0,     // v1.1.8: Increased noise threshold for better noise rejection
           smoothingFactor: 0.25    // v1.1.8: Increased smoothing to reduce noise spikes

@@ -648,9 +648,11 @@ export class PitchDetector {
     const platformSpecs = this.deviceSpecs;
     const adjustedRms = rms * platformSpecs.gainCompensation;
     
-    // 音量計算用定数定義
-    const SCALING_FACTOR = 400; // RMS値からパーセント表示への変換係数
+    // 🔧 動的SCALING_FACTOR計算 (sensitivity値に基づく)
+    const currentSensitivity = platformSpecs.sensitivity;
+    const SCALING_FACTOR = 400 / (currentSensitivity * currentSensitivity);
     const NOISE_GATE_SCALING_FACTOR = 1500; // ノイズゲート閾値計算用係数 
+    
     // ハードクリッピング（シンプルなリニア変換）
     const rawVolumeValue = adjustedRms * SCALING_FACTOR;
     const volumePercent = Math.min(100, Math.max(0, rawVolumeValue));
