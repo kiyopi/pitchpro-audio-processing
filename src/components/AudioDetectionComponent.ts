@@ -872,12 +872,12 @@ export class AudioDetectionComponent {
         minVolumeAbsolute: this.deviceSpecs.noiseGate * 0.25  // Based on DeviceDetection noiseGate
       },
       iPhone: {
-        volumeMultiplier: 7.5,        // 📈 調整: 8.5→7.5 (ユーザー要望)
+        volumeMultiplier: 7.5,        // ✅ 最適化完了 (ユーザー確認済み)
         sensitivityMultiplier: 3.5,
         minVolumeAbsolute: this.deviceSpecs.noiseGate * 0.15  // ノイズゲート最適化
       },
       iPad: {
-        volumeMultiplier: 7.0,        // 📈 調整: 5.0→7.0 (20%→28%目標)
+        volumeMultiplier: 10.0,       // 📈 調整: 7.0→10.0 (30%→43%目標)
         sensitivityMultiplier: 5.0,
         minVolumeAbsolute: this.deviceSpecs.noiseGate * 0.15  // ノイズゲート最適化
       }
