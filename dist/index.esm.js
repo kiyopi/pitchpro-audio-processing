@@ -5075,8 +5075,8 @@ const j = class j {
         // Based on DeviceDetection noiseGate
       },
       iPhone: {
-        volumeMultiplier: 4,
-        // 📈 再調整: 3.2→4.0 (大きな声で30%→50%程度に改善)
+        volumeMultiplier: 6,
+        // 📈 再調整: 4.0→6.0 (普通の声で60-80%目標)
         sensitivityMultiplier: 3.5,
         minVolumeAbsolute: this.deviceSpecs.noiseGate * 0.15
         // ノイズゲート最適化
