@@ -50,8 +50,10 @@ jobs:
       - name: Prepare GitHub Pages content
         run: |
           mkdir -p _site
-          cp -r demos/* _site/
+          cp -r demos _site/
           cp -r dist _site/
+          cp -r *.html _site/ 2>/dev/null || true
+          cp -r *.md _site/ 2>/dev/null || true
           
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
