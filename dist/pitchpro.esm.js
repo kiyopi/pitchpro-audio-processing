@@ -4678,7 +4678,9 @@ const j = class j {
    * @param config.minVolumeAbsolute - Minimum volume threshold (default: 0.003)
    * @param config.fftSize - FFT size for analysis (default: 4096)
    * @param config.smoothing - Smoothing factor (default: 0.1)
-   * @param config.deviceOptimization - Enable automatic device optimization (default: true)
+   * @param config.deviceOptimization - デバイス固有の音量最適化を有効にする (default: true)
+   *   - true: 自動音量補正 (PC: 3.0x, iPhone: 7.5x, iPad: 20.0x)
+   *   - false: 生音量値を使用（独自処理向け）
    * @param config.uiUpdateInterval - UI update interval in ms (default: 50)
    * @param config.autoUpdateUI - Enable automatic UI updates (default: true)
    * @param config.debug - Enable debug logging (default: false)

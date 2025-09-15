@@ -33,9 +33,25 @@
  *
  * @remarks
  * **音量調整について（v1.2.9）**:
- * - 取得される音量値は自動的にデバイス最適化が適用されます
+ * - デフォルトでは音量値は自動的にデバイス最適化が適用されます
  * - PC/iPhone/iPad の違いを意識する必要はありません
  * - 最終的な音量値は常に 0-100% の範囲で統一されています
+ *
+ * **カスタム音量処理が必要な場合**:
+ * ```typescript
+ * // deviceOptimization: false で生の音量値を取得
+ * const audioDetector = new AudioDetectionComponent({
+ *   deviceOptimization: false,  // 自動補正を無効化
+ *   volumeBarSelector: '#volume-bar'
+ * });
+ *
+ * audioDetector.setCallbacks({
+ *   onPitchUpdate: (result) => {
+ *     // result.volume は生の値（通常5-15%）
+ *     const customVolume = result.volume * yourCustomMultiplier;
+ *   }
+ * });
+ * ```
  * 
  * @version 1.0.0
  * @since 1.0.0
@@ -100,6 +116,45 @@ export interface AudioDetectionConfig {
   smoothing?: number;
   
   // Device Optimization
+  /**
+   * デバイス固有の音量最適化を有効にするかどうか
+   *
+   * @remarks
+   * **デバイス最適化の効果**:
+   * - `true` (推奨): デバイス別の音量補正が自動適用
+   *   - PC: volumeMultiplier 3.0x
+   *   - iPhone: volumeMultiplier 7.5x
+   *   - iPad: volumeMultiplier 20.0x
+   * - `false`: 音量補正なし（生の音量値をそのまま使用）
+   *
+   * **オフにする場合の用途**:
+   * - 独自の音量処理を実装したい場合
+   * - デバッグ時に生の音量値を確認したい場合
+   * - 特定のデバイスで異なる動作を実装したい場合
+   *
+   * @default true
+   * @since v1.2.0
+   *
+   * @example
+   * ```typescript
+   * // デバイス最適化を無効にして生の音量値を取得
+   * const audioDetector = new AudioDetectionComponent({
+   *   deviceOptimization: false,  // 音量補正を無効化
+   *   volumeBarSelector: '#volume-bar'
+   * });
+   *
+   * audioDetector.setCallbacks({
+   *   onPitchUpdate: (result) => {
+   *     // result.volume は生の値（通常5-15%程度）
+   *     console.log(`生音量: ${result.volume}%`);
+   *
+   *     // 独自の音量処理
+   *     const customVolume = result.volume * myCustomMultiplier;
+   *     updateMyUI(customVolume);
+   *   }
+   * });
+   * ```
+   */
   deviceOptimization?: boolean;
   
   // UI Update Settings
@@ -232,7 +287,9 @@ export class AudioDetectionComponent {
    * @param config.minVolumeAbsolute - Minimum volume threshold (default: 0.003)
    * @param config.fftSize - FFT size for analysis (default: 4096)
    * @param config.smoothing - Smoothing factor (default: 0.1)
-   * @param config.deviceOptimization - Enable automatic device optimization (default: true)
+   * @param config.deviceOptimization - デバイス固有の音量最適化を有効にする (default: true)
+   *   - true: 自動音量補正 (PC: 3.0x, iPhone: 7.5x, iPad: 20.0x)
+   *   - false: 生音量値を使用（独自処理向け）
    * @param config.uiUpdateInterval - UI update interval in ms (default: 50)
    * @param config.autoUpdateUI - Enable automatic UI updates (default: true)
    * @param config.debug - Enable debug logging (default: false)
