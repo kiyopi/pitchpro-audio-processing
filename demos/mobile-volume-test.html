@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>📱 PitchPro モバイル音量調整テスト</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>📱 PitchPro モバイル音量調整テスト v20250915-04</title>
     <style>
         * { 
             box-sizing: border-box; 
@@ -313,7 +316,7 @@
         // 強制キャッシュ回避用タイムスタンプ
         const timestamp = new Date().getTime();
         const script = document.createElement('script');
-        script.src = `../dist/pitchpro.umd.js?v=20250915-03&t=${timestamp}`;
+        script.src = `../dist/pitchpro.umd.js?v=20250915-04&t=${timestamp}&r=${Math.random()}`;
         script.onload = function() {
             console.log('✅ PitchPro library loaded with timestamp:', timestamp);
         };
