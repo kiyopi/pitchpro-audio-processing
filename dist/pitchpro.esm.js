@@ -6235,7 +6235,7 @@ x.SCALE_PATTERNS = {
   12: "Perfect Octave"
 };
 let Fe = x;
-const ut = "1.2.0", dt = (/* @__PURE__ */ new Date()).toISOString(), mt = {
+const ut = "1.2.1", dt = (/* @__PURE__ */ new Date()).toISOString(), mt = {
   pitchDetector: {
     fftSize: 4096,
     smoothing: 0.1,

@@ -1,6 +1,9 @@
 import { defineConfig } from 'vite'
 import { resolve } from 'path'
 
+// package.jsonからバージョン情報を読み込み
+const pkg = require('./package.json')
+
 // ビルド出力設定の定数化
 const OUTPUT_FORMATS = {
   ESM: { format: 'es', fileName: 'index.esm.js' },
@@ -9,6 +12,9 @@ const OUTPUT_FORMATS = {
 } as const
 
 export default defineConfig({
+  define: {
+    'process.env.npm_package_version': JSON.stringify(pkg.version)
+  },
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
