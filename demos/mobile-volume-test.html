@@ -242,7 +242,7 @@
     <div class="container">
         <div class="header">
             <h1>📱 PitchPro モバイル調整</h1>
-            <p>v1.2.0.1 iPhone音量再調整テスト (volumeMultiplier: 3.2→4.0)</p>
+            <p>v1.2.0.2 iPhone音量再調整テスト (volumeMultiplier: 3.2→4.0) 🔄強制更新</p>
         </div>
         
         <div id="device-info" class="device-info">
@@ -316,7 +316,7 @@
         // 強制キャッシュ回避用タイムスタンプ
         const timestamp = new Date().getTime();
         const script = document.createElement('script');
-        script.src = `../dist/pitchpro.umd.js?v=20250915-04&t=${timestamp}&r=${Math.random()}`;
+        script.src = `../dist/pitchpro.umd.js?v=20250915-06&t=${timestamp}&r=${Math.random()}&force=${Date.now()}`;
         script.onload = function() {
             console.log('✅ PitchPro library loaded with timestamp:', timestamp);
         };
