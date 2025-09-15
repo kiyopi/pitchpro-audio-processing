@@ -616,21 +616,17 @@
             
             stopTest() {
                 if (this.audioDetector) {
-                    // 設計原則に従い、停止とUIリセットを分離
-                    this.audioDetector.stopDetection();  // 検出停止（UIは最後の値を保持）
-
-                    // UIリセットは明示的に実行（reset設計思想に基づく）
-                    if (typeof this.audioDetector.resetDisplayElements === 'function') {
-                        this.audioDetector.resetDisplayElements();  // UIを0にリセット
-                        this.addLogEntry('info', 'UI reset using resetDisplayElements()');
+                    // 🎯 統合管理システム設計に従い、MicrophoneController.reset()を使用
+                    const micController = this.audioDetector.microphoneController;
+                    if (micController) {
+                        // MicrophoneController.reset() = 包括的リセット（停止 + UIリセット + 状態クリア）
+                        micController.reset();
+                        this.addLogEntry('info', '✅ Complete reset using MicrophoneController.reset()');
                     } else {
-                        // フォールバック：手動でリセット
-                        this.elements.volumeBar.style.width = '0%';
-                        this.elements.volumeText.textContent = '0%';
-                        this.elements.frequencyValue.textContent = '0Hz';
-                        this.elements.noteValue.textContent = '-';
-                        this.elements.scalingFactor.textContent = '0';
-                        this.addLogEntry('info', 'UI reset manually (fallback)');
+                        // フォールバック：個別実行
+                        this.audioDetector.stopDetection();
+                        this.audioDetector.resetDisplayElements();
+                        this.addLogEntry('info', '⚠️ Fallback: stopDetection() + resetDisplayElements()');
                     }
                 }
 
@@ -639,7 +635,7 @@
                 this.elements.stopTest.classList.add('hidden');
                 this.setStatus('ready', '準備完了 - 設定を調整してテストを開始');
 
-                this.addLogEntry('info', 'Volume test stopped - following start()/reset() design pattern');
+                this.addLogEntry('info', '🛑 Volume test stopped - using 4-button UI design pattern');
             }
             
             updateDisplay(result) {
