@@ -229,7 +229,7 @@ const A = class A {
   }
 };
 A.cachedSpecs = null;
-let ce = A;
+let ae = A;
 var W = /* @__PURE__ */ ((l) => (l.AUDIO_CONTEXT_ERROR = "AUDIO_CONTEXT_ERROR", l.MICROPHONE_ACCESS_DENIED = "MICROPHONE_ACCESS_DENIED", l.PITCH_DETECTION_ERROR = "PITCH_DETECTION_ERROR", l.BUFFER_OVERFLOW = "BUFFER_OVERFLOW", l.INVALID_SAMPLE_RATE = "INVALID_SAMPLE_RATE", l.DEVICE_NOT_SUPPORTED = "DEVICE_NOT_SUPPORTED", l.PROCESSING_TIMEOUT = "PROCESSING_TIMEOUT", l))(W || {});
 class F extends Error {
   constructor(e, t, s) {
@@ -511,7 +511,7 @@ class xe {
    * @returns Device-optimized sensitivity value (PC: 1.0x, iPhone: 3.0x, iPad: 7.0x)
    */
   _getDefaultSensitivity() {
-    const e = ce.getDeviceSpecs();
+    const e = ae.getDeviceSpecs();
     return console.log(`🔧 [AudioManager] ${e.deviceType} detected - setting default sensitivity ${e.sensitivity}x`), e.sensitivity;
   }
   /**
@@ -883,7 +883,7 @@ class xe {
    * Complies with MICROPHONE_PLATFORM_SPECIFICATIONS.md
    */
   getPlatformSpecs() {
-    const e = ce.getDeviceSpecs();
+    const e = ae.getDeviceSpecs();
     return {
       ...e,
       sensitivity: this.currentSensitivity || e.sensitivity
@@ -1176,8 +1176,8 @@ P.prototype._transform4 = function() {
     var m = o >>> 2;
     for (n = 0; n < t; n += o)
       for (var u = n + m, d = n, f = 0; d < u; d += 2, f += i) {
-        const g = d, y = g + m, p = y + m, S = p + m, w = e[g], v = e[g + 1], b = e[y], N = e[y + 1], _ = e[p], O = e[p + 1], z = e[S], J = e[S + 1], L = w, X = v, $ = h[f], H = c * h[f + 1], U = b * $ - N * H, V = b * H + N * $, Y = h[2 * f], K = c * h[2 * f + 1], Z = _ * Y - O * K, ee = _ * K + O * Y, te = h[3 * f], ie = c * h[3 * f + 1], se = z * te - J * ie, oe = z * ie + J * te, ne = L + Z, B = X + ee, M = L - Z, D = X - ee, E = U + se, G = V + oe, T = c * (U - se), q = c * (V - oe), ae = ne + E, fe = B + G, ge = ne - E, pe = B - G, ve = M + q, ye = D - T, Se = M - q, Ce = D + T;
-        e[g] = ae, e[g + 1] = fe, e[y] = ve, e[y + 1] = ye, e[p] = ge, e[p + 1] = pe, e[S] = Se, e[S + 1] = Ce;
+        const g = d, y = g + m, p = y + m, S = p + m, w = e[g], v = e[g + 1], b = e[y], N = e[y + 1], _ = e[p], O = e[p + 1], z = e[S], J = e[S + 1], $ = w, X = v, L = h[f], H = c * h[f + 1], U = b * L - N * H, V = b * H + N * L, Y = h[2 * f], K = c * h[2 * f + 1], Z = _ * Y - O * K, ee = _ * K + O * Y, te = h[3 * f], ie = c * h[3 * f + 1], se = z * te - J * ie, oe = z * ie + J * te, ne = $ + Z, B = X + ee, M = $ - Z, D = X - ee, E = U + se, G = V + oe, T = c * (U - se), q = c * (V - oe), ce = ne + E, fe = B + G, ge = ne - E, pe = B - G, ve = M + q, ye = D - T, Se = M - q, Ce = D + T;
+        e[g] = ce, e[g + 1] = fe, e[y] = ve, e[y + 1] = ye, e[p] = ge, e[p + 1] = pe, e[S] = Se, e[S + 1] = Ce;
       }
   }
 };
@@ -1186,8 +1186,8 @@ P.prototype._singleTransform2 = function(e, t, s) {
   i[e] = h, i[e + 1] = m, i[e + 2] = u, i[e + 3] = d;
 };
 P.prototype._singleTransform4 = function(e, t, s) {
-  const i = this._out, o = this._data, n = this._inv ? -1 : 1, r = s * 2, a = s * 3, c = o[t], h = o[t + 1], m = o[t + s], u = o[t + s + 1], d = o[t + r], f = o[t + r + 1], g = o[t + a], y = o[t + a + 1], p = c + d, S = h + f, w = c - d, v = h - f, b = m + g, N = u + y, _ = n * (m - g), O = n * (u - y), z = p + b, J = S + N, L = w + O, X = v - _, $ = p - b, H = S - N, U = w - O, V = v + _;
-  i[e] = z, i[e + 1] = J, i[e + 2] = L, i[e + 3] = X, i[e + 4] = $, i[e + 5] = H, i[e + 6] = U, i[e + 7] = V;
+  const i = this._out, o = this._data, n = this._inv ? -1 : 1, r = s * 2, a = s * 3, c = o[t], h = o[t + 1], m = o[t + s], u = o[t + s + 1], d = o[t + r], f = o[t + r + 1], g = o[t + a], y = o[t + a + 1], p = c + d, S = h + f, w = c - d, v = h - f, b = m + g, N = u + y, _ = n * (m - g), O = n * (u - y), z = p + b, J = S + N, $ = w + O, X = v - _, L = p - b, H = S - N, U = w - O, V = v + _;
+  i[e] = z, i[e + 1] = J, i[e + 2] = $, i[e + 3] = X, i[e + 4] = L, i[e + 5] = H, i[e + 6] = U, i[e + 7] = V;
 };
 P.prototype._realTransform4 = function() {
   var e = this._out, t = this._csize, s = this._width, i = 1 << s, o = t / i << 1, n, r, a = this._bitrev;
@@ -1207,15 +1207,15 @@ P.prototype._realTransform4 = function() {
     var m = o >>> 1, u = m >>> 1, d = u >>> 1;
     for (n = 0; n < t; n += o)
       for (var f = 0, g = 0; f <= d; f += 2, g += i) {
-        var y = n + f, p = y + u, S = p + u, w = S + u, v = e[y], b = e[y + 1], N = e[p], _ = e[p + 1], O = e[S], z = e[S + 1], J = e[w], L = e[w + 1], X = v, $ = b, H = h[g], U = c * h[g + 1], V = N * H - _ * U, Y = N * U + _ * H, K = h[2 * g], Z = c * h[2 * g + 1], ee = O * K - z * Z, te = O * Z + z * K, ie = h[3 * g], se = c * h[3 * g + 1], oe = J * ie - L * se, ne = J * se + L * ie, B = X + ee, M = $ + te, D = X - ee, E = $ - te, G = V + oe, T = Y + ne, q = c * (V - oe), ae = c * (Y - ne), fe = B + G, ge = M + T, pe = D + ae, ve = E - q;
+        var y = n + f, p = y + u, S = p + u, w = S + u, v = e[y], b = e[y + 1], N = e[p], _ = e[p + 1], O = e[S], z = e[S + 1], J = e[w], $ = e[w + 1], X = v, L = b, H = h[g], U = c * h[g + 1], V = N * H - _ * U, Y = N * U + _ * H, K = h[2 * g], Z = c * h[2 * g + 1], ee = O * K - z * Z, te = O * Z + z * K, ie = h[3 * g], se = c * h[3 * g + 1], oe = J * ie - $ * se, ne = J * se + $ * ie, B = X + ee, M = L + te, D = X - ee, E = L - te, G = V + oe, T = Y + ne, q = c * (V - oe), ce = c * (Y - ne), fe = B + G, ge = M + T, pe = D + ce, ve = E - q;
         if (e[y] = fe, e[y + 1] = ge, e[p] = pe, e[p + 1] = ve, f === 0) {
           var ye = B - G, Se = M - T;
           e[S] = ye, e[S + 1] = Se;
           continue;
         }
         if (f !== d) {
-          var Ce = D, Ie = -E, Ne = B, Re = -M, Pe = -c * ae, _e = -c * q, qe = -c * T, ke = -c * G, Oe = Ce + Pe, ze = Ie + _e, Le = Ne + ke, $e = Re - qe, Ae = n + u - f, we = n + m - f;
-          e[Ae] = Oe, e[Ae + 1] = ze, e[we] = Le, e[we + 1] = $e;
+          var Ce = D, Ie = -E, Ne = B, Re = -M, Pe = -c * ce, _e = -c * q, qe = -c * T, ke = -c * G, Oe = Ce + Pe, ze = Ie + _e, $e = Ne + ke, Le = Re - qe, Ae = n + u - f, we = n + m - f;
+          e[Ae] = Oe, e[Ae + 1] = ze, e[we] = $e, e[we + 1] = Le;
         }
       }
   }
@@ -1877,8 +1877,8 @@ class Ke {
    * redundant calculations and efficient buffer operations
    */
   detectPitch() {
-    var $, H, U, V, Y, K, Z, ee, te, ie, se, oe, ne, B;
-    const e = typeof process < "u" && (($ = process.env) == null ? void 0 : $.NODE_ENV) === "development" || typeof window < "u", t = performance.now();
+    var L, H, U, V, Y, K, Z, ee, te, ie, se, oe, ne, B;
+    const e = typeof process < "u" && ((L = process.env) == null ? void 0 : L.NODE_ENV) === "development" || typeof window < "u", t = performance.now();
     if (!this.frameRateLimiter.shouldProcess()) {
       this.animationFrame = requestAnimationFrame(() => this.detectPitch());
       return;
@@ -1940,8 +1940,8 @@ class Ke {
       if (typeof process < "u" && ((oe = process.env) == null ? void 0 : oe.NODE_ENV) === "development" && console.log(`[Debug] 判定条件: pitch=${!!D}, clarity=${E == null ? void 0 : E.toFixed(3)}>${this.config.clarityThreshold}, volume=${(ne = this.currentVolume) == null ? void 0 : ne.toFixed(1)}>${this.config.minVolumeAbsolute}, range=${G}`), D && E > this.config.clarityThreshold && this.currentVolume > this.config.minVolumeAbsolute && G) {
         let T = D;
         if (!this.disableHarmonicCorrection) {
-          const ae = Math.min(this.currentVolume / 100, 1);
-          T = this.correctHarmonic(D, ae);
+          const ce = Math.min(this.currentVolume / 100, 1);
+          T = this.correctHarmonic(D, ce);
         }
         this.currentFrequency = T;
         const q = this.frequencyToNoteAndOctave(this.currentFrequency);
@@ -1960,8 +1960,8 @@ class Ke {
       cents: this.currentFrequency > 0 ? this.frequencyToCents(this.currentFrequency) : void 0
     };
     this.processAudioData(z), this.updateVisuals(z);
-    const L = performance.now() - t;
-    this.frameRateLimiter.getStats().frameDrops === 0 && this.frameRateLimiter.recoverPerformance(), typeof process < "u" && ((B = process.env) == null ? void 0 : B.NODE_ENV) === "development" && L > 16.67 && console.warn(`[PitchDetector] Frame processing took ${L.toFixed(2)}ms (>16.67ms threshold)`), this.animationFrame = requestAnimationFrame(() => this.detectPitch());
+    const $ = performance.now() - t;
+    this.frameRateLimiter.getStats().frameDrops === 0 && this.frameRateLimiter.recoverPerformance(), typeof process < "u" && ((B = process.env) == null ? void 0 : B.NODE_ENV) === "development" && $ > 16.67 && console.warn(`[PitchDetector] Frame processing took ${$.toFixed(2)}ms (>16.67ms threshold)`), this.animationFrame = requestAnimationFrame(() => this.detectPitch());
   }
   /**
    * Harmonic correction system with configurable parameters
@@ -4843,14 +4843,14 @@ const j = class j {
           var o, n;
           this.deviceSpecs = i, (n = (o = this.callbacks).onDeviceDetected) == null || n.call(o, i);
         }
-      }), await this.micController.initialize(), this.pitchDetector = new Ke(this.audioManager, {
+      }), await this.micController.initialize(), this.deviceSpecs || (this.deviceSpecs = ae.getDeviceSpecs(), this.debugLog("🔍 DeviceSpecs initialized:", this.deviceSpecs)), Object.keys(this.config.customDeviceConfig).length > 0 && (this.applyCustomDeviceConfig(), this.debugLog("🔧 Custom device configuration applied before PitchDetector init:", this.config.customDeviceConfig)), this.pitchDetector = new Ke(this.audioManager, {
         clarityThreshold: this.config.clarityThreshold,
         minVolumeAbsolute: this.config.minVolumeAbsolute,
         fftSize: this.config.fftSize,
         smoothing: ((e = this.deviceSpecs) == null ? void 0 : e.smoothingFactor) ?? this.config.smoothing,
         // v1.1.8: Use DeviceDetection smoothing
         deviceOptimization: this.config.deviceOptimization
-      }), Object.keys(this.config.customDeviceConfig).length > 0 && (this.applyCustomDeviceConfig(), this.pitchDetector && this.deviceSpecs && (this.pitchDetector.setCustomDeviceSpecs(this.deviceSpecs), this.debugLog("🔧 Applied custom device specs to PitchDetector")), this.debugLog("Custom device configuration applied:", this.config.customDeviceConfig)), this.pitchDetector.setCallbacks({
+      }), this.deviceSpecs && Object.keys(this.config.customDeviceConfig).length > 0 && (this.pitchDetector.setCustomDeviceSpecs(this.deviceSpecs), this.debugLog("✅ Custom device specs applied to PitchDetector during init")), this.pitchDetector.setCallbacks({
         onPitchUpdate: (i) => {
           this.handlePitchUpdate(i);
         },
@@ -4862,12 +4862,12 @@ const j = class j {
         }
       }), await this.pitchDetector.initialize();
       const s = Object.keys(this.config.customDeviceConfig).length > 0;
-      this.debugLog("🔍 Custom config check:", {
+      this.debugLog("🔍 Final custom config verification:", {
         hasCustomConfig: s,
         customDeviceConfig: this.config.customDeviceConfig,
         deviceSpecs: this.deviceSpecs,
         deviceSpecsSensitivity: (t = this.deviceSpecs) == null ? void 0 : t.sensitivity
-      }), s && this.deviceSpecs && (this.debugLog("🔄 Applying custom device specs to PitchDetector:", this.deviceSpecs), this.pitchDetector.setCustomDeviceSpecs(this.deviceSpecs), this.debugLog("✅ Custom device specs applied to PitchDetector")), this.micController && this.pitchDetector && (this.micController.registerDetector(this.pitchDetector), this.micController.registerAudioDetectionComponent(this), this.debugLog("✅ PitchDetector and AudioDetectionComponent registered with MicrophoneController for unified management")), this.cacheUIElements(), this.micController && (Object.keys(this.config.customDeviceConfig).length > 0 && this.config.customDeviceConfig.sensitivity ? (this.micController.setSensitivity(this.config.customDeviceConfig.sensitivity), this.debugLog("🎯 Applied custom sensitivity to AudioManager:", this.config.customDeviceConfig.sensitivity)) : this.deviceSettings && (this.micController.setSensitivity(this.deviceSettings.sensitivityMultiplier), this.debugLog("Applied device-specific sensitivity:", this.deviceSettings.sensitivityMultiplier))), this.isInitialized = !0, this.updateState("ready"), this.debugLog("Initialization complete");
+      }), this.micController && this.pitchDetector && (this.micController.registerDetector(this.pitchDetector), this.micController.registerAudioDetectionComponent(this), this.debugLog("✅ PitchDetector and AudioDetectionComponent registered with MicrophoneController for unified management")), this.cacheUIElements(), this.micController && (Object.keys(this.config.customDeviceConfig).length > 0 && this.config.customDeviceConfig.sensitivity ? (this.micController.setSensitivity(this.config.customDeviceConfig.sensitivity), this.debugLog("🎯 Applied custom sensitivity to AudioManager:", this.config.customDeviceConfig.sensitivity)) : this.deviceSettings && (this.micController.setSensitivity(this.deviceSettings.sensitivityMultiplier), this.debugLog("Applied device-specific sensitivity:", this.deviceSettings.sensitivityMultiplier))), this.isInitialized = !0, this.updateState("ready"), this.debugLog("Initialization complete");
     } catch (s) {
       const i = this.createStructuredError(s, "initialization");
       throw I.logError(i, "AudioDetectionComponent initialization"), this.lastError = i, this.updateState("error"), i;
@@ -5117,7 +5117,7 @@ const j = class j {
    * @private
    */
   detectAndOptimizeDevice() {
-    this.deviceSpecs = ce.getDeviceSpecs();
+    this.deviceSpecs = ae.getDeviceSpecs();
     const e = {
       PC: {
         volumeMultiplier: 3,
@@ -5731,7 +5731,7 @@ class lt {
 }
 class ht {
   constructor() {
-    this.calibrationData = null, this.isCalibrated = !1, this.calibrationInProgress = !1, this.deviceSpecs = ce.getDeviceSpecs();
+    this.calibrationData = null, this.isCalibrated = !1, this.calibrationInProgress = !1, this.deviceSpecs = ae.getDeviceSpecs();
   }
   /**
    * Perform automatic calibration
@@ -6280,7 +6280,7 @@ export {
   dt as BUILD_DATE,
   ht as CalibrationSystem,
   mt as DEFAULT_CONFIG,
-  ce as DeviceDetection,
+  ae as DeviceDetection,
   et as ErrorNotificationSystem,
   R as FrequencyUtils,
   ct as HarmonicCorrection,

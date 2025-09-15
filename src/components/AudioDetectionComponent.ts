@@ -414,6 +414,18 @@ export class AudioDetectionComponent {
       // Initialize microphone
       await this.micController.initialize();
 
+      // 🔧 Ensure deviceSpecs is available before applying custom config
+      if (!this.deviceSpecs) {
+        this.deviceSpecs = DeviceDetection.getDeviceSpecs();
+        this.debugLog('🔍 DeviceSpecs initialized:', this.deviceSpecs);
+      }
+
+      // Apply custom device configuration BEFORE PitchDetector initialization
+      if (Object.keys(this.config.customDeviceConfig).length > 0) {
+        this.applyCustomDeviceConfig();
+        this.debugLog('🔧 Custom device configuration applied before PitchDetector init:', this.config.customDeviceConfig);
+      }
+
       // Initialize PitchDetector with DeviceDetection optimized settings
       this.pitchDetector = new PitchDetector(this.audioManager, {
         clarityThreshold: this.config.clarityThreshold,
@@ -423,16 +435,10 @@ export class AudioDetectionComponent {
         deviceOptimization: this.config.deviceOptimization
       });
 
-      // Apply custom device configuration if provided (for mobile testing)
-      if (Object.keys(this.config.customDeviceConfig).length > 0) {
-        this.applyCustomDeviceConfig();
-        
-        // Pass custom device specs directly to PitchDetector
-        if (this.pitchDetector && this.deviceSpecs) {
-          this.pitchDetector.setCustomDeviceSpecs(this.deviceSpecs);
-          this.debugLog('🔧 Applied custom device specs to PitchDetector');
-        }
-        this.debugLog('Custom device configuration applied:', this.config.customDeviceConfig);
+      // Pass custom device specs directly to PitchDetector during initialization
+      if (this.deviceSpecs && Object.keys(this.config.customDeviceConfig).length > 0) {
+        this.pitchDetector.setCustomDeviceSpecs(this.deviceSpecs);
+        this.debugLog('✅ Custom device specs applied to PitchDetector during init');
       }
 
       // Set up PitchDetector callbacks
@@ -450,20 +456,14 @@ export class AudioDetectionComponent {
 
       await this.pitchDetector.initialize();
 
-      // 🔧 初期化後に再度カスタム設定を確実に適用
+      // 🔍 Final verification of custom configuration
       const hasCustomConfig = Object.keys(this.config.customDeviceConfig).length > 0;
-      this.debugLog('🔍 Custom config check:', {
+      this.debugLog('🔍 Final custom config verification:', {
         hasCustomConfig,
         customDeviceConfig: this.config.customDeviceConfig,
         deviceSpecs: this.deviceSpecs,
         deviceSpecsSensitivity: this.deviceSpecs?.sensitivity
       });
-      
-      if (hasCustomConfig && this.deviceSpecs) {
-        this.debugLog('🔄 Applying custom device specs to PitchDetector:', this.deviceSpecs);
-        this.pitchDetector.setCustomDeviceSpecs(this.deviceSpecs);
-        this.debugLog('✅ Custom device specs applied to PitchDetector');
-      }
 
       // ⭐ Register PitchDetector and AudioDetectionComponent with MicrophoneController for unified management
       if (this.micController && this.pitchDetector) {
