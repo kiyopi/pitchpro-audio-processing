@@ -530,23 +530,47 @@ export class AudioDetectionComponent {
   }
 
   /**
-   * Stops pitch detection and UI updates
-   * 
+   * 音声検出を停止します（UIの値は保持されます）
+   *
+   * @remarks
+   * ⚠️ 重要: このメソッドは検出処理のみを停止し、UIの表示値は最後の状態を保持します。
+   * UIをリセットしたい場合は、別途 `resetDisplayElements()` を呼び出すか、
+   * MicrophoneController の `reset()` メソッドを使用してください。
+   *
    * @example
    * ```typescript
+   * // ❌ よくある間違い - UIの値が残ってしまう
    * audioDetector.stopDetection();
-   * console.log('Detection stopped');
+   *
+   * // ✅ 正しい実装1: 検出停止 + UI手動リセット
+   * audioDetector.stopDetection();
+   * audioDetector.resetDisplayElements();
+   *
+   * // ✅ 正しい実装2: MicrophoneController使用（推奨）
+   * micController.reset();  // 検出停止 + UIリセット + 状態クリア
    * ```
+   *
+   * @see {@link resetDisplayElements} UIをリセットする
+   * @see {@link MicrophoneController.reset} 完全なリセット（推奨）
    */
   stopDetection(): void {
     try {
+      // 開発時警告: UIが保持されることを明示的に通知
+      if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
+        console.warn(
+          '⚠️ [AudioDetectionComponent] stopDetection() called - UI values will be preserved.\n' +
+          '   To clear UI: call resetDisplayElements() after this method\n' +
+          '   For complete reset: use MicrophoneController.reset() instead'
+        );
+      }
+
       if (this.pitchDetector) {
         this.pitchDetector.stopDetection();
       }
 
       this.stopUIUpdates();
       this.updateState('stopped');
-      this.debugLog('Detection stopped');
+      this.debugLog('Detection stopped (UI values preserved)');
     } catch (error) {
       const structuredError = this.createStructuredError(error as Error, 'stop_detection');
       this.handleError(structuredError, 'stop_detection');
