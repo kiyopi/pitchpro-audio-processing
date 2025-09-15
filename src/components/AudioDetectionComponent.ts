@@ -427,15 +427,10 @@ export class AudioDetectionComponent {
       if (Object.keys(this.config.customDeviceConfig).length > 0) {
         this.applyCustomDeviceConfig();
         
-        // AudioManagerにカスタム感度を設定（MicrophoneController作成後）
-        if (this.config.customDeviceConfig.sensitivity && this.micController) {
-          this.micController.setSensitivity(this.config.customDeviceConfig.sensitivity);
-          this.debugLog('🔧 Applied custom sensitivity to AudioManager:', this.config.customDeviceConfig.sensitivity);
-        }
-        
         // Pass custom device specs directly to PitchDetector
         if (this.pitchDetector && this.deviceSpecs) {
           this.pitchDetector.setCustomDeviceSpecs(this.deviceSpecs);
+          this.debugLog('🔧 Applied custom device specs to PitchDetector');
         }
         this.debugLog('Custom device configuration applied:', this.config.customDeviceConfig);
       }
@@ -465,10 +460,17 @@ export class AudioDetectionComponent {
       // Cache UI elements
       this.cacheUIElements();
 
-      // Apply device-specific sensitivity
-      if (this.deviceSettings && this.micController) {
-        this.micController.setSensitivity(this.deviceSettings.sensitivityMultiplier);
-        this.debugLog('Applied device-specific sensitivity:', this.deviceSettings.sensitivityMultiplier);
+      // Apply device-specific sensitivity OR custom sensitivity
+      if (this.micController) {
+        // カスタム設定がある場合は優先的に適用
+        if (Object.keys(this.config.customDeviceConfig).length > 0 && this.config.customDeviceConfig.sensitivity) {
+          this.micController.setSensitivity(this.config.customDeviceConfig.sensitivity);
+          this.debugLog('🎯 Applied custom sensitivity to AudioManager:', this.config.customDeviceConfig.sensitivity);
+        } else if (this.deviceSettings) {
+          // カスタム設定がない場合はデバイス固有の設定を使用
+          this.micController.setSensitivity(this.deviceSettings.sensitivityMultiplier);
+          this.debugLog('Applied device-specific sensitivity:', this.deviceSettings.sensitivityMultiplier);
+        }
       }
 
       this.isInitialized = true;
