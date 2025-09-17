@@ -452,14 +452,22 @@ export class AudioDetectionComponent {
       // Initialize microphone
       await this.micController.initialize();
 
+      // 🔧 CRITICAL DEBUG: Log actual minVolumeAbsolute before PitchDetector creation
+      console.log(`🔧 [CRITICAL] Before PitchDetector creation: this.config.minVolumeAbsolute = ${this.config.minVolumeAbsolute}`);
+      console.log(`📱 [CRITICAL] Device: ${this.deviceSpecs?.deviceType}, detectAndOptimizeDevice was called in constructor`);
+
       // Initialize PitchDetector with DeviceDetection optimized settings
-      this.pitchDetector = new PitchDetector(this.audioManager, {
+      const pitchDetectorConfig = {
         clarityThreshold: this.config.clarityThreshold,
         minVolumeAbsolute: this.config.minVolumeAbsolute,
         fftSize: this.config.fftSize,
         smoothing: this.deviceSpecs?.smoothingFactor ?? this.config.smoothing,  // v1.1.8: Use DeviceDetection smoothing
         deviceOptimization: this.config.deviceOptimization
-      });
+      };
+
+      console.log(`🔧 [CRITICAL] PitchDetector config object:`, pitchDetectorConfig);
+
+      this.pitchDetector = new PitchDetector(this.audioManager, pitchDetectorConfig);
 
       // Set up PitchDetector callbacks
       this.pitchDetector.setCallbacks({
@@ -475,6 +483,10 @@ export class AudioDetectionComponent {
       });
 
       await this.pitchDetector.initialize();
+
+      // 🔧 CRITICAL DEBUG: Verify PitchDetector's actual config after initialization
+      const pitchDetectorStatus = this.pitchDetector.getStatus();
+      console.log(`🔧 [CRITICAL] After PitchDetector initialization - actual minVolumeAbsolute:`, pitchDetectorStatus.config?.minVolumeAbsolute);
 
       // ⭐ Register PitchDetector and AudioDetectionComponent with MicrophoneController for unified management
       if (this.micController && this.pitchDetector) {
