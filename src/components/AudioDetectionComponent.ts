@@ -459,7 +459,8 @@ export class AudioDetectionComponent {
       // Initialize PitchDetector with DeviceDetection optimized settings
       const pitchDetectorConfig = {
         clarityThreshold: this.config.clarityThreshold,
-        minVolumeAbsolute: this.config.minVolumeAbsolute,
+        // ⬇️ ログ提案: デバイス固有のnoiseGate値をminVolumeAbsoluteとして渡す
+        minVolumeAbsolute: this.deviceSpecs?.noiseGate ?? this.config.minVolumeAbsolute,
         fftSize: this.config.fftSize,
         smoothing: this.deviceSpecs?.smoothingFactor ?? this.config.smoothing,  // v1.1.8: Use DeviceDetection smoothing
         deviceOptimization: this.config.deviceOptimization
@@ -1001,15 +1002,10 @@ export class AudioDetectionComponent {
     };
 
     this.deviceSettings = deviceSettingsMap[this.deviceSpecs.deviceType] || deviceSettingsMap.PC;
-    
-    // 🔧 v1.2.9 iPhone専用ノイズカット: 10%閾値で動作確認済みの安定設定に復帰
-    if (this.deviceSpecs.deviceType === 'iPhone') {
-      this.config.minVolumeAbsolute = 0.020;  // iPhone: 10%閾値（動作確認済み設定に復帰）
-      console.log(`📱 [iPhone Restore] minVolumeAbsolute restored to ${this.config.minVolumeAbsolute} (10% threshold - confirmed working setting)`);
-    } else {
-      console.log(`🔧 [DeviceOptimization] minVolumeAbsolute preserved at library default: ${this.config.minVolumeAbsolute}`);
-    }
-    // this.config.minVolumeAbsolute = this.deviceSettings.minVolumeAbsolute;  // ❌ 修正: この行をコメントアウト
+
+    // 📊 ログ分析提案実装: 固定設定を削除し、DeviceDetectionの設定のみを使用
+    console.log(`🔧 [DeviceOptimization] Applying device-specific noiseGate: ${this.deviceSpecs.deviceType} = ${this.deviceSpecs.noiseGate} (${(this.deviceSpecs.noiseGate * 100).toFixed(1)}% threshold)`);
+    console.log(`📊 [DeviceAnalysis] Expected thresholds - PC: 2.0% (10%), iPhone: 1.0% (5%), iPad: 1.5% (7.5%)`);
     
     this.debugLog('Device optimization applied:', {
       device: this.deviceSpecs.deviceType,

@@ -114,7 +114,7 @@ export class DeviceDetection {
       case 'iPad':
         return {
           sensitivity: 3.5,        // 📱 iPhoneと同じ感度に調整 (音量バー動作改善)
-          noiseGate: 0.015,        // 📱 テスト導出最適値: 音量閾値 1.5% (0.015)
+          noiseGate: 0.015,        // 📊 iPad専用ノイズゲート値 (7.5% threshold) - ログ分析最適値
           divisor: 4.0,            // Volume calculation divisor
           gainCompensation: 1.5,   // Gain compensation for low-frequency cut
           noiseThreshold: 8.0,     // v1.1.8: Increased noise threshold to prevent ambient noise pickup
@@ -124,7 +124,7 @@ export class DeviceDetection {
       case 'iPhone':
         return {
           sensitivity: 3.5,        // 📱 テスト導出最適値: マイク感度 3.5x
-          noiseGate: 0.015,        // 📱 テスト導出最適値: 音量閾値 1.5% (0.015)
+          noiseGate: 0.010,        // 📊 iPhone専用ノイズゲート値 (5% threshold) - ログ分析最適値
           divisor: 4.0,            // Keep original divisor  
           gainCompensation: 1.5,   // Keep original gain compensation
           noiseThreshold: 6.0,     // v1.1.8: Increased noise threshold for better noise rejection
@@ -135,7 +135,7 @@ export class DeviceDetection {
       default:
         return {
           sensitivity: 1.8,        // 📊 v1.2.9確定値に復元 (SCALING_FACTOR=123.46)
-          noiseGate: 0.035,        // v1.1.8: Increased noise gate for better ambient noise filtering
+          noiseGate: 0.020,        // 📊 PC専用ノイズゲート値 (10% threshold) - ログ分析最適値
           divisor: 6.0,            // Different volume calculation for PC
           gainCompensation: 1.0,   // No additional gain compensation needed
           noiseThreshold: 7.0,     // v1.1.8: Increased noise threshold for cleaner detection

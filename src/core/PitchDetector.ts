@@ -651,12 +651,10 @@ export class PitchDetector {
     // 🔧 動的SCALING_FACTOR計算 (sensitivity値に基づく)
     const currentSensitivity = platformSpecs.sensitivity;
     const SCALING_FACTOR = 400 / (currentSensitivity * currentSensitivity);
-    const NOISE_GATE_SCALING_FACTOR = 125; // 📊 最終調整: 2.5%閾値（iPad完全安定化のための最適値）
-    
     // ハードクリッピング（シンプルなリニア変換）
     const rawVolumeValue = adjustedRms * SCALING_FACTOR;
     const volumePercent = Math.min(100, Math.max(0, rawVolumeValue));
-    
+
     // ブラウザ環境でのデバッグログ（デバッグモード時のみ）
     if (IS_DEBUG_MODE) {
       console.log(`[Debug] 音量計算詳細:`);
@@ -668,7 +666,7 @@ export class PitchDetector {
       console.log(`  クリップされた？: ${rawVolumeValue > 100 ? 'YES' : 'NO'}`);
       console.log(`  プラットフォーム: gain=${platformSpecs.gainCompensation}, divisor=${platformSpecs.divisor}`);
     }
-    
+
     // Raw volume calculation (pre-filter)
     let rawSum = 0;
     for (let i = 0; i < rawBuffer.length; i++) {
@@ -677,26 +675,28 @@ export class PitchDetector {
     const rawRms = Math.sqrt(rawSum / rawBuffer.length);
     const rawAdjustedRms = rawRms * platformSpecs.gainCompensation;
     const rawVolumePercent = Math.min(100, Math.max(0, rawAdjustedRms * SCALING_FACTOR));
-    
+
     // Volume stabilization with configurable history length
     this.addToVolumeHistory(volumePercent);
     this.stableVolume = this.calculateVolumeAverage();
-    
+
     // 平滑化結果のデバッグログ
     if (IS_DEBUG_MODE) {
       console.log(`[Debug] 平滑化結果: volumePercent=${volumePercent.toFixed(2)}%, stableVolume=${this.stableVolume.toFixed(2)}%`);
     }
-    
-    // ★★★ ノイズゲート処理の追加 ★★★
-    const NOISE_GATE_THRESHOLD = this.config.minVolumeAbsolute * NOISE_GATE_SCALING_FACTOR; // 📊 v1.2.1.22: 200倍で1.75%閾値（理想の1.5%に近似）
+
+    // ★★★ デバイス固有ノイズゲート処理（ログ分析提案実装） ★★★
+    // minVolumeAbsoluteを直接パーセント閾値として使用（DeviceDetectionから渡される）
+    const NOISE_GATE_THRESHOLD = this.config.minVolumeAbsolute * 100; // 📊 デバイス固有閾値をパーセント変換
     const isSignalBelowNoiseGate = volumePercent < NOISE_GATE_THRESHOLD; // 平滑化前の値で判定
     
     // ノイズゲート判定のデバッグログ
     if (IS_DEBUG_MODE) {
-      console.log(`[Debug] ノイズゲート判定:`);
-      console.log(`  閾値: ${NOISE_GATE_THRESHOLD.toFixed(2)}% (minVolumeAbsolute=${this.config.minVolumeAbsolute} × ${NOISE_GATE_SCALING_FACTOR})`);
-      console.log(`  現在値: ${volumePercent.toFixed(2)}%`);
+      console.log(`[Debug] デバイス固有ノイズゲート判定:`);
+      console.log(`  デバイス設定閾値: ${NOISE_GATE_THRESHOLD.toFixed(2)}% (minVolumeAbsolute=${this.config.minVolumeAbsolute.toFixed(3)} × 100)`);
+      console.log(`  現在音量: ${volumePercent.toFixed(2)}%`);
       console.log(`  判定: ${isSignalBelowNoiseGate ? 'ノイズとしてブロック' : '有効信号として通過'}`);
+      console.log(`  適用デバイス: ${platformSpecs.deviceType || 'Unknown'}`);
     }
     
     if (isSignalBelowNoiseGate) {
