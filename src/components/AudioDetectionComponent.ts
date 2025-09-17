@@ -484,9 +484,11 @@ export class AudioDetectionComponent {
 
       await this.pitchDetector.initialize();
 
-      // 🔧 CRITICAL DEBUG: Verify PitchDetector's actual config after initialization
+      // 🔧 CRITICAL DEBUG: Verify PitchDetector's actual status after initialization
       const pitchDetectorStatus = this.pitchDetector.getStatus();
-      console.log(`🔧 [CRITICAL] After PitchDetector initialization - actual minVolumeAbsolute:`, pitchDetectorStatus.config?.minVolumeAbsolute);
+      console.log(`🔧 [CRITICAL] After PitchDetector initialization - status:`, pitchDetectorStatus);
+      console.log(`🔧 [CRITICAL] PitchDetector componentState:`, pitchDetectorStatus.componentState);
+      console.log(`🔧 [CRITICAL] PitchDetector isInitialized:`, pitchDetectorStatus.isInitialized);
 
       // ⭐ Register PitchDetector and AudioDetectionComponent with MicrophoneController for unified management
       if (this.micController && this.pitchDetector) {
