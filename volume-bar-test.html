@@ -298,7 +298,13 @@
         script.src = `dist/pitchpro.umd.js?v=${timestamp}&cb=${Math.random()}`;
         script.onload = function() {
             addLog('success', '✅ ライブラリ読み込み完了');
-            initializeApp();
+            console.log('🔍 [Debug] Script loaded, calling initializeApp()');
+
+            // 少し待ってから初期化（ライブラリの完全な読み込み待機）
+            setTimeout(() => {
+                addLog('info', '🔄 自動初期化を開始...');
+                initializeApp();
+            }, 100);
         };
         script.onerror = function() {
             addLog('error', '❌ ライブラリ読み込み失敗');
@@ -463,11 +469,34 @@
             addLog('info', '🎯 検出開始プロセス開始');
             console.log('🔍 [Debug] Start detection process initiated');
 
+            // 初期化状況の詳細チェック
+            console.log('🔍 [Debug] Current state check:');
+            console.log('  - audioManager:', audioManager);
+            console.log('  - audioDetection:', audioDetection);
+            console.log('  - window.PitchPro:', typeof window.PitchPro);
+            console.log('  - window.PitchDetector:', typeof window.PitchDetector);
+
             if (!audioDetection) {
                 addLog('error', '❌ AudioDetectionComponentが初期化されていません');
-                addLog('info', '🔧 初期化を実行してください');
+                addLog('warning', '🔄 自動初期化を再試行中...');
                 console.error('❌ [Debug] AudioDetectionComponent not initialized');
-                return;
+
+                // 自動初期化を再試行
+                try {
+                    await initializeApp();
+
+                    // 初期化後に再度チェック
+                    if (audioDetection) {
+                        addLog('success', '✅ 自動初期化完了 - 検出を開始します');
+                    } else {
+                        addLog('error', '❌ 自動初期化に失敗しました');
+                        return;
+                    }
+                } catch (error) {
+                    addLog('error', `❌ 自動初期化エラー: ${error.message}`);
+                    console.error('❌ [Debug] Auto-initialization failed:', error);
+                    return;
+                }
             }
 
             if (!audioManager) {
