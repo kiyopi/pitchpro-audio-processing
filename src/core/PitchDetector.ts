@@ -761,10 +761,10 @@ export class PitchDetector {
     
     // Human vocal range filtering (practical adjustment)
     // Optimized for actual human voice range:
-    // - Low range: 45Hz and above (F1 and above, supporting exceptional bass voices)
+    // - Low range: 30Hz and above (extended for low bass instruments and voices)
     // - High range: 1200Hz and below (practical singing range)
-    // - Exclude extreme low frequency noise while preserving deep male voices
-    const isValidVocalRange = pitch >= 45 && pitch <= 1200;
+    // - Exclude extreme low frequency noise while preserving deep male voices and low bass
+    const isValidVocalRange = pitch >= 30 && pitch <= 1200;
     
     // Development-only decision criteria debug logging
     if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {

@@ -1896,7 +1896,7 @@ class Ke {
         }
       }
       typeof process < "u" && ((Y = process.env) == null ? void 0 : Y.NODE_ENV) === "development" && (console.log(`[Debug] Pitchy結果: pitch=${(T == null ? void 0 : T.toFixed(1)) || "null"}, clarity=${(E == null ? void 0 : E.toFixed(3)) || "null"}, volume=${(K = this.currentVolume) == null ? void 0 : K.toFixed(1)}%, sampleRate=${A.toString()}`), console.log(`[Debug] Pitchyバッファー: 最初5要素=${Array.from(s.slice(0, 5)).map((F) => F.toFixed(6)).join(", ")}`));
-      const G = T >= 45 && T <= 1200;
+      const G = T >= 30 && T <= 1200;
       if (typeof process < "u" && ((Z = process.env) == null ? void 0 : Z.NODE_ENV) === "development" && console.log(`[Debug] 判定条件: pitch=${!!T}, clarity=${E == null ? void 0 : E.toFixed(3)}>${this.config.clarityThreshold}, volume=${(ee = this.currentVolume) == null ? void 0 : ee.toFixed(1)}>${this.config.minVolumeAbsolute}, range=${G}`), T && E > this.config.clarityThreshold && this.currentVolume > this.config.minVolumeAbsolute && G) {
         let F = T;
         if (!this.disableHarmonicCorrection) {
