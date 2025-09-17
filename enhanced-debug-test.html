@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 PitchPro Enhanced Debug Test v1.2.9</title>
+
+    <!-- Complete cache prevention -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #ffffff;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+        }
+
+        .step-section {
+            background: #2d2d30;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+            border-left: 5px solid #007ACC;
+        }
+
+        .step-section.success {
+            border-left-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .step-section.error {
+            border-left-color: #F44336;
+            background: rgba(244, 67, 54, 0.1);
+        }
+
+        .step-section.warning {
+            border-left-color: #FF9800;
+            background: rgba(255, 152, 0, 0.1);
+        }
+
+        .log-container {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 10px;
+            max-height: 500px;
+            overflow-y: auto;
+            font-size: 13px;
+            margin: 15px 0;
+            border: 1px solid #444;
+        }
+
+        .log-entry {
+            margin: 4px 0;
+            padding: 6px 12px;
+            border-radius: 4px;
+            line-height: 1.4;
+        }
+
+        .log-success { background: rgba(76,175,80,0.2); color: #4CAF50; }
+        .log-error { background: rgba(244,67,54,0.2); color: #F44336; }
+        .log-warning { background: rgba(255,152,0,0.2); color: #FF9800; }
+        .log-info { background: rgba(33,150,243,0.2); color: #2196F3; }
+        .log-debug { background: rgba(156,39,176,0.2); color: #9C27B0; }
+
+        .value-display {
+            background: #333;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            border: 1px solid #555;
+        }
+
+        .highlight {
+            background: #FFD700;
+            color: #000;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            margin: 8px;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #333;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50 0%, #2196F3 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .diagnostic-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .diagnostic-card {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #444;
+        }
+
+        .diagnostic-card h4 {
+            margin: 0 0 10px 0;
+            color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 PitchPro Enhanced Debug Test</h1>
+            <p>v1.2.9-FINAL - Comprehensive Initialization Analysis</p>
+            <div class="progress-bar">
+                <div id="progressFill" class="progress-fill"></div>
+            </div>
+        </div>
+
+        <div id="environmentInfo" class="step-section">
+            <h3>🌍 Environment Analysis</h3>
+            <div id="environmentDetails">Analyzing environment...</div>
+        </div>
+
+        <div id="libraryInfo" class="step-section">
+            <h3>📚 Library Loading Analysis</h3>
+            <div id="libraryDetails">Preparing library analysis...</div>
+        </div>
+
+        <div id="compatibilityInfo" class="step-section">
+            <h3>🔧 Browser Compatibility Check</h3>
+            <div id="compatibilityDetails">Checking compatibility...</div>
+        </div>
+
+        <div id="initializationInfo" class="step-section">
+            <h3>⚙️ Initialization Process</h3>
+            <div id="initializationDetails">Waiting for initialization...</div>
+        </div>
+
+        <div class="diagnostic-grid">
+            <div class="diagnostic-card">
+                <h4>🎯 Configuration Status</h4>
+                <div id="configStatus">Not loaded</div>
+            </div>
+            <div class="diagnostic-card">
+                <h4>📱 Device Detection</h4>
+                <div id="deviceStatus">Not detected</div>
+            </div>
+            <div class="diagnostic-card">
+                <h4>🎤 Audio System</h4>
+                <div id="audioStatus">Not initialized</div>
+            </div>
+        </div>
+
+        <div class="step-section">
+            <h3>🎮 Manual Testing Controls</h3>
+            <button id="startFullTest" onclick="runFullDiagnosticTest()" disabled>🔬 Run Complete Diagnostic</button>
+            <button id="testAudioOnly" onclick="testAudioSystemOnly()" disabled>🎤 Test Audio System Only</button>
+            <button onclick="clearLogs()">🧹 Clear All Logs</button>
+            <button onclick="exportDiagnostics()">📋 Export Diagnostics</button>
+        </div>
+
+        <div class="step-section">
+            <h3>📊 Detailed Diagnostic Log</h3>
+            <div id="logContainer" class="log-container">
+                <!-- Detailed logs will appear here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Enhanced diagnostic system
+        let diagnosticLog = [];
+        let currentProgress = 0;
+        let libraryObject = null;
+        let audioManager = null;
+        let audioDetection = null;
+        let environmentData = {};
+
+        function addLog(level, message, details = null) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logContainer = document.getElementById('logContainer');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${level}`;
+
+            let logText = `[${timestamp}] [${level.toUpperCase()}] ${message}`;
+            if (details) {
+                logText += '\n  📋 Details: ' + JSON.stringify(details, null, 2);
+            }
+
+            entry.textContent = logText;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+
+            diagnosticLog.push({
+                timestamp,
+                level,
+                message,
+                details,
+                fullText: logText
+            });
+
+            console.log(`[Enhanced Debug] ${logText}`);
+        }
+
+        function updateProgress(percent) {
+            currentProgress = percent;
+            document.getElementById('progressFill').style.width = `${percent}%`;
+        }
+
+        function updateSection(sectionId, content, className = '') {
+            const section = document.getElementById(sectionId);
+            if (className) {
+                section.parentElement.className = `step-section ${className}`;
+            }
+            section.innerHTML = content;
+        }
+
+        function updateDiagnosticCard(cardId, content) {
+            document.getElementById(cardId).innerHTML = content;
+        }
+
+        // Environment analysis
+        function analyzeEnvironment() {
+            addLog('info', 'Starting comprehensive environment analysis');
+            updateProgress(10);
+
+            environmentData = {
+                userAgent: navigator.userAgent,
+                platform: navigator.platform || 'unknown',
+                language: navigator.language,
+                cookieEnabled: navigator.cookieEnabled,
+                onLine: navigator.onLine,
+                deviceMemory: navigator.deviceMemory || 'unknown',
+                hardwareConcurrency: navigator.hardwareConcurrency || 'unknown',
+                screen: {
+                    width: screen.width,
+                    height: screen.height,
+                    pixelRatio: window.devicePixelRatio || 1
+                },
+                viewport: {
+                    width: window.innerWidth,
+                    height: window.innerHeight
+                },
+                touch: 'ontouchend' in document,
+                protocols: {
+                    https: location.protocol === 'https:',
+                    localhost: location.hostname === 'localhost',
+                    githubPages: location.hostname.includes('github.io')
+                }
+            };
+
+            const envHtml = `
+                <div class="value-display">
+                    <strong>User Agent:</strong> ${environmentData.userAgent.substring(0, 80)}...<br>
+                    <strong>Platform:</strong> ${environmentData.platform}<br>
+                    <strong>Screen:</strong> ${environmentData.screen.width}x${environmentData.screen.height} (${environmentData.screen.pixelRatio}x)<br>
+                    <strong>Touch Support:</strong> ${environmentData.touch ? 'Yes' : 'No'}<br>
+                    <strong>Protocol:</strong> ${environmentData.protocols.https ? 'HTTPS ✅' : 'HTTP ⚠️'}<br>
+                    <strong>Environment:</strong> ${environmentData.protocols.githubPages ? 'GitHub Pages' : 'Local/Other'}
+                </div>
+            `;
+
+            updateSection('environmentDetails', envHtml, 'success');
+            addLog('success', 'Environment analysis completed', environmentData);
+        }
+
+        // Enhanced library loading with detailed analysis
+        function loadLibraryWithAnalysis() {
+            addLog('info', 'Initiating enhanced library loading process');
+            updateProgress(25);
+
+            const timestamp = Date.now();
+            const randomId = Math.random().toString(36).substring(2, 10);
+            const script = document.createElement('script');
+
+            // Enhanced cache busting
+            const cacheParams = [
+                `v=enhanced-${timestamp}`,
+                `r=${randomId}`,
+                `cb=${Date.now()}`,
+                `env=${environmentData.protocols.githubPages ? 'github' : 'local'}`,
+                `nocache=true`,
+                `force=${Math.random()}`
+            ].join('&');
+
+            script.src = `dist/pitchpro.umd.js?${cacheParams}`;
+
+            addLog('info', 'Library URL constructed', { url: script.src });
+
+            script.onload = function() {
+                addLog('success', 'Library script loaded successfully');
+                updateProgress(50);
+                analyzeLibraryStructure();
+            };
+
+            script.onerror = function(error) {
+                addLog('error', 'Library loading failed', {
+                    url: script.src,
+                    error: error.message || 'Script loading error'
+                });
+                updateSection('libraryDetails', '❌ Library loading failed - check console for details', 'error');
+            };
+
+            document.head.appendChild(script);
+            updateSection('libraryDetails', `📦 Loading library with enhanced cache busting...<br>URL: ${script.src}`, 'warning');
+        }
+
+        // Comprehensive library structure analysis
+        function analyzeLibraryStructure() {
+            addLog('info', 'Analyzing library structure and exports');
+
+            const analysis = {
+                globalPitchPro: typeof window.PitchPro,
+                globalPitchDetector: typeof window.PitchDetector,
+                pitchProContent: null,
+                availableClasses: [],
+                errors: []
+            };
+
+            try {
+                if (typeof window.PitchPro !== 'undefined') {
+                    libraryObject = window.PitchPro;
+                    analysis.pitchProContent = Object.keys(window.PitchPro);
+                    analysis.availableClasses = analysis.pitchProContent.filter(key =>
+                        typeof window.PitchPro[key] === 'function'
+                    );
+                    addLog('success', 'PitchPro global object found', analysis);
+                } else if (typeof window.PitchDetector !== 'undefined') {
+                    libraryObject = window.PitchDetector;
+                    analysis.pitchProContent = Object.keys(window.PitchDetector);
+                    addLog('success', 'PitchDetector global object found', analysis);
+                } else {
+                    analysis.errors.push('No PitchPro or PitchDetector global object found');
+
+                    // Search for any pitch-related globals
+                    const pitchGlobals = Object.keys(window).filter(key =>
+                        key.toLowerCase().includes('pitch') ||
+                        key.toLowerCase().includes('audio') ||
+                        key.toLowerCase().includes('pro')
+                    );
+
+                    analysis.availableGlobals = pitchGlobals;
+                    addLog('warning', 'Searching for related globals', { found: pitchGlobals });
+                }
+
+                // Verify required classes
+                const requiredClasses = ['AudioManager', 'PitchDetector', 'AudioDetectionComponent'];
+                const foundClasses = [];
+                const missingClasses = [];
+
+                requiredClasses.forEach(className => {
+                    if (libraryObject && libraryObject[className]) {
+                        foundClasses.push(className);
+                    } else {
+                        missingClasses.push(className);
+                    }
+                });
+
+                const libraryHtml = `
+                    <div class="value-display">
+                        <strong>Library Object:</strong> <span class="highlight">${analysis.globalPitchPro !== 'undefined' ? 'window.PitchPro' : analysis.globalPitchDetector !== 'undefined' ? 'window.PitchDetector' : 'Not Found'}</span><br>
+                        <strong>Available Classes:</strong> ${foundClasses.join(', ') || 'None'}<br>
+                        <strong>Missing Classes:</strong> ${missingClasses.join(', ') || 'None'}<br>
+                        <strong>Total Exports:</strong> ${analysis.pitchProContent ? analysis.pitchProContent.length : 0}
+                    </div>
+                `;
+
+                if (foundClasses.length === requiredClasses.length) {
+                    updateSection('libraryDetails', `✅ Library analysis complete\n${libraryHtml}`, 'success');
+                    updateDiagnosticCard('configStatus', `✅ ${foundClasses.length}/3 classes loaded`);
+                    checkBrowserCompatibility();
+                } else {
+                    updateSection('libraryDetails', `⚠️ Partial library loading\n${libraryHtml}`, 'warning');
+                    updateDiagnosticCard('configStatus', `⚠️ ${foundClasses.length}/3 classes loaded`);
+                    addLog('warning', 'Some required classes are missing', { found: foundClasses, missing: missingClasses });
+                }
+
+            } catch (error) {
+                addLog('error', 'Library structure analysis failed', { error: error.message, stack: error.stack });
+                updateSection('libraryDetails', `❌ Library analysis failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Enhanced browser compatibility check
+        function checkBrowserCompatibility() {
+            addLog('info', 'Running comprehensive browser compatibility check');
+            updateProgress(75);
+
+            const compatibility = {
+                audioContext: !!(window.AudioContext || window.webkitAudioContext),
+                mediaDevices: !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia),
+                promises: typeof Promise !== 'undefined',
+                asyncAwait: true, // Modern browsers support this
+                webAudio: false,
+                permissions: !!(navigator.permissions),
+                localStorage: typeof Storage !== 'undefined',
+                indexedDB: 'indexedDB' in window,
+                webRTC: !!(window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection),
+                serviceWorker: 'serviceWorker' in navigator
+            };
+
+            // Test AudioContext creation
+            try {
+                const testContext = new (window.AudioContext || window.webkitAudioContext)();
+                compatibility.webAudio = true;
+                compatibility.audioContextState = testContext.state;
+                testContext.close();
+                addLog('success', 'AudioContext test successful');
+            } catch (error) {
+                compatibility.webAudioError = error.message;
+                addLog('error', 'AudioContext test failed', { error: error.message });
+            }
+
+            const compatibilityHtml = `
+                <div class="value-display">
+                    <strong>AudioContext:</strong> ${compatibility.audioContext ? '✅ Available' : '❌ Not Available'}<br>
+                    <strong>MediaDevices:</strong> ${compatibility.mediaDevices ? '✅ Available' : '❌ Not Available'}<br>
+                    <strong>Web Audio API:</strong> ${compatibility.webAudio ? '✅ Working' : '❌ Failed'}<br>
+                    <strong>Promises:</strong> ${compatibility.promises ? '✅ Supported' : '❌ Not Supported'}<br>
+                    <strong>Permissions API:</strong> ${compatibility.permissions ? '✅ Available' : '❌ Not Available'}<br>
+                    <strong>Storage:</strong> ${compatibility.localStorage ? '✅ Available' : '❌ Not Available'}
+                </div>
+            `;
+
+            const allCompatible = compatibility.audioContext && compatibility.mediaDevices && compatibility.webAudio;
+
+            if (allCompatible) {
+                updateSection('compatibilityDetails', `✅ Full compatibility confirmed\n${compatibilityHtml}`, 'success');
+                document.getElementById('startFullTest').disabled = false;
+                document.getElementById('testAudioOnly').disabled = false;
+                addLog('success', 'Browser compatibility check passed', compatibility);
+                beginInitializationTest();
+            } else {
+                updateSection('compatibilityDetails', `⚠️ Compatibility issues detected\n${compatibilityHtml}`, 'warning');
+                addLog('warning', 'Browser compatibility issues found', compatibility);
+            }
+
+            updateProgress(90);
+        }
+
+        // Initialization test
+        async function beginInitializationTest() {
+            addLog('info', 'Beginning initialization test sequence');
+
+            try {
+                if (!libraryObject || !libraryObject.AudioManager) {
+                    throw new Error('AudioManager class not available in library');
+                }
+
+                // Test AudioManager creation
+                audioManager = new libraryObject.AudioManager();
+                addLog('success', 'AudioManager instance created');
+                updateDiagnosticCard('audioStatus', '✅ AudioManager created');
+
+                // Test AudioDetectionComponent creation
+                if (libraryObject.AudioDetectionComponent) {
+                    audioDetection = new libraryObject.AudioDetectionComponent(audioManager, {
+                        autoUpdateUI: false,
+                        debug: true
+                    });
+                    addLog('success', 'AudioDetectionComponent instance created');
+                    updateDiagnosticCard('configStatus', '✅ All components ready');
+                } else {
+                    addLog('warning', 'AudioDetectionComponent not available');
+                }
+
+                updateSection('initializationDetails', '✅ Basic initialization successful - ready for full testing', 'success');
+                updateProgress(100);
+
+            } catch (error) {
+                addLog('error', 'Initialization test failed', { error: error.message, stack: error.stack });
+                updateSection('initializationDetails', `❌ Initialization failed: ${error.message}`, 'error');
+                updateDiagnosticCard('audioStatus', '❌ Initialization failed');
+            }
+        }
+
+        // Full diagnostic test
+        async function runFullDiagnosticTest() {
+            addLog('info', 'Starting comprehensive diagnostic test');
+
+            try {
+                // Initialize AudioManager
+                await audioManager.initialize();
+                addLog('success', 'AudioManager initialization completed');
+                updateDiagnosticCard('audioStatus', '✅ AudioManager initialized');
+
+                // Initialize AudioDetectionComponent
+                if (audioDetection) {
+                    await audioDetection.initialize();
+                    addLog('success', 'AudioDetectionComponent initialization completed');
+
+                    // Get configuration
+                    const config = audioDetection.config;
+                    const deviceSpecs = audioDetection.deviceSpecs;
+
+                    updateDiagnosticCard('configStatus', `
+                        ✅ Configured<br>
+                        minVolumeAbsolute: ${config.minVolumeAbsolute}<br>
+                        Threshold: ${(config.minVolumeAbsolute * 500).toFixed(1)}%
+                    `);
+
+                    updateDiagnosticCard('deviceStatus', `
+                        ✅ Detected: ${deviceSpecs.deviceType}<br>
+                        Sensitivity: ${deviceSpecs.sensitivity}x
+                    `);
+
+                    addLog('success', 'Full diagnostic test completed successfully', {
+                        config: {
+                            minVolumeAbsolute: config.minVolumeAbsolute,
+                            threshold: config.minVolumeAbsolute * 500
+                        },
+                        device: {
+                            type: deviceSpecs.deviceType,
+                            sensitivity: deviceSpecs.sensitivity
+                        }
+                    });
+                } else {
+                    addLog('warning', 'AudioDetectionComponent not available for full test');
+                }
+
+            } catch (error) {
+                addLog('error', 'Full diagnostic test failed', {
+                    error: error.message,
+                    stack: error.stack
+                });
+            }
+        }
+
+        // Audio system only test
+        async function testAudioSystemOnly() {
+            addLog('info', 'Testing audio system independently');
+
+            try {
+                if (!audioManager) {
+                    audioManager = new libraryObject.AudioManager();
+                    addLog('info', 'Created new AudioManager for isolated test');
+                }
+
+                await audioManager.initialize();
+                addLog('success', 'AudioManager standalone test successful');
+
+                const status = audioManager.getStatus();
+                addLog('info', 'AudioManager status', status);
+
+                updateDiagnosticCard('audioStatus', '✅ Standalone test passed');
+
+            } catch (error) {
+                addLog('error', 'Audio system test failed', {
+                    error: error.message,
+                    stack: error.stack
+                });
+                updateDiagnosticCard('audioStatus', '❌ Test failed');
+            }
+        }
+
+        function clearLogs() {
+            document.getElementById('logContainer').innerHTML = '';
+            diagnosticLog = [];
+            addLog('info', 'Diagnostic logs cleared');
+        }
+
+        function exportDiagnostics() {
+            const diagnosticReport = {
+                timestamp: new Date().toISOString(),
+                environment: environmentData,
+                logs: diagnosticLog,
+                libraryAnalysis: {
+                    available: !!libraryObject,
+                    classes: libraryObject ? Object.keys(libraryObject) : []
+                },
+                progress: currentProgress
+            };
+
+            const reportText = JSON.stringify(diagnosticReport, null, 2);
+
+            navigator.clipboard.writeText(reportText).then(() => {
+                addLog('success', 'Complete diagnostic report copied to clipboard');
+            }).catch(() => {
+                addLog('warning', 'Could not copy to clipboard - check browser console for full report');
+                console.log('DIAGNOSTIC REPORT:', diagnosticReport);
+            });
+        }
+
+        // Auto-start the diagnostic process
+        addLog('info', 'Enhanced diagnostic system starting...');
+        analyzeEnvironment();
+        setTimeout(() => loadLibraryWithAnalysis(), 1000);
+    </script>
+</body>
+</html>
