@@ -325,30 +325,67 @@
 
         async function initializeApp() {
             try {
+                addLog('info', '🚀 初期化プロセス開始');
+                console.log('🔍 [Debug] Starting initialization process');
+
+                // ライブラリの存在確認
+                addLog('info', '📚 ライブラリの確認中...');
                 const PitchProLib = window.PitchPro || window.PitchDetector;
                 if (!PitchProLib) {
                     addLog('error', '❌ ライブラリが見つかりません');
+                    addLog('debug', '🔍 利用可能なグローバルオブジェクト: ' + Object.keys(window).filter(k => k.toLowerCase().includes('pitch') || k.toLowerCase().includes('audio')).join(', '));
+                    console.error('❌ Library not found. Available globals:', Object.keys(window).filter(k => k.toLowerCase().includes('pitch') || k.toLowerCase().includes('audio')));
                     return;
                 }
 
+                addLog('success', `✅ ライブラリ確認完了: ${typeof window.PitchPro !== 'undefined' ? 'PitchPro' : 'PitchDetector'}`);
+                addLog('info', `📋 利用可能なクラス: ${Object.keys(PitchProLib).filter(k => typeof PitchProLib[k] === 'function').join(', ')}`);
+                console.log('🔍 [Debug] Library loaded:', Object.keys(PitchProLib));
+
                 // AudioManager初期化
+                addLog('info', '🎤 AudioManager初期化中...');
+                if (!PitchProLib.AudioManager) {
+                    throw new Error('AudioManager クラスが見つかりません');
+                }
+
                 audioManager = new PitchProLib.AudioManager();
+                addLog('info', '🔧 AudioManager インスタンス作成完了');
+                console.log('🔍 [Debug] AudioManager instance created');
+
                 await audioManager.initialize();
                 addLog('success', '✅ AudioManager初期化完了');
+                console.log('🔍 [Debug] AudioManager initialized successfully');
 
                 // AudioDetectionComponent初期化（設定上書きなし！）
+                addLog('info', '🎵 AudioDetectionComponent初期化中...');
+                if (!PitchProLib.AudioDetectionComponent) {
+                    throw new Error('AudioDetectionComponent クラスが見つかりません');
+                }
+
                 audioDetection = new PitchProLib.AudioDetectionComponent({
                     // minVolumeAbsoluteは指定しない - ライブラリのデフォルト値を使用
                     autoUpdateUI: false,
                     debug: true
                 });
+                addLog('info', '🔧 AudioDetectionComponent インスタンス作成完了');
+                console.log('🔍 [Debug] AudioDetectionComponent instance created');
 
                 await audioDetection.initialize();
                 addLog('success', '✅ AudioDetectionComponent初期化完了');
+                console.log('🔍 [Debug] AudioDetectionComponent initialized successfully');
 
                 // 設定値の確認と表示
+                addLog('info', '📊 設定値の確認と表示中...');
                 const config = audioDetection.config;
                 const deviceSpecs = audioDetection.deviceSpecs;
+
+                if (!config || !deviceSpecs) {
+                    throw new Error('設定値またはデバイス情報の取得に失敗しました');
+                }
+
+                addLog('info', `📱 検出されたデバイス: ${deviceSpecs.deviceType}`);
+                addLog('info', `⚙️ minVolumeAbsolute: ${config.minVolumeAbsolute}`);
+                addLog('info', `🎯 感度: ${deviceSpecs.sensitivity}x`);
 
                 document.getElementById('minVolumeValue').textContent = config.minVolumeAbsolute.toFixed(3);
                 document.getElementById('thresholdValue').textContent = `${(config.minVolumeAbsolute * 500).toFixed(1)}%`;
@@ -360,19 +397,33 @@
                 document.getElementById('thresholdIndicator').style.left = `${Math.min(100, thresholdPercent)}%`;
                 document.querySelector('.threshold-label').textContent = `閾値 ${thresholdPercent.toFixed(1)}%`;
 
-                addLog('info', `📊 設定確認: minVolumeAbsolute=${config.minVolumeAbsolute}, 閾値=${thresholdPercent.toFixed(1)}%`);
+                addLog('success', `📊 設定確認完了: minVolumeAbsolute=${config.minVolumeAbsolute}, 閾値=${thresholdPercent.toFixed(1)}%`);
 
                 // コールバック設定
+                addLog('info', '🔗 コールバック設定中...');
                 audioDetection.setCallbacks({
                     onPitchUpdate: updateDisplay,
                     onError: (error) => {
-                        addLog('error', `❌ エラー: ${error.message}`);
+                        addLog('error', `❌ 検出エラー: ${error.message}`);
+                        console.error('🔍 [Debug] Detection error:', error);
                     }
                 });
 
+                addLog('success', '🎉 初期化プロセス完全完了！');
+                console.log('🔍 [Debug] Initialization process completed successfully');
+
             } catch (error) {
                 addLog('error', `❌ 初期化エラー: ${error.message}`);
-                console.error('Initialization error:', error);
+                addLog('error', `🔍 エラー詳細: ${error.name}`);
+                if (error.stack) {
+                    addLog('error', `📜 スタックトレース: ${error.stack.split('\n')[0]}`);
+                }
+                console.error('❌ [Debug] Initialization failed:', error);
+                console.error('❌ [Debug] Error details:', {
+                    name: error.name,
+                    message: error.message,
+                    stack: error.stack
+                });
             }
         }
 
@@ -409,23 +460,51 @@
         }
 
         async function startDetection() {
+            addLog('info', '🎯 検出開始プロセス開始');
+            console.log('🔍 [Debug] Start detection process initiated');
+
             if (!audioDetection) {
-                addLog('error', '❌ 初期化が完了していません');
+                addLog('error', '❌ AudioDetectionComponentが初期化されていません');
+                addLog('info', '🔧 初期化を実行してください');
+                console.error('❌ [Debug] AudioDetectionComponent not initialized');
+                return;
+            }
+
+            if (!audioManager) {
+                addLog('error', '❌ AudioManagerが初期化されていません');
+                console.error('❌ [Debug] AudioManager not initialized');
                 return;
             }
 
             try {
+                addLog('info', '🎤 ピッチ検出を開始中...');
+                console.log('🔍 [Debug] Calling audioDetection.startDetection()');
+
                 const started = audioDetection.startDetection();
+                console.log('🔍 [Debug] startDetection() returned:', started);
+
                 if (started) {
                     isRunning = true;
                     document.getElementById('startBtn').disabled = true;
                     document.getElementById('stopBtn').disabled = false;
-                    addLog('success', '🎤 ピッチ検出開始');
+                    addLog('success', '🎤 ピッチ検出開始成功');
+                    console.log('🔍 [Debug] Detection started successfully');
                 } else {
-                    addLog('error', '❌ 検出開始に失敗');
+                    addLog('error', '❌ 検出開始に失敗 - startDetection()がfalseを返しました');
+                    console.error('❌ [Debug] Detection start failed - startDetection() returned false');
                 }
             } catch (error) {
-                addLog('error', `❌ 開始エラー: ${error.message}`);
+                addLog('error', `❌ 検出開始エラー: ${error.message}`);
+                addLog('error', `🔍 エラー詳細: ${error.name}`);
+                if (error.stack) {
+                    addLog('error', `📜 スタックトレース: ${error.stack.split('\n')[0]}`);
+                }
+                console.error('❌ [Debug] Detection start error:', error);
+                console.error('❌ [Debug] Error details:', {
+                    name: error.name,
+                    message: error.message,
+                    stack: error.stack
+                });
             }
         }
 
