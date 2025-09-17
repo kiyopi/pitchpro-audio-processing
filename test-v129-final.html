@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔧 PitchPro v1.2.9-FINAL 設定検証テスト</title>
+    <title>🎯 PitchPro v1.2.9 + 統一アーキテクチャ + PC=0.9%ノイズゲート</title>
 
     <!-- 完全キャッシュ回避設定 -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
@@ -92,16 +92,17 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🔧 PitchPro v1.2.9-FINAL 設定検証テスト</h1>
-            <p>完全新規ファイル - キャッシュ問題回避専用</p>
+            <h1>🎯 PitchPro v1.2.9 + sensitivity=1.7 + noiseGate=0.45% デバイス最適化</h1>
+            <p>PC用デバイス固有ノイズゲート閾値最適化版</p>
         </div>
 
         <div class="test-section">
-            <h2>🎯 期待する設定値</h2>
+            <h2>🎯 v1.2.9+ 最適化設定値</h2>
             <div class="config-display">
-                <div><strong>minVolumeAbsolute:</strong> <span class="value-highlight">0.020</span> (10%閾値)</div>
-                <div><strong>ノイズゲート閾値:</strong> <span class="value-highlight">10.0%</span> (0.020 × 500)</div>
-                <div><strong>目標:</strong> 環境ノイズ(3.8%-6.2%)をブロック、有効音声(10%超)を通過</div>
+                <div><strong>PC sensitivity:</strong> <span class="value-highlight">1.7</span> (適切バランス調整: 1.8→1.5→1.7)</div>
+                <div><strong>PC noiseGate:</strong> <span class="value-highlight">0.018</span> (デバイス固有設定)</div>
+                <div><strong>実効閾値:</strong> <span class="value-highlight">0.45%</span> (noiseGate × 0.25 係数)</div>
+                <div><strong>目標:</strong> 8%常時ノイズをブロック、音量バランス最適化</div>
             </div>
         </div>
 
@@ -118,6 +119,7 @@
             <button id="stopBtn" onclick="stopTest()" disabled>テスト停止</button>
             <button onclick="clearLogs()">ログクリア</button>
             <button onclick="exportLogs()">ログをコピー</button>
+            <button onclick="forceHardReload()" style="background: #FF5722;">🚀 HARD RELOAD</button>
         </div>
 
         <div class="test-section">
@@ -134,8 +136,22 @@
         const randomId = Math.random().toString(36).substring(2);
         const script = document.createElement('script');
 
-        // 複数のキャッシュバスト手法を組み合わせ
-        script.src = `dist/pitchpro.umd.js?v=final-${timestamp}&r=${randomId}&_cb=${Date.now()}&nocache=true`;
+        // 🚀 NUCLEAR キャッシュ完全回避 - ファイル内容ハッシュ + 乱数完全生成
+        const microTimestamp = Date.now() + Math.random() * 1000000;
+        const cryptoRandom = Math.random().toString(36) + Math.random().toString(36);
+        const userAgent = navigator.userAgent.replace(/\s+/g, '').substring(0, 20);
+        const screenSignature = screen.width + screen.height + (screen.pixelDepth || 0);
+        const memorySignature = navigator.hardwareConcurrency || Math.random();
+
+        // 絶対に重複しない一意キー生成
+        const uniqueKey = `${microTimestamp}-${cryptoRandom}-${userAgent}-${screenSignature}-${memorySignature}-${performance.now()}`;
+        const hashCode = uniqueKey.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0);
+
+        script.src = `dist/pitchpro.umd.js?nuclear=${hashCode}&micro=${microTimestamp}&crypto=${cryptoRandom}&ua=${userAgent}&screen=${screenSignature}&mem=${memorySignature}&perf=${performance.now()}&rnd1=${Math.random()}&rnd2=${Math.random()}&rnd3=${Math.random()}&ts=${Date.now()}&force_reload=true&bypass_all=true&new_build=true`;
+
+        // 追加: script要素自体も動的に完全再生成
+        const oldScript = document.querySelector('script[src*="pitchpro.umd.js"]');
+        if (oldScript) oldScript.remove();
         script.onload = function() {
             addLog('success', '✅ PitchPro ライブラリ読み込み完了');
             addLog('info', `📝 URL: ${script.src}`);
@@ -287,48 +303,72 @@
                 const config = pitchDetector.config;
                 addLog('info', '📊 設定値詳細確認:');
 
-                // minVolumeAbsolute確認
+                // minVolumeAbsolute確認 - PC用修正値検証
                 const actualMinVolume = config.minVolumeAbsolute;
                 addLog('info', `  minVolumeAbsolute: ${actualMinVolume}`);
 
-                if (actualMinVolume === 0.020) {
-                    addLog('success', '✅ minVolumeAbsolute = 0.020 (期待値と一致)');
+                // 🔍 デバッグ: config オブジェクト全体を確認
+                console.log('🔍 [Debug] Full config object:', config);
+                console.log('🔍 [Debug] config keys:', Object.keys(config));
+                addLog('info', `  期待値（PC用0.45%）: 0.0045`);
+
+                if (Math.abs(actualMinVolume - 0.0045) < 0.0001) {
+                    addLog('success', '✅ minVolumeAbsolute = 0.0045 (PC用修正値と一致)');
+                } else if (actualMinVolume === 0.004) {
+                    addLog('warning', '⚠️ minVolumeAbsolute = 0.004 (修正前の値、キャッシュ問題の可能性)');
                 } else {
-                    addLog('error', `❌ minVolumeAbsolute = ${actualMinVolume} (期待値: 0.020)`);
+                    addLog('error', `❌ minVolumeAbsolute = ${actualMinVolume} (期待値: 0.0045)`);
                 }
 
                 // ノイズゲート閾値計算
                 const NOISE_GATE_SCALING_FACTOR = 500;
                 const calculatedThreshold = actualMinVolume * NOISE_GATE_SCALING_FACTOR;
                 addLog('info', `  計算されたノイズゲート閾値: ${calculatedThreshold.toFixed(2)}%`);
+                addLog('info', `  期待値（PC用）: 2.25%`);
 
-                if (Math.abs(calculatedThreshold - 10.0) < 0.1) {
-                    addLog('success', '✅ ノイズゲート閾値 = 10.0% (期待値と一致)');
+                if (Math.abs(calculatedThreshold - 2.25) < 0.1) {
+                    addLog('success', '✅ ノイズゲート閾値 = 2.25% (PC用修正値と一致)');
+                } else if (Math.abs(calculatedThreshold - 2.0) < 0.1) {
+                    addLog('warning', '⚠️ ノイズゲート閾値 = 2.0% (修正前の値)');
                 } else {
-                    addLog('error', `❌ ノイズゲート閾値 = ${calculatedThreshold.toFixed(2)}% (期待値: 10.0%)`);
+                    addLog('error', `❌ ノイズゲート閾値 = ${calculatedThreshold.toFixed(2)}% (期待値: 2.25%)`);
                 }
 
                 // 設定表示を更新
+                const isCorrectValue = Math.abs(actualMinVolume - 0.0045) < 0.0001;
                 document.getElementById('configStatus').innerHTML = `
                     <div><strong>実際のminVolumeAbsolute:</strong> <span class="value-highlight">${actualMinVolume}</span></div>
                     <div><strong>実際のノイズゲート閾値:</strong> <span class="value-highlight">${calculatedThreshold.toFixed(2)}%</span></div>
-                    <div><strong>判定:</strong> <span class="${actualMinVolume === 0.020 ? 'success' : 'error'}">${actualMinVolume === 0.020 ? '✅ 正常' : '❌ 異常'}</span></div>
+                    <div><strong>期待値:</strong> <span class="value-highlight">0.0045 (2.25%)</span></div>
+                    <div><strong>判定:</strong> <span class="${isCorrectValue ? 'success' : 'error'}">${isCorrectValue ? '✅ PC用修正値' : '❌ キャッシュ問題'}</span></div>
                 `;
 
-                // リアルタイムテスト（オプション）
-                addLog('info', '🎤 リアルタイム動作テスト開始（5秒間）');
+                // 📊 シンプルログテスト - 重要情報のみ表示
+                addLog('info', '🎤 ノイズゲート動作テスト開始（5秒間）');
 
                 let updateCount = 0;
+                let blockedCount = 0;
+                let passedCount = 0;
+                let maxVolume = 0;
+                let minVolume = 100;
+
                 pitchDetector.setCallbacks({
                     onPitchUpdate: function(result) {
                         if (!isTestRunning) return;
 
                         const volume = result.volume || 0;
                         if (volume > 0) {
+                            passedCount++;
+                            maxVolume = Math.max(maxVolume, volume);
+                            minVolume = Math.min(minVolume, volume);
+
+                            // 最初の3回と10回おきに表示
                             updateCount++;
-                            if (updateCount <= 5) { // 最初の5回のみログ表示
-                                addLog('success', `🔊 有効信号: ${volume.toFixed(1)}%`);
+                            if (updateCount <= 3 || updateCount % 10 === 0) {
+                                addLog('success', `🔊 通過: ${volume.toFixed(1)}% (${updateCount}回目)`);
                             }
+                        } else {
+                            blockedCount++;
                         }
                     }
                 });
@@ -337,11 +377,26 @@
                 if (started) {
                     addLog('success', '✅ ピッチ検出開始');
 
-                    // 5秒後に自動停止
+                    // 5秒後に自動停止 + サマリー表示
                     testTimeout = setTimeout(() => {
                         if (isTestRunning) {
+                            // 📊 テスト結果サマリー
+                            addLog('info', '📊 === テスト結果サマリー ===');
+                            addLog('success', `🔊 通過した信号: ${passedCount}回`);
+                            addLog('info', `🚫 ブロックされた信号: ${blockedCount}回`);
+                            if (passedCount > 0) {
+                                addLog('info', `📈 音量範囲: ${minVolume.toFixed(1)}% - ${maxVolume.toFixed(1)}%`);
+
+                                // ノイズゲート効果の判定
+                                if (minVolume > 2.25) {
+                                    addLog('success', '✅ ノイズゲート正常動作 (2.25%以上の信号のみ通過)');
+                                } else {
+                                    addLog('warning', '⚠️ 2.25%未満の信号が通過 (設定要確認)');
+                                }
+                            }
+
                             stopTest();
-                            addLog('info', '✅ リアルタイムテスト完了（5秒経過）');
+                            addLog('info', '🎯 ノイズゲートテスト完了（5秒経過）');
                         }
                     }, 5000);
                 } else {
@@ -357,6 +412,33 @@
                 // エラー時のクリーンアップ
                 stopTest();
             }
+        }
+
+        function forceHardReload() {
+            addLog('warning', '🚀 HARD RELOAD実行 - 全キャッシュクリア中...');
+
+            // 1. Service Worker キャッシュクリア
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    registrations.forEach(registration => registration.unregister());
+                });
+            }
+
+            // 2. ブラウザキャッシュ強制クリア
+            if ('caches' in window) {
+                caches.keys().then(names => {
+                    names.forEach(name => caches.delete(name));
+                });
+            }
+
+            // 3. LocalStorage/SessionStorage クリア
+            localStorage.clear();
+            sessionStorage.clear();
+
+            // 4. 完全リロード（キャッシュ無効化）
+            setTimeout(() => {
+                window.location.reload(true); // 強制リロード
+            }, 1000);
         }
     </script>
 </body>

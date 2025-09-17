@@ -113,33 +113,27 @@ export class DeviceDetection {
     switch (deviceType) {
       case 'iPad':
         return {
-          sensitivity: 3.5,        // 📱 iPhoneと同じ感度に調整 (音量バー動作改善)
-          noiseGate: 0.015,        // 📊 iPad専用ノイズゲート値 (7.5% threshold) - ログ分析最適値
-          divisor: 4.0,            // Volume calculation divisor
-          gainCompensation: 1.5,   // Gain compensation for low-frequency cut
-          noiseThreshold: 8.0,     // v1.1.8: Increased noise threshold to prevent ambient noise pickup
-          smoothingFactor: 0.3     // v1.1.8: Increased smoothing to reduce noise fluctuations
+          sensitivity: 5.0,           // 🎤 マイク感度 (PitchDetector用)
+          noiseGate: 0.0225,          // 🚪 ノイズゲート閾値 (0.075 * 0.3) - 統合計算済み
+          volumeMultiplier: 20.0,     // 🔊 表示音量補正 (AudioDetectionComponent用)
+          smoothingFactor: 0.3        // 📊 平滑化係数
         };
         
       case 'iPhone':
         return {
-          sensitivity: 3.5,        // 📱 テスト導出最適値: マイク感度 3.5x
-          noiseGate: 0.010,        // 📊 iPhone専用ノイズゲート値 (5% threshold) - ログ分析最適値
-          divisor: 4.0,            // Keep original divisor  
-          gainCompensation: 1.5,   // Keep original gain compensation
-          noiseThreshold: 6.0,     // v1.1.8: Increased noise threshold for better noise rejection
-          smoothingFactor: 0.25    // v1.1.8: Increased smoothing to reduce noise spikes
+          sensitivity: 3.5,           // 🎤 マイク感度
+          noiseGate: 0.020,           // 🚪 ノイズゲート閾値 (0.050 * 0.4) - 統合計算済み
+          volumeMultiplier: 7.5,      // 🔊 表示音量補正
+          smoothingFactor: 0.25       // 📊 平滑化係数
         };
         
       case 'PC':
       default:
         return {
-          sensitivity: 1.8,        // 📊 v1.2.9確定値に復元 (SCALING_FACTOR=123.46)
-          noiseGate: 0.020,        // 📊 PC専用ノイズゲート値 (10% threshold) - ログ分析最適値
-          divisor: 6.0,            // Different volume calculation for PC
-          gainCompensation: 1.0,   // No additional gain compensation needed
-          noiseThreshold: 7.0,     // v1.1.8: Increased noise threshold for cleaner detection
-          smoothingFactor: 0.25    // v1.1.8: Increased smoothing for more stable readings
+          sensitivity: 2.5,           // 🎤 マイク感度 (1.7から戻す - より安定)
+          noiseGate: 0.009,           // 🚪 ノイズゲート閾値 (0.018 * 0.5) - 統合計算済み  
+          volumeMultiplier: 3.0,      // 🔊 表示音量補正
+          smoothingFactor: 0.25       // 📊 平滑化係数
         };
     }
   }

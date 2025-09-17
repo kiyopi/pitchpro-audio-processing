@@ -294,15 +294,23 @@ export class PitchDetector {
     } = {}
   ) {
     this.audioManager = audioManager;
+    
+    // 🔧 デバッグ: 受け取った設定値を確認
+    console.log('🔧 [PitchDetector] Constructor - received config.minVolumeAbsolute:', config.minVolumeAbsolute);
+    
     this.config = {
       fftSize: 4096,
       smoothing: 0.9, // 揺れ防止のため強化 (0.1 → 0.9)
       clarityThreshold: 0.4,    // 0.8から0.4に現実的な値に変更
-      minVolumeAbsolute: 0.020, // 🔧 環境適応ノイズゲート: 10%閾値でマイクノイズを確実にブロック
+      // ⬇️ 固定のデフォルト値を削除し、configから渡される値を優先する
+      minVolumeAbsolute: config.minVolumeAbsolute ?? 0.015, // 安全なフォールバック値
       noiseGate: 0.02,          // v1.1.8: デフォルトnoiseGate値
       deviceOptimization: true, // v1.1.8: デバイス最適化デフォルト有効
-      ...config
+      ...config  // 🎯 外部設定で上書き
     };
+    
+    // 🔧 デバッグ: 最終的な設定値を確認
+    console.log('🔧 [PitchDetector] Constructor - final config.minVolumeAbsolute:', this.config.minVolumeAbsolute);
     
     // Initialize harmonic correction configuration
     this.harmonicConfig = {
@@ -595,10 +603,6 @@ export class PitchDetector {
    * redundant calculations and efficient buffer operations
    */
   private detectPitch(): void {
-    // デバッグモード判定（本番環境ではログを無効化）
-    const IS_DEBUG_MODE = typeof process !== 'undefined' && process.env?.NODE_ENV === 'development' || 
-                          typeof window !== 'undefined';
-    
     // Batch timestamp retrieval for performance
     const frameStartTime = performance.now();
     
@@ -607,13 +611,6 @@ export class PitchDetector {
       // Skip this frame but schedule next
       this.animationFrame = requestAnimationFrame(() => this.detectPitch());
       return;
-    }
-    // Development-only debug logging
-    if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
-      console.log(`[Debug] detectPitch呼び出し: detecting=${this.isDetecting}, analyser=${!!this.analyser}, rawAnalyser=${!!this.rawAnalyser}, pitchDetector=${!!this.pitchDetector}`);
-      
-      const audioManagerStatus = this.audioManager.getStatus();
-      console.log(`[Debug] AudioManager状態: context=${audioManagerStatus.audioContextState}, stream=${audioManagerStatus.mediaStreamActive}`);
     }
     
     if (!this.isDetecting || !this.analyser || !this.rawAnalyser || !this.pitchDetector || !this.deviceSpecs) return;
@@ -625,24 +622,12 @@ export class PitchDetector {
     this.analyser.getFloatTimeDomainData(buffer);
     this.rawAnalyser.getFloatTimeDomainData(rawBuffer);
     
-    // Development-only buffer analysis debug logging
-    if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
-      const nonZeroCount = buffer.filter(val => Math.abs(val) > 0.0001).length;
-      const maxValue = Math.max(...buffer.map(val => Math.abs(val)));
-      console.log(`[Debug] バッファー分析: 非ゼロ値=${nonZeroCount}/${bufferLength}, 最大値=${maxValue.toFixed(6)}`);
-    }
-    
     // Volume calculation (filtered)
     let sum = 0;
     for (let i = 0; i < bufferLength; i++) {
       sum += Math.abs(buffer[i]);
     }
     const rms = Math.sqrt(sum / bufferLength);
-    
-    // Development-only RMS calculation debug logging
-    if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
-      console.log(`[Debug] RMS計算: sum=${sum.toFixed(6)}, rms=${rms.toFixed(6)}`);
-    }
     
     // Platform-specific volume calculation
     const platformSpecs = this.deviceSpecs;
@@ -654,18 +639,6 @@ export class PitchDetector {
     // ハードクリッピング（シンプルなリニア変換）
     const rawVolumeValue = adjustedRms * SCALING_FACTOR;
     const volumePercent = Math.min(100, Math.max(0, rawVolumeValue));
-
-    // ブラウザ環境でのデバッグログ（デバッグモード時のみ）
-    if (IS_DEBUG_MODE) {
-      console.log(`[Debug] 音量計算詳細:`);
-      console.log(`  rms=${rms.toFixed(6)}`);
-      console.log(`  adjustedRms=${adjustedRms.toFixed(6)}`);
-      console.log(`  SCALING_FACTOR=${SCALING_FACTOR}`);
-      console.log(`  計算前: adjustedRms * SCALING_FACTOR = ${rawVolumeValue.toFixed(6)}`);
-      console.log(`  計算後volumePercent=${volumePercent.toFixed(2)}%`);
-      console.log(`  クリップされた？: ${rawVolumeValue > 100 ? 'YES' : 'NO'}`);
-      console.log(`  プラットフォーム: gain=${platformSpecs.gainCompensation}, divisor=${platformSpecs.divisor}`);
-    }
 
     // Raw volume calculation (pre-filter)
     let rawSum = 0;
@@ -680,24 +653,10 @@ export class PitchDetector {
     this.addToVolumeHistory(volumePercent);
     this.stableVolume = this.calculateVolumeAverage();
 
-    // 平滑化結果のデバッグログ
-    if (IS_DEBUG_MODE) {
-      console.log(`[Debug] 平滑化結果: volumePercent=${volumePercent.toFixed(2)}%, stableVolume=${this.stableVolume.toFixed(2)}%`);
-    }
-
-    // ★★★ デバイス固有ノイズゲート処理（ログ分析提案実装） ★★★
+    // ⭐⭐⭐ デバイス固有ノイズゲート処理（ログ分析提案実装） ⭐⭐⭐
     // minVolumeAbsoluteを直接パーセント閾値として使用（DeviceDetectionから渡される）
     const NOISE_GATE_THRESHOLD = this.config.minVolumeAbsolute * 100; // 📊 デバイス固有閾値をパーセント変換
     const isSignalBelowNoiseGate = volumePercent < NOISE_GATE_THRESHOLD; // 平滑化前の値で判定
-    
-    // ノイズゲート判定のデバッグログ
-    if (IS_DEBUG_MODE) {
-      console.log(`[Debug] デバイス固有ノイズゲート判定:`);
-      console.log(`  デバイス設定閾値: ${NOISE_GATE_THRESHOLD.toFixed(2)}% (minVolumeAbsolute=${this.config.minVolumeAbsolute.toFixed(3)} × 100)`);
-      console.log(`  現在音量: ${volumePercent.toFixed(2)}%`);
-      console.log(`  判定: ${isSignalBelowNoiseGate ? 'ノイズとしてブロック' : '有効信号として通過'}`);
-      console.log(`  適用デバイス: ${platformSpecs.deviceType || 'Unknown'}`);
-    }
     
     if (isSignalBelowNoiseGate) {
       // 閾値以下の場合は、検出結果をクリアするが、stableVolumeは保持（スムージング維持）
@@ -709,10 +668,6 @@ export class PitchDetector {
       this.detectedOctave = null;
       this.pitchClarity = 0;
       this.resetHarmonicHistory();
-      
-      if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
-        console.log(`[Debug] ノイズゲート作動: 入力音量=${volumePercent.toFixed(3)} < 閾値=${NOISE_GATE_THRESHOLD}, stableVolume=${this.stableVolume.toFixed(3)}（保持）`);
-      }
     } else {
       // 閾値以上の信号がある場合のみ、ピッチ検出を実行
       this.currentVolume = this.stableVolume;
@@ -753,23 +708,12 @@ export class PitchDetector {
       }
     }
     
-    // Development-only Pitchy results debug logging
-    if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
-      console.log(`[Debug] Pitchy結果: pitch=${pitch?.toFixed(1) || 'null'}, clarity=${clarity?.toFixed(3) || 'null'}, volume=${this.currentVolume?.toFixed(1)}%, sampleRate=${sampleRate.toString()}`);
-      console.log(`[Debug] Pitchyバッファー: 最初5要素=${Array.from(buffer.slice(0, 5)).map(v => v.toFixed(6)).join(', ')}`);
-    }
-    
     // Human vocal range filtering (practical adjustment)
     // Optimized for actual human voice range:
     // - Low range: 30Hz and above (extended for low bass instruments and voices)
     // - High range: 1200Hz and below (practical singing range)
     // - Exclude extreme low frequency noise while preserving deep male voices and low bass
     const isValidVocalRange = pitch >= 30 && pitch <= 1200;
-    
-    // Development-only decision criteria debug logging
-    if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
-      console.log(`[Debug] 判定条件: pitch=${!!pitch}, clarity=${clarity?.toFixed(3)}>${this.config.clarityThreshold}, volume=${this.currentVolume?.toFixed(1)}>${this.config.minVolumeAbsolute}, range=${isValidVocalRange}`);
-    }
     
     if (pitch && clarity > this.config.clarityThreshold && this.currentVolume > this.config.minVolumeAbsolute && isValidVocalRange) {
       let finalFreq = pitch;

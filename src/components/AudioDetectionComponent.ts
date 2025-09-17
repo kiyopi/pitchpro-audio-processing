@@ -409,118 +409,7 @@ export class AudioDetectionComponent {
    * }
    * ```
    */
-  async initialize(): Promise<void> {
-    if (this.isInitialized) {
-      this.debugLog('Already initialized');
-      return;
-    }
-
-    try {
-      this.updateState('initializing');
-      this.debugLog('Starting initialization...');
-
-      // Initialize MicrophoneController
-      this.micController = new MicrophoneController({
-        audioManager: {
-          sampleRate: 44100,
-          echoCancellation: false,
-          autoGainControl: false
-        },
-        lifecycle: {
-          maxAutoRecoveryAttempts: 3,
-          healthCheckIntervalMs: 1000
-        },
-        notifications: {
-          enabled: this.config.debug
-        }
-      });
-
-      // Set up MicrophoneController callbacks
-      this.micController.setCallbacks({
-        onStateChange: (state) => {
-          this.debugLog('MicrophoneController state:', state);
-        },
-        onError: (error) => {
-          this.handleError(error, 'microphone_controller');
-        },
-        onDeviceChange: (specs) => {
-          this.deviceSpecs = specs;
-          this.callbacks.onDeviceDetected?.(specs);
-        }
-      });
-
-      // Initialize microphone
-      await this.micController.initialize();
-
-      // 🔧 CRITICAL DEBUG: Log actual minVolumeAbsolute before PitchDetector creation
-      console.log(`🔧 [CRITICAL] Before PitchDetector creation: this.config.minVolumeAbsolute = ${this.config.minVolumeAbsolute}`);
-      console.log(`📱 [CRITICAL] Device: ${this.deviceSpecs?.deviceType}, detectAndOptimizeDevice was called in constructor`);
-
-      // Initialize PitchDetector with DeviceDetection optimized settings
-      const pitchDetectorConfig = {
-        clarityThreshold: this.config.clarityThreshold,
-        // ⬇️ ログ提案: デバイス固有のnoiseGate値をminVolumeAbsoluteとして渡す
-        minVolumeAbsolute: this.deviceSpecs?.noiseGate ?? this.config.minVolumeAbsolute,
-        fftSize: this.config.fftSize,
-        smoothing: this.deviceSpecs?.smoothingFactor ?? this.config.smoothing,  // v1.1.8: Use DeviceDetection smoothing
-        deviceOptimization: this.config.deviceOptimization
-      };
-
-      console.log(`🔧 [CRITICAL] PitchDetector config object:`, pitchDetectorConfig);
-
-      this.pitchDetector = new PitchDetector(this.audioManager, pitchDetectorConfig);
-
-      // Set up PitchDetector callbacks
-      this.pitchDetector.setCallbacks({
-        onPitchUpdate: (result) => {
-          this.handlePitchUpdate(result);
-        },
-        onError: (error) => {
-          this.handleError(error, 'pitch_detector');
-        },
-        onStateChange: (state) => {
-          this.debugLog('PitchDetector state:', state);
-        }
-      });
-
-      await this.pitchDetector.initialize();
-
-      // 🔧 CRITICAL DEBUG: Verify PitchDetector's actual status after initialization
-      const pitchDetectorStatus = this.pitchDetector.getStatus();
-      console.log(`🔧 [CRITICAL] After PitchDetector initialization - status:`, pitchDetectorStatus);
-      console.log(`🔧 [CRITICAL] PitchDetector componentState:`, pitchDetectorStatus.componentState);
-      console.log(`🔧 [CRITICAL] PitchDetector isInitialized:`, pitchDetectorStatus.isInitialized);
-
-      // ⭐ Register PitchDetector and AudioDetectionComponent with MicrophoneController for unified management
-      if (this.micController && this.pitchDetector) {
-        this.micController.registerDetector(this.pitchDetector);
-        this.micController.registerAudioDetectionComponent(this);
-        this.debugLog('✅ PitchDetector and AudioDetectionComponent registered with MicrophoneController for unified management');
-      }
-
-      // Cache UI elements
-      this.cacheUIElements();
-
-      // Apply device-specific sensitivity
-      if (this.deviceSettings && this.micController) {
-        this.micController.setSensitivity(this.deviceSettings.sensitivityMultiplier);
-        this.debugLog('Applied device-specific sensitivity:', this.deviceSettings.sensitivityMultiplier);
-      }
-
-      this.isInitialized = true;
-      this.updateState('ready');
-      this.debugLog('Initialization complete');
-
-    } catch (error) {
-      const structuredError = this.createStructuredError(error as Error, 'initialization');
-      ErrorMessageBuilder.logError(structuredError, 'AudioDetectionComponent initialization');
-      
-      this.lastError = structuredError;
-      this.updateState('error');
-      
-      throw structuredError;
-    }
-  }
+  async initialize(): Promise<void> {\n    if (this.isInitialized) {\n      this.debugLog('Already initialized');\n      return;\n    }\n\n    try {\n      this.updateState('initializing');\n      this.debugLog('Starting initialization...');\n\n      // Initialize MicrophoneController\n      this.micController = new MicrophoneController({\n        audioManager: {\n          sampleRate: 44100,\n          echoCancellation: false,\n          autoGainControl: false\n        },\n        lifecycle: {\n          maxAutoRecoveryAttempts: 3,\n          healthCheckIntervalMs: 1000\n        },\n        notifications: {\n          enabled: this.config.debug\n        }\n      });\n\n      // Set up MicrophoneController callbacks\n      this.micController.setCallbacks({\n        onStateChange: (state) => {\n          this.debugLog('MicrophoneController state:', state);\n        },\n        onError: (error) => {\n          this.handleError(error, 'microphone_controller');\n        },\n        onDeviceChange: (specs) => {\n          this.deviceSpecs = specs;\n          this.callbacks.onDeviceDetected?.(specs);\n        }\n      });\n\n      // Initialize microphone\n      await this.micController.initialize();\n\n      // 🔧 CRITICAL DEBUG: Log DeviceDetection values\n      console.log(`🔧 [CRITICAL] DeviceDetection values:`);\n      console.log(`📱 Device: ${this.deviceSpecs?.deviceType}`);\n      console.log(`🎯 noiseGate: ${this.deviceSpecs?.noiseGate}`);\n      console.log(`🔊 volumeMultiplier: ${this.deviceSpecs?.volumeMultiplier}`);\n      console.log(`📊 smoothingFactor: ${this.deviceSpecs?.smoothingFactor}`);\n\n      // Initialize PitchDetector with DeviceDetection settings (NO custom calculations)\n      const pitchDetectorConfig = {\n        clarityThreshold: this.config.clarityThreshold,\n        // ⬇️ DeviceDetectionから取得したnoiseGate値をそのまま渡す\n        minVolumeAbsolute: this.deviceSpecs?.noiseGate ?? this.config.minVolumeAbsolute,\n        fftSize: this.config.fftSize,\n        smoothing: this.deviceSpecs?.smoothingFactor ?? this.config.smoothing,\n        deviceOptimization: this.config.deviceOptimization\n      };\n\n      console.log(`🔧 [CRITICAL] PitchDetector config object:`, pitchDetectorConfig);\n\n      this.pitchDetector = new PitchDetector(this.audioManager, pitchDetectorConfig);\n\n      // Set up PitchDetector callbacks\n      this.pitchDetector.setCallbacks({\n        onPitchUpdate: (result) => {\n          this.handlePitchUpdate(result);\n        },\n        onError: (error) => {\n          this.handleError(error, 'pitch_detector');\n        },\n        onStateChange: (state) => {\n          this.debugLog('PitchDetector state:', state);\n        }\n      });\n\n      await this.pitchDetector.initialize();\n\n      // 🔧 CRITICAL DEBUG: Verify PitchDetector's actual status after initialization\n      const pitchDetectorStatus = this.pitchDetector.getStatus();\n      console.log(`🔧 [CRITICAL] After PitchDetector initialization - status:`, pitchDetectorStatus);\n      console.log(`🔧 [CRITICAL] PitchDetector componentState:`, pitchDetectorStatus.componentState);\n      console.log(`🔧 [CRITICAL] PitchDetector isInitialized:`, pitchDetectorStatus.isInitialized);\n\n      // ⭐ Register PitchDetector and AudioDetectionComponent with MicrophoneController for unified management\n      if (this.micController && this.pitchDetector) {\n        this.micController.registerDetector(this.pitchDetector);\n        this.micController.registerAudioDetectionComponent(this);\n        this.debugLog('✅ PitchDetector and AudioDetectionComponent registered with MicrophoneController for unified management');\n      }\n\n      // Cache UI elements\n      this.cacheUIElements();\n\n      // Apply device-specific sensitivity from DeviceDetection\n      if (this.deviceSpecs && this.micController) {\n        this.micController.setSensitivity(this.deviceSpecs.sensitivity);\n        this.debugLog('Applied DeviceDetection sensitivity:', this.deviceSpecs.sensitivity);\n      }\n\n      this.isInitialized = true;\n      this.updateState('ready');\n      this.debugLog('Initialization complete');\n\n    } catch (error) {\n      const structuredError = this.createStructuredError(error as Error, 'initialization');\n      ErrorMessageBuilder.logError(structuredError, 'AudioDetectionComponent initialization');\n      \n      this.lastError = structuredError;\n      this.updateState('error');\n      \n      throw structuredError;\n    }\n  }
 
   /**
    * 音声検出イベント用のコールバック関数を設定します
@@ -979,39 +868,7 @@ export class AudioDetectionComponent {
    * Detects device type and applies optimization settings
    * @private
    */
-  private detectAndOptimizeDevice(): void {
-    this.deviceSpecs = DeviceDetection.getDeviceSpecs();
-    
-    // v1.2.9: 確定値に復元 - 正常動作していた設定値
-    const deviceSettingsMap: Record<string, DeviceSettings> = {
-      PC: {
-        volumeMultiplier: 3.0,        // 📊 v1.2.9確定値に復元
-        sensitivityMultiplier: 2.5,
-        minVolumeAbsolute: this.deviceSpecs.noiseGate * 0.25  // Based on DeviceDetection noiseGate
-      },
-      iPhone: {
-        volumeMultiplier: 7.5,        // ✅ 最適化完了 (ユーザー確認済み)
-        sensitivityMultiplier: 3.5,
-        minVolumeAbsolute: this.deviceSpecs.noiseGate * 0.15  // ノイズゲート最適化
-      },
-      iPad: {
-        volumeMultiplier: 20.0,       // 📈 調整: 15.0→20.0 (50%→67%目標)
-        sensitivityMultiplier: 5.0,
-        minVolumeAbsolute: this.deviceSpecs.noiseGate * 0.10  // 📈 ノイズゲート緩和済み
-      }
-    };
-
-    this.deviceSettings = deviceSettingsMap[this.deviceSpecs.deviceType] || deviceSettingsMap.PC;
-
-    // 📊 ログ分析提案実装: 固定設定を削除し、DeviceDetectionの設定のみを使用
-    console.log(`🔧 [DeviceOptimization] Applying device-specific noiseGate: ${this.deviceSpecs.deviceType} = ${this.deviceSpecs.noiseGate} (${(this.deviceSpecs.noiseGate * 100).toFixed(1)}% threshold)`);
-    console.log(`📊 [DeviceAnalysis] Expected thresholds - PC: 2.0% (10%), iPhone: 1.0% (5%), iPad: 1.5% (7.5%)`);
-    
-    this.debugLog('Device optimization applied:', {
-      device: this.deviceSpecs.deviceType,
-      settings: this.deviceSettings
-    });
-  }
+  private detectAndOptimizeDevice(): void {\n    this.deviceSpecs = DeviceDetection.getDeviceSpecs();\n    \n    // ⬇️ 独自のdeviceSettingsMapを削除し、deviceSpecsを直接利用するように変更\n    // DeviceDetection.ts が唯一の情報源となる\n    \n    console.log(`🔧 [DeviceOptimization] Using DeviceDetection values directly:`);\n    console.log(`📱 Device: ${this.deviceSpecs.deviceType}`);\n    console.log(`🎯 noiseGate: ${this.deviceSpecs.noiseGate} (${(this.deviceSpecs.noiseGate * 100).toFixed(2)}% threshold)`);\n    console.log(`🔊 volumeMultiplier: ${this.deviceSpecs.volumeMultiplier}`);\n    console.log(`🎤 sensitivity: ${this.deviceSpecs.sensitivity}`);\n    console.log(`📊 smoothingFactor: ${this.deviceSpecs.smoothingFactor}`);\n    \n    this.debugLog('Device optimization applied:', {\n      device: this.deviceSpecs.deviceType,\n      settings: this.deviceSpecs // ⬅️ deviceSettingsではなくdeviceSpecsを参照\n    });\n  }
 
   /**
    * Caches UI elements for efficient updates
@@ -1242,33 +1099,7 @@ export class AudioDetectionComponent {
    * @since v1.2.0 デバイス固有音量調整システム導入
    * @see {@link detectAndOptimizeDevice} デバイス設定の決定方法
    */
-  private _getProcessedResult(rawResult: PitchDetectionResult | null): PitchDetectionResult | null {
-    if (!rawResult) return null;
-
-    // 元のオブジェクトを変更しないようにコピーを作成
-    const processedResult = { ...rawResult };
-
-    // デバイスごとの補正係数を適用
-    const volumeMultiplier = this.deviceSettings?.volumeMultiplier ?? 1.0;
-    const finalVolume = rawResult.volume * volumeMultiplier;
-    
-    // 🔍 v1.2.1.20: 全デバイスでvolumeMultiplier処理をログ出力
-    if (rawResult.volume > 0.1) {
-      console.log(`📊 [VolumeAdjustment] Device: ${this.deviceSpecs?.deviceType}, Raw: ${rawResult.volume.toFixed(2)}%, Multiplier: ${volumeMultiplier}, Final: ${Math.min(100, Math.max(0, finalVolume)).toFixed(2)}%`);
-      console.log(`🔍 [CRITICAL] _getProcessedResult details:`, {
-        inputVolume: rawResult.volume,
-        deviceType: this.deviceSpecs?.deviceType,
-        volumeMultiplier: volumeMultiplier,
-        calculatedFinal: finalVolume,
-        clampedFinal: Math.min(100, Math.max(0, finalVolume))
-      });
-    }
-    
-    // 最終的な音量を0-100の範囲に丸めて、結果オブジェクトを更新
-    processedResult.volume = Math.min(100, Math.max(0, finalVolume));
-
-    return processedResult;
-  }
+  private _getProcessedResult(rawResult: PitchDetectionResult | null): PitchDetectionResult | null {\n    if (!rawResult) return null;\n\n    // 元のオブジェクトを変更しないようにコピーを作成\n    const processedResult = { ...rawResult };\n\n    // ⬇️ deviceSettingsではなくdeviceSpecsからvolumeMultiplierを取得\n    const volumeMultiplier = this.deviceSpecs?.volumeMultiplier ?? 1.0;\n    const finalVolume = rawResult.volume * volumeMultiplier;\n    \n    // 🔍 v1.2.1.20: 全デバイスでvolumeMultiplier処理をログ出力\n    if (rawResult.volume > 0.1) {\n      console.log(`📊 [VolumeAdjustment] Device: ${this.deviceSpecs?.deviceType}, Raw: ${rawResult.volume.toFixed(2)}%, Multiplier: ${volumeMultiplier}, Final: ${Math.min(100, Math.max(0, finalVolume)).toFixed(2)}%`);\n      console.log(`🔍 [CRITICAL] _getProcessedResult details:`, {\n        inputVolume: rawResult.volume,\n        deviceType: this.deviceSpecs?.deviceType,\n        volumeMultiplier: volumeMultiplier,\n        calculatedFinal: finalVolume,\n        clampedFinal: Math.min(100, Math.max(0, finalVolume))\n      });\n    }\n    \n    // 最終的な音量を0-100の範囲に丸めて、結果オブジェクトを更新\n    processedResult.volume = Math.min(100, Math.max(0, finalVolume));\n\n    return processedResult;\n  }
 
   /**
    * Updates component state and notifies callbacks
