@@ -988,10 +988,10 @@ export class AudioDetectionComponent {
 
     this.deviceSettings = deviceSettingsMap[this.deviceSpecs.deviceType] || deviceSettingsMap.PC;
     
-    // 🔧 v1.2.9 iPhone専用ノイズカット強化: 15%閾値でより厳格なノイズブロック
+    // 🔧 v1.2.9 iPhone専用ノイズカット調整: 12%閾値で適切なバランス
     if (this.deviceSpecs.deviceType === 'iPhone') {
-      this.config.minVolumeAbsolute = 0.030;  // iPhone: 15%閾値（環境ノイズを確実にブロック）
-      console.log(`📱 [iPhone Enhancement] minVolumeAbsolute set to ${this.config.minVolumeAbsolute} (15% threshold for enhanced noise blocking)`);
+      this.config.minVolumeAbsolute = 0.024;  // iPhone: 12%閾値（ノイズブロック + 音量バー動作のバランス）
+      console.log(`📱 [iPhone Enhancement] minVolumeAbsolute set to ${this.config.minVolumeAbsolute} (12% threshold for balanced noise blocking)`);
     } else {
       console.log(`🔧 [DeviceOptimization] minVolumeAbsolute preserved at library default: ${this.config.minVolumeAbsolute}`);
     }

@@ -5132,7 +5132,7 @@ const j = class j {
         // 📈 ノイズゲート緩和済み
       }
     };
-    this.deviceSettings = e[this.deviceSpecs.deviceType] || e.PC, this.deviceSpecs.deviceType === "iPhone" ? (this.config.minVolumeAbsolute = 0.03, console.log(`📱 [iPhone Enhancement] minVolumeAbsolute set to ${this.config.minVolumeAbsolute} (15% threshold for enhanced noise blocking)`)) : console.log(`🔧 [DeviceOptimization] minVolumeAbsolute preserved at library default: ${this.config.minVolumeAbsolute}`), this.debugLog("Device optimization applied:", {
+    this.deviceSettings = e[this.deviceSpecs.deviceType] || e.PC, this.deviceSpecs.deviceType === "iPhone" ? (this.config.minVolumeAbsolute = 0.024, console.log(`📱 [iPhone Enhancement] minVolumeAbsolute set to ${this.config.minVolumeAbsolute} (12% threshold for balanced noise blocking)`)) : console.log(`🔧 [DeviceOptimization] minVolumeAbsolute preserved at library default: ${this.config.minVolumeAbsolute}`), this.debugLog("Device optimization applied:", {
       device: this.deviceSpecs.deviceType,
       settings: this.deviceSettings
     });
