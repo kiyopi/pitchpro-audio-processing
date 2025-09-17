@@ -988,10 +988,13 @@ export class AudioDetectionComponent {
 
     this.deviceSettings = deviceSettingsMap[this.deviceSpecs.deviceType] || deviceSettingsMap.PC;
     
-    // 🔧 v1.2.9 CRITICAL FIX: ライブラリのデフォルト値0.020を保持し、デバイス特化計算値で上書きしない
-    // NOTE: this.deviceSettings.minVolumeAbsolute は環境音声に基づく過度に低い値(0.00225)のため使用しない
-    // デフォルト0.020 = 10%閾値により環境ノイズ(3.8%-6.2%)を確実にブロック
-    console.log(`🔧 [DeviceOptimization] minVolumeAbsolute preserved at library default: ${this.config.minVolumeAbsolute} (device calculated: ${this.deviceSettings.minVolumeAbsolute})`);
+    // 🔧 v1.2.9 iPhone専用ノイズカット強化: 15%閾値でより厳格なノイズブロック
+    if (this.deviceSpecs.deviceType === 'iPhone') {
+      this.config.minVolumeAbsolute = 0.030;  // iPhone: 15%閾値（環境ノイズを確実にブロック）
+      console.log(`📱 [iPhone Enhancement] minVolumeAbsolute set to ${this.config.minVolumeAbsolute} (15% threshold for enhanced noise blocking)`);
+    } else {
+      console.log(`🔧 [DeviceOptimization] minVolumeAbsolute preserved at library default: ${this.config.minVolumeAbsolute}`);
+    }
     // this.config.minVolumeAbsolute = this.deviceSettings.minVolumeAbsolute;  // ❌ 修正: この行をコメントアウト
     
     this.debugLog('Device optimization applied:', {
