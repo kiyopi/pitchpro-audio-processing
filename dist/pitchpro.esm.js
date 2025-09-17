@@ -5132,7 +5132,7 @@ const j = class j {
         // 📈 ノイズゲート緩和済み
       }
     };
-    this.deviceSettings = e[this.deviceSpecs.deviceType] || e.PC, this.config.minVolumeAbsolute = this.deviceSettings.minVolumeAbsolute, this.debugLog("Device optimization applied:", {
+    this.deviceSettings = e[this.deviceSpecs.deviceType] || e.PC, console.log(`🔧 [DeviceOptimization] minVolumeAbsolute preserved at library default: ${this.config.minVolumeAbsolute} (device calculated: ${this.deviceSettings.minVolumeAbsolute})`), this.debugLog("Device optimization applied:", {
       device: this.deviceSpecs.deviceType,
       settings: this.deviceSettings
     });

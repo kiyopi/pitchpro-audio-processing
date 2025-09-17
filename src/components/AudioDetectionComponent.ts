@@ -988,8 +988,11 @@ export class AudioDetectionComponent {
 
     this.deviceSettings = deviceSettingsMap[this.deviceSpecs.deviceType] || deviceSettingsMap.PC;
     
-    // v1.1.8: Apply DeviceDetection optimized volume threshold
-    this.config.minVolumeAbsolute = this.deviceSettings.minVolumeAbsolute;
+    // 🔧 v1.2.9 CRITICAL FIX: ライブラリのデフォルト値0.020を保持し、デバイス特化計算値で上書きしない
+    // NOTE: this.deviceSettings.minVolumeAbsolute は環境音声に基づく過度に低い値(0.00225)のため使用しない
+    // デフォルト0.020 = 10%閾値により環境ノイズ(3.8%-6.2%)を確実にブロック
+    console.log(`🔧 [DeviceOptimization] minVolumeAbsolute preserved at library default: ${this.config.minVolumeAbsolute} (device calculated: ${this.deviceSettings.minVolumeAbsolute})`);
+    // this.config.minVolumeAbsolute = this.deviceSettings.minVolumeAbsolute;  // ❌ 修正: この行をコメントアウト
     
     this.debugLog('Device optimization applied:', {
       device: this.deviceSpecs.deviceType,
