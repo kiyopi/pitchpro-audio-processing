@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 PitchPro デバッグ・初期化テスト</title>
+
+    <!-- 強力なキャッシュ回避 -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1e1e1e;
+            color: #ffffff;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #2d2d30;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #007ACC;
+            border-radius: 8px;
+        }
+
+        .step-section {
+            background: #252526;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #007ACC;
+        }
+
+        .step-section.success {
+            border-left-color: #4CAF50;
+            background: #1e3a1e;
+        }
+
+        .step-section.error {
+            border-left-color: #F44336;
+            background: #3a1e1e;
+        }
+
+        .step-section.warning {
+            border-left-color: #FF9800;
+            background: #3a2e1e;
+        }
+
+        .log-container {
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-size: 12px;
+            margin: 10px 0;
+        }
+
+        .log-entry {
+            margin: 3px 0;
+            padding: 3px 8px;
+            border-radius: 3px;
+        }
+
+        .log-success { background: rgba(76,175,80,0.2); color: #4CAF50; }
+        .log-error { background: rgba(244,67,54,0.2); color: #F44336; }
+        .log-warning { background: rgba(255,152,0,0.2); color: #FF9800; }
+        .log-info { background: rgba(33,150,243,0.2); color: #2196F3; }
+        .log-debug { background: rgba(156,39,176,0.2); color: #9C27B0; }
+
+        button {
+            background: #007ACC;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+
+        button:hover {
+            background: #005a9e;
+        }
+
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+
+        .value-display {
+            background: #333;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 5px 0;
+            font-family: monospace;
+        }
+
+        .highlight {
+            background: #FFD700;
+            color: #000;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 PitchPro デバッグ・初期化テスト</h1>
+            <p>初期化問題の詳細診断と解決</p>
+        </div>
+
+        <div id="step1" class="step-section">
+            <h3>ステップ1: ライブラリ読み込み</h3>
+            <div id="step1Status">待機中...</div>
+        </div>
+
+        <div id="step2" class="step-section">
+            <h3>ステップ2: ブラウザ互換性チェック</h3>
+            <div id="step2Status">待機中...</div>
+        </div>
+
+        <div id="step3" class="step-section">
+            <h3>ステップ3: AudioManager初期化</h3>
+            <div id="step3Status">待機中...</div>
+        </div>
+
+        <div id="step4" class="step-section">
+            <h3>ステップ4: AudioDetectionComponent初期化</h3>
+            <div id="step4Status">待機中...</div>
+        </div>
+
+        <div class="step-section">
+            <h3>🎮 手動テスト</h3>
+            <button id="startManualTest" onclick="runManualTest()" disabled>手動初期化テスト実行</button>
+            <button onclick="clearLogs()">ログクリア</button>
+            <button onclick="copyLogs()">ログコピー</button>
+        </div>
+
+        <div class="step-section">
+            <h3>📋 詳細ログ</h3>
+            <div id="logContainer" class="log-container">
+                <!-- ログがここに表示されます -->
+            </div>
+        </div>
+
+        <div id="configSection" class="step-section" style="display: none;">
+            <h3>⚙️ 設定値確認</h3>
+            <div id="configDisplay">
+                <!-- 設定値がここに表示されます -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let logBuffer = [];
+        let currentStep = 0;
+        let PitchProLib = null;
+        let audioManager = null;
+        let audioDetection = null;
+
+        function addLog(level, message, details = null) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logContainer = document.getElementById('logContainer');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${level}`;
+
+            let logText = `[${timestamp}] [${level.toUpperCase()}] ${message}`;
+            if (details) {
+                logText += '\n  ' + JSON.stringify(details, null, 2);
+            }
+
+            entry.textContent = logText;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+
+            logBuffer.push(logText);
+            console.log(`[PitchPro Debug] ${logText}`);
+        }
+
+        function updateStepStatus(stepNum, status, className = '') {
+            const stepElement = document.getElementById(`step${stepNum}`);
+            const statusElement = document.getElementById(`step${stepNum}Status`);
+
+            if (className) {
+                stepElement.className = `step-section ${className}`;
+            }
+            statusElement.textContent = status;
+        }
+
+        function clearLogs() {
+            document.getElementById('logContainer').innerHTML = '';
+            logBuffer = [];
+            addLog('info', 'ログクリア完了');
+        }
+
+        function copyLogs() {
+            const logText = logBuffer.join('\n');
+            navigator.clipboard.writeText(logText).then(() => {
+                addLog('success', 'ログをクリップボードにコピーしました');
+            }).catch(err => {
+                addLog('error', 'ログコピーに失敗', err.message);
+            });
+        }
+
+        // ステップ1: ライブラリ読み込み
+        function loadLibrary() {
+            addLog('info', 'ライブラリ読み込み開始');
+            updateStepStatus(1, '読み込み中...');
+
+            const timestamp = Date.now();
+            const script = document.createElement('script');
+
+            // GitHub Pages用のパス
+            const isGitHubPages = window.location.hostname.includes('github.io');
+            const basePath = isGitHubPages ? 'https://kiyopi.github.io/pitchpro-audio-processing/' : './';
+
+            script.src = `${basePath}dist/pitchpro.umd.js?v=${timestamp}&r=${Math.random()}`;
+
+            script.onload = function() {
+                addLog('success', 'ライブラリ読み込み完了', { url: script.src });
+                updateStepStatus(1, '✅ 読み込み完了', 'success');
+
+                // ライブラリオブジェクトの確認
+                if (typeof window.PitchPro !== 'undefined') {
+                    PitchProLib = window.PitchPro;
+                    addLog('success', 'PitchPro オブジェクト確認', Object.keys(PitchProLib));
+                } else {
+                    addLog('error', 'PitchPro オブジェクトが見つかりません');
+                    addLog('debug', '利用可能なグローバルオブジェクト',
+                        Object.keys(window).filter(key => key.toLowerCase().includes('pitch') || key.toLowerCase().includes('audio'))
+                    );
+                }
+
+                runStep2();
+            };
+
+            script.onerror = function(error) {
+                addLog('error', 'ライブラリ読み込み失敗', {
+                    url: script.src,
+                    error: error.message || 'Unknown error'
+                });
+                updateStepStatus(1, '❌ 読み込み失敗', 'error');
+            };
+
+            document.head.appendChild(script);
+        }
+
+        // ステップ2: ブラウザ互換性チェック
+        function runStep2() {
+            addLog('info', 'ブラウザ互換性チェック開始');
+            updateStepStatus(2, 'チェック中...');
+
+            const compatibility = {
+                userAgent: navigator.userAgent,
+                audioContext: !!(window.AudioContext || window.webkitAudioContext),
+                mediaDevices: !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia),
+                promises: typeof Promise !== 'undefined',
+                async: typeof async !== 'undefined'
+            };
+
+            addLog('info', 'ブラウザ情報', compatibility);
+
+            if (!compatibility.audioContext) {
+                addLog('error', 'AudioContext が利用できません');
+                updateStepStatus(2, '❌ AudioContext未対応', 'error');
+                return;
+            }
+
+            if (!compatibility.mediaDevices) {
+                addLog('error', 'MediaDevices API が利用できません');
+                updateStepStatus(2, '❌ MediaDevices未対応', 'error');
+                return;
+            }
+
+            addLog('success', 'ブラウザ互換性チェック完了');
+            updateStepStatus(2, '✅ 互換性OK', 'success');
+
+            runStep3();
+        }
+
+        // ステップ3: AudioManager初期化
+        async function runStep3() {
+            addLog('info', 'AudioManager初期化開始');
+            updateStepStatus(3, '初期化中...');
+
+            try {
+                if (!PitchProLib || !PitchProLib.AudioManager) {
+                    throw new Error('AudioManager クラスが見つかりません');
+                }
+
+                audioManager = new PitchProLib.AudioManager();
+                addLog('success', 'AudioManager インスタンス作成完了');
+
+                // 初期化の実行
+                await audioManager.initialize();
+                addLog('success', 'AudioManager初期化完了');
+                updateStepStatus(3, '✅ 初期化完了', 'success');
+
+                runStep4();
+
+            } catch (error) {
+                addLog('error', 'AudioManager初期化失敗', {
+                    name: error.name,
+                    message: error.message,
+                    stack: error.stack
+                });
+                updateStepStatus(3, `❌ 初期化失敗: ${error.message}`, 'error');
+
+                // よくある問題の診断
+                if (error.message.includes('Permission denied') || error.name === 'NotAllowedError') {
+                    addLog('warning', 'マイクアクセス許可が必要です');
+                    updateStepStatus(3, '⚠️ マイクアクセス許可が必要', 'warning');
+                } else if (error.message.includes('AudioContext')) {
+                    addLog('warning', 'AudioContext関連のエラーです');
+                } else if (error.message.includes('getUserMedia')) {
+                    addLog('warning', 'getUserMedia関連のエラーです');
+                }
+            }
+        }
+
+        // ステップ4: AudioDetectionComponent初期化
+        async function runStep4() {
+            addLog('info', 'AudioDetectionComponent初期化開始');
+            updateStepStatus(4, '初期化中...');
+
+            try {
+                if (!PitchProLib || !PitchProLib.AudioDetectionComponent) {
+                    throw new Error('AudioDetectionComponent クラスが見つかりません');
+                }
+
+                // 設定上書きなしで初期化
+                audioDetection = new PitchProLib.AudioDetectionComponent({
+                    autoUpdateUI: false,
+                    debug: true
+                });
+
+                await audioDetection.initialize();
+                addLog('success', 'AudioDetectionComponent初期化完了');
+                updateStepStatus(4, '✅ 初期化完了', 'success');
+
+                // 設定値の表示
+                displayConfig();
+
+                // 手動テストボタンを有効化
+                document.getElementById('startManualTest').disabled = false;
+
+            } catch (error) {
+                addLog('error', 'AudioDetectionComponent初期化失敗', {
+                    name: error.name,
+                    message: error.message,
+                    stack: error.stack
+                });
+                updateStepStatus(4, `❌ 初期化失敗: ${error.message}`, 'error');
+            }
+        }
+
+        function displayConfig() {
+            if (!audioDetection) return;
+
+            const config = audioDetection.config;
+            const deviceSpecs = audioDetection.deviceSpecs;
+
+            const configHtml = `
+                <div class="value-display">
+                    <strong>minVolumeAbsolute:</strong> <span class="highlight">${config.minVolumeAbsolute}</span><br>
+                    <strong>ノイズゲート閾値:</strong> <span class="highlight">${(config.minVolumeAbsolute * 500).toFixed(1)}%</span><br>
+                    <strong>デバイス:</strong> <span class="highlight">${deviceSpecs.deviceType}</span><br>
+                    <strong>感度:</strong> <span class="highlight">${deviceSpecs.sensitivity}x</span><br>
+                    <strong>clarityThreshold:</strong> <span class="highlight">${config.clarityThreshold}</span>
+                </div>
+            `;
+
+            document.getElementById('configDisplay').innerHTML = configHtml;
+            document.getElementById('configSection').style.display = 'block';
+
+            addLog('info', '設定値確認完了', {
+                minVolumeAbsolute: config.minVolumeAbsolute,
+                thresholdPercent: config.minVolumeAbsolute * 500,
+                deviceType: deviceSpecs.deviceType,
+                sensitivity: deviceSpecs.sensitivity
+            });
+        }
+
+        async function runManualTest() {
+            addLog('info', '手動テスト開始');
+
+            try {
+                if (!audioDetection) {
+                    throw new Error('AudioDetectionComponent が初期化されていません');
+                }
+
+                const started = audioDetection.startDetection();
+                if (started) {
+                    addLog('success', 'ピッチ検出開始');
+
+                    // 3秒後に停止
+                    setTimeout(() => {
+                        audioDetection.stopDetection();
+                        addLog('info', 'ピッチ検出停止');
+                    }, 3000);
+                } else {
+                    addLog('error', 'ピッチ検出開始に失敗');
+                }
+
+            } catch (error) {
+                addLog('error', '手動テスト実行エラー', {
+                    message: error.message,
+                    stack: error.stack
+                });
+            }
+        }
+
+        // 初期化開始
+        addLog('info', 'デバッグテスト開始');
+        loadLibrary();
+    </script>
+</body>
+</html>

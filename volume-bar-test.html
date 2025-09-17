@@ -337,7 +337,7 @@
                 addLog('success', '✅ AudioManager初期化完了');
 
                 // AudioDetectionComponent初期化（設定上書きなし！）
-                audioDetection = new PitchProLib.AudioDetectionComponent(audioManager, {
+                audioDetection = new PitchProLib.AudioDetectionComponent({
                     // minVolumeAbsoluteは指定しない - ライブラリのデフォルト値を使用
                     autoUpdateUI: false,
                     debug: true
