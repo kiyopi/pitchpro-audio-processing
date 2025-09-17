@@ -134,7 +134,7 @@ export class DeviceDetection {
       case 'PC':
       default:
         return {
-          sensitivity: 1.8,        // Optimized sensitivity for PC microphones (上昇速度調整)
+          sensitivity: 1.8,        // 📊 v1.2.9確定値に復元 (SCALING_FACTOR=123.46)
           noiseGate: 0.035,        // v1.1.8: Increased noise gate for better ambient noise filtering
           divisor: 6.0,            // Different volume calculation for PC
           gainCompensation: 1.0,   // No additional gain compensation needed

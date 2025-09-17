@@ -324,7 +324,7 @@ export class AudioDetectionComponent {
       noteSelector: config.noteSelector,
       
       clarityThreshold: config.clarityThreshold ?? 0.4,
-      minVolumeAbsolute: config.minVolumeAbsolute ?? 0.003,
+      minVolumeAbsolute: config.minVolumeAbsolute ?? 0.020, // 🔧 環境適応ノイズゲート: 10%閾値でマイクノイズを確実にブロック
       fftSize: config.fftSize ?? 4096,
       smoothing: config.smoothing ?? 0.1,
       
@@ -967,10 +967,10 @@ export class AudioDetectionComponent {
   private detectAndOptimizeDevice(): void {
     this.deviceSpecs = DeviceDetection.getDeviceSpecs();
     
-    // v1.2.0: iPhone/iPad音量最適化 - 段階的調整 (普通の声60-80%目標)
+    // v1.2.9: 確定値に復元 - 正常動作していた設定値
     const deviceSettingsMap: Record<string, DeviceSettings> = {
       PC: {
-        volumeMultiplier: 3.0,        // ✅ 最適化済み (v1.2.9)
+        volumeMultiplier: 3.0,        // 📊 v1.2.9確定値に復元
         sensitivityMultiplier: 2.5,
         minVolumeAbsolute: this.deviceSpecs.noiseGate * 0.25  // Based on DeviceDetection noiseGate
       },
@@ -1236,9 +1236,16 @@ export class AudioDetectionComponent {
     const volumeMultiplier = this.deviceSettings?.volumeMultiplier ?? 1.0;
     const finalVolume = rawResult.volume * volumeMultiplier;
     
-    // v1.2.0: デバッグログ追加 - iPhone/iPad音量調整の効果確認
-    if (this.deviceSpecs?.deviceType !== 'PC' && rawResult.volume > 0.1) {
-      console.log(`📱 [VolumeAdjustment] Device: ${this.deviceSpecs?.deviceType}, Raw: ${rawResult.volume.toFixed(2)}%, Multiplier: ${volumeMultiplier}, Final: ${Math.min(100, Math.max(0, finalVolume)).toFixed(2)}%`);
+    // 🔍 v1.2.1.20: 全デバイスでvolumeMultiplier処理をログ出力
+    if (rawResult.volume > 0.1) {
+      console.log(`📊 [VolumeAdjustment] Device: ${this.deviceSpecs?.deviceType}, Raw: ${rawResult.volume.toFixed(2)}%, Multiplier: ${volumeMultiplier}, Final: ${Math.min(100, Math.max(0, finalVolume)).toFixed(2)}%`);
+      console.log(`🔍 [CRITICAL] _getProcessedResult details:`, {
+        inputVolume: rawResult.volume,
+        deviceType: this.deviceSpecs?.deviceType,
+        volumeMultiplier: volumeMultiplier,
+        calculatedFinal: finalVolume,
+        clampedFinal: Math.min(100, Math.max(0, finalVolume))
+      });
     }
     
     // 最終的な音量を0-100の範囲に丸めて、結果オブジェクトを更新

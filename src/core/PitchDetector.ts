@@ -298,7 +298,7 @@ export class PitchDetector {
       fftSize: 4096,
       smoothing: 0.9, // 揺れ防止のため強化 (0.1 → 0.9)
       clarityThreshold: 0.4,    // 0.8から0.4に現実的な値に変更
-      minVolumeAbsolute: 0.010, // v1.1.8: 音程変化対応極限調整 (0.011→0.010)
+      minVolumeAbsolute: 0.020, // 🔧 環境適応ノイズゲート: 10%閾値でマイクノイズを確実にブロック
       noiseGate: 0.02,          // v1.1.8: デフォルトnoiseGate値
       deviceOptimization: true, // v1.1.8: デバイス最適化デフォルト有効
       ...config
@@ -651,7 +651,7 @@ export class PitchDetector {
     // 🔧 動的SCALING_FACTOR計算 (sensitivity値に基づく)
     const currentSensitivity = platformSpecs.sensitivity;
     const SCALING_FACTOR = 400 / (currentSensitivity * currentSensitivity);
-    const NOISE_GATE_SCALING_FACTOR = 1500; // ノイズゲート閾値計算用係数 
+    const NOISE_GATE_SCALING_FACTOR = 500; // 📊 v1.2.9確定値: 理想の1.5%閾値（テスト導出最適値）
     
     // ハードクリッピング（シンプルなリニア変換）
     const rawVolumeValue = adjustedRms * SCALING_FACTOR;
@@ -688,13 +688,13 @@ export class PitchDetector {
     }
     
     // ★★★ ノイズゲート処理の追加 ★★★
-    const NOISE_GATE_THRESHOLD = this.config.minVolumeAbsolute * NOISE_GATE_SCALING_FACTOR; // 0.015 * 1500 = 22.5%
+    const NOISE_GATE_THRESHOLD = this.config.minVolumeAbsolute * NOISE_GATE_SCALING_FACTOR; // 📊 v1.2.1.22: 200倍で1.75%閾値（理想の1.5%に近似）
     const isSignalBelowNoiseGate = volumePercent < NOISE_GATE_THRESHOLD; // 平滑化前の値で判定
     
     // ノイズゲート判定のデバッグログ
     if (IS_DEBUG_MODE) {
       console.log(`[Debug] ノイズゲート判定:`);
-      console.log(`  閾値: ${NOISE_GATE_THRESHOLD.toFixed(2)}%`);
+      console.log(`  閾値: ${NOISE_GATE_THRESHOLD.toFixed(2)}% (minVolumeAbsolute=${this.config.minVolumeAbsolute} × ${NOISE_GATE_SCALING_FACTOR})`);
       console.log(`  現在値: ${volumePercent.toFixed(2)}%`);
       console.log(`  判定: ${isSignalBelowNoiseGate ? 'ノイズとしてブロック' : '有効信号として通過'}`);
     }
@@ -761,10 +761,10 @@ export class PitchDetector {
     
     // Human vocal range filtering (practical adjustment)
     // Optimized for actual human voice range:
-    // - Low range: 65Hz and above (C2 and above, considering male lowest vocal range)  
+    // - Low range: 45Hz and above (F1 and above, supporting exceptional bass voices)
     // - High range: 1200Hz and below (practical singing range)
-    // - Exclude extreme low frequency noise (G-1, etc.) reliably
-    const isValidVocalRange = pitch >= 65 && pitch <= 1200;
+    // - Exclude extreme low frequency noise while preserving deep male voices
+    const isValidVocalRange = pitch >= 45 && pitch <= 1200;
     
     // Development-only decision criteria debug logging
     if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {

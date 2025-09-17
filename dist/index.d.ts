@@ -33,7 +33,7 @@ export declare const DEFAULT_CONFIG: {
         readonly fftSize: 4096;
         readonly smoothing: 0.1;
         readonly clarityThreshold: 0.4;
-        readonly minVolumeAbsolute: 0.003;
+        readonly minVolumeAbsolute: 0.02;
     };
     readonly audioManager: {
         readonly sampleRate: 44100;
@@ -43,10 +43,12 @@ export declare const DEFAULT_CONFIG: {
         readonly autoGainControl: false;
     };
     readonly noiseFilter: {
-        readonly highpassFreq: 80;
+        readonly highpassFreq: 50;
         readonly lowpassFreq: 800;
-        readonly notchFreq: 60;
-        readonly Q: 0.7;
+        readonly notchFreq: 50;
+        readonly highpassQ: 0.7;
+        readonly lowpassQ: 0.7;
+        readonly notchQ: 10;
     };
 };
 //# sourceMappingURL=index.d.ts.map

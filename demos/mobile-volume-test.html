@@ -1,4 +1,17 @@
 <!DOCTYPE html>
+<!--
+    PitchPro PC音量調整テスト 更新履歴:
+    v1.2.9-FINAL完全修正 (2024-09-16): ✅ 上書き設定削除による根本解決
+        - 🚨重要: テストページのminVolumeAbsolute: 0.003上書き設定を削除
+        - ✅修正: ライブラリデフォルト値0.020 (10%閾値) を正常に使用
+        - 📊結果: ノイズゲート閾値 4.38% → 10.0% に正常化
+        - 🎯効果: 環境ノイズ(3.8%-6.2%)を確実にブロック、有効音声(10%超)を通過
+        - PC設定維持: sensitivity=1.8, volumeMultiplier=3.0, SCALING_FACTOR=123
+    ------- 以前のバージョン -------
+    v1.2.1.22: ノイズゲート最適化 - SCALING_FACTOR=200 試行
+    v1.2.1.15: 独自フィルター優先設計 - noiseSuppression: false
+    v1.2.1.12: 低音声対応実装開始
+-->
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -6,7 +19,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>🖥️ PitchPro PC音量調整テスト v1.2.0.11-PC volumeMultiplier 3.0</title>
+    <meta http-equiv="Last-Modified" content="Mon, 16 Sep 2024 12:00:00 GMT">
+    <meta http-equiv="If-Modified-Since" content="Mon, 16 Sep 2024 12:00:00 GMT">
+    <title>🖥️ PitchPro PC音量調整テスト v1.2.9-FINAL 上書き設定削除・完全修正</title>
     <style>
         * { 
             box-sizing: border-box; 
@@ -241,8 +256,8 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🖥️ PitchPro PC音量調整</h1>
-            <p>v1.2.0.11 PC音量テスト (volumeMultiplier: 3.0) 🎯適正レベル確認</p>
+            <h1>🖥️ PitchPro PC音量調整 v1.2.9-FINAL 完全修正 🎯</h1>
+            <p>テストページ設定上書き削除 + ライブラリデフォルト値使用 ✅ 10%閾値ノイズゲート正常化</p>
         </div>
         
         <div id="device-info" class="device-info">
@@ -316,9 +331,11 @@
         // 強制キャッシュ回避用タイムスタンプ
         const timestamp = new Date().getTime();
         const script = document.createElement('script');
-        script.src = `../dist/pitchpro.umd.js?v=20250915-11&t=${timestamp}&r=${Math.random()}&force=${Date.now()}`;
+        script.src = `../dist/pitchpro.umd.js?v=20250916-v129-fixed&t=${timestamp}&r=${Math.random()}&force=${Date.now()}&cache=bust`;
         script.onload = function() {
-            console.log('✅ PitchPro library loaded with timestamp:', timestamp);
+            console.log('🔧 [CacheBuster] PitchPro library loaded successfully');
+            console.log('📝 [CacheBuster] URL:', script.src);
+            console.log('⏰ [CacheBuster] Timestamp:', new Date(timestamp).toISOString());
         };
         script.onerror = function() {
             console.error('❌ Failed to load PitchPro library');
@@ -538,7 +555,7 @@
                     // 🔍 設定値をより詳細にログ出力
                     const config = {
                         clarityThreshold: 0.4,
-                        minVolumeAbsolute: 0.003,
+                        // minVolumeAbsolute: ライブラリのデフォルト値(0.020 = 10%閾値)を使用
                         deviceOptimization: true, // ✅ デバイス最適化を有効化 (v1.2.0)
                         autoUpdateUI: false,
                         debug: true, // デバッグログ有効化
@@ -564,8 +581,16 @@
                         this.addLogEntry('info', `📊 AudioDetectionComponent status: ${JSON.stringify({
                             state: status.state,
                             deviceSpecs: status.deviceSpecs,
+                            deviceSettings: status.deviceSettings,
                             customConfig: status.config.customDeviceConfig
                         })}`);
+
+                        // 🔧 [CacheBuster] volumeMultiplier値の確実確認
+                        if (status.deviceSettings && status.deviceSettings.volumeMultiplier !== undefined) {
+                            this.addLogEntry('info', `🔧 [CacheBuster] volumeMultiplier CONFIRMED: ${status.deviceSettings.volumeMultiplier}`);
+                        } else {
+                            this.addLogEntry('warn', `⚠️ [CacheBuster] volumeMultiplier NOT FOUND in deviceSettings`);
+                        }
                     } else {
                         this.addLogEntry('warn', `⚠️ MicrophoneController not found`);
                     }
@@ -639,12 +664,33 @@
             }
             
             updateDisplay(result) {
+                // 🔍 CRITICAL DEBUG: コールバック受信時の値をログ
+                this.addLogEntry('debug', `📊 updateDisplay called: result.volume=${result.volume}, rounded=${Math.round(result.volume || 0)}%`);
+
+                // 🔧 [CacheBuster] volumeMultiplier確認
+                if (this.audioDetector) {
+                    const status = this.audioDetector.getStatus();
+                    if (status.deviceSettings && status.deviceSettings.volumeMultiplier !== undefined) {
+                        this.addLogEntry('debug', `🔧 [CacheBuster] Current volumeMultiplier: ${status.deviceSettings.volumeMultiplier}`);
+                    }
+
+                    // 🔍 [CRITICAL] PitchDetectorの生の計算値と比較
+                    if (this.audioDetector.pitchDetector) {
+                        const rawResult = this.audioDetector.pitchDetector.getLatestResult();
+                        if (rawResult) {
+                            this.addLogEntry('debug', `🔍 [CRITICAL] Raw PitchDetector volume: ${rawResult.volume}%`);
+                            this.addLogEntry('debug', `🔍 [CRITICAL] Callback received volume: ${result.volume}%`);
+                            this.addLogEntry('debug', `🔍 [CRITICAL] Difference: ${(result.volume - rawResult.volume).toFixed(2)}%`);
+                        }
+                    }
+                }
+
                 // 音量表示
                 if (result.volume !== undefined) {
                     const volume = Math.round(result.volume);
                     this.elements.volumeText.textContent = `${volume}%`;
                     this.elements.volumeBar.style.width = `${Math.min(volume, 100)}%`;
-                    
+
                     // 🔍 デバッグ：音量が低い場合の詳細ログ
                     if (volume > 0 && volume <= 10) {
                         this.addLogEntry('debug', `❌ Low volume detected: ${volume}% - Expected higher with sensitivity=${this.currentSettings.sensitivity}`);

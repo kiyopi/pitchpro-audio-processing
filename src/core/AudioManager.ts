@@ -253,23 +253,23 @@ export class AudioManager {
           audio: {
             // Basic settings: Safari WebKit stability focused
             echoCancellation: this.config.echoCancellation,
-            noiseSuppression: this.config.noiseSuppression,
+            noiseSuppression: this.config.noiseSuppression,  // ✅ 設定値を尊重
             autoGainControl: this.config.autoGainControl,
             
-            // HOTFIX: Enhanced AGC disable for all platforms to prevent level drop
+            // ブラウザ固有制御: noiseSuppression設定に基づく条件付き適用
             ...(window as any).chrome && {
-              googAutoGainControl: false,     // Google AGC complete disable
-              googNoiseSuppression: false,    // Google noise suppression disable
-              googEchoCancellation: false,    // Google echo cancellation disable
-              googHighpassFilter: false,      // Google highpass filter disable
-              googTypingNoiseDetection: false, // Typing noise detection disable
-              googBeamforming: false,         // Beamforming disable
+              googAutoGainControl: false,     // AGCは常に無効（音量問題回避）
+              googNoiseSuppression: this.config.noiseSuppression,  // ✅ 設定値に従う
+              googEchoCancellation: this.config.echoCancellation,  // ✅ 設定値に従う
+              googHighpassFilter: false,      // ハイパスフィルターは独自実装を使用
+              googTypingNoiseDetection: this.config.noiseSuppression, // ノイズ抑制と連動
+              googBeamforming: this.config.noiseSuppression,          // ノイズ抑制と連動
             },
             
             // Mozilla-specific constraints
             ...(navigator.userAgent.includes('Firefox')) && {
-              mozAutoGainControl: false,      // Mozilla AGC disable
-              mozNoiseSuppression: false,     // Mozilla noise suppression disable
+              mozAutoGainControl: false,      // AGCは常に無効
+              mozNoiseSuppression: this.config.noiseSuppression,  // ✅ 設定値に従う
             },
             
             // Safari compatibility: Explicit quality settings  
@@ -282,7 +282,10 @@ export class AudioManager {
           }
         };
         
-        console.log('🎤 [AudioManager] Getting MediaStream with Safari-compatible settings:', audioConstraints);
+        console.log('🎤 [AudioManager] Getting MediaStream with noiseSuppression settings:', {
+          noiseSuppression: this.config.noiseSuppression,
+          constraints: audioConstraints
+        });
         this.mediaStream = await navigator.mediaDevices.getUserMedia(audioConstraints);
         console.log('✅ [AudioManager] MediaStream acquisition complete');
         
@@ -293,11 +296,19 @@ export class AudioManager {
             const actualConstraints = audioTrack.getConstraints();
             const actualSettings = audioTrack.getSettings();
             
-            console.log('🔍 [DIAGNOSTIC] Requested autoGainControl:', audioConstraints.audio && (audioConstraints.audio as any).autoGainControl);
+            console.log('🔍 [DIAGNOSTIC] Requested noiseSuppression:', this.config.noiseSuppression);
             console.log('🔍 [DIAGNOSTIC] Actually applied constraints:', actualConstraints);
             console.log('🔍 [DIAGNOSTIC] Actual MediaStream settings:', actualSettings);
             
-            // Critical check: Verify autoGainControl was actually disabled
+            // Critical check: Verify noiseSuppression was applied as requested
+            if (actualSettings.noiseSuppression !== this.config.noiseSuppression) {
+              console.warn('⚠️ [DIAGNOSTIC] noiseSuppression setting mismatch!');
+              console.warn(`⚠️ [DIAGNOSTIC] Requested: ${this.config.noiseSuppression}, Applied: ${actualSettings.noiseSuppression}`);
+            } else {
+              console.log('✅ [DIAGNOSTIC] noiseSuppression successfully applied by browser');
+            }
+            
+            // Check autoGainControl status
             if (actualSettings.autoGainControl === true) {
               console.warn('⚠️ [DIAGNOSTIC] CRITICAL: Browser ignored autoGainControl: false setting!');
               console.warn('⚠️ [DIAGNOSTIC] This explains the gain drift issues - browser is automatically adjusting gain');
@@ -465,10 +476,10 @@ export class AudioManager {
       throw error;
     }
 
-    // 1. Highpass filter (remove low frequency noise: cut below 80Hz)
+    // 1. Highpass filter (remove low frequency noise: cut below 50Hz, 深い男性の声を保護)
     const highpass = this.audioContext.createBiquadFilter();
     highpass.type = 'highpass';
-    highpass.frequency.setValueAtTime(80, this.audioContext.currentTime);
+    highpass.frequency.setValueAtTime(50, this.audioContext.currentTime);
     highpass.Q.setValueAtTime(0.7, this.audioContext.currentTime);
 
     // 2. Lowpass filter (remove high frequency noise: cut above 800Hz)
@@ -477,10 +488,10 @@ export class AudioManager {
     lowpass.frequency.setValueAtTime(800, this.audioContext.currentTime);
     lowpass.Q.setValueAtTime(0.7, this.audioContext.currentTime);
 
-    // 3. Notch filter (remove power noise: 60Hz)
+    // 3. Notch filter (remove power noise: 50Hz) - 🔧 日本の電源周波数に合わせて調整
     const notch = this.audioContext.createBiquadFilter();
     notch.type = 'notch';
-    notch.frequency.setValueAtTime(60, this.audioContext.currentTime);
+    notch.frequency.setValueAtTime(50, this.audioContext.currentTime);
     notch.Q.setValueAtTime(10, this.audioContext.currentTime);
 
     return { highpass, lowpass, notch };

@@ -93,9 +93,9 @@ export class NoiseFilter {
   constructor(audioContext: AudioContext, config: NoiseFilterConfig = {}) {
     this.audioContext = audioContext;
     this.config = {
-      highpassFreq: 80,
+      highpassFreq: 50,  // 深い男性の声に対応（G1 49Hzまで）
       lowpassFreq: 800,
-      notchFreq: 60,
+      notchFreq: 50,      // 🔧 日本の電源周波数50Hzに合わせて電源ハムノイズを除去
       highpassQ: 0.7,
       lowpassQ: 0.7,
       notchQ: 10.0,
@@ -116,7 +116,7 @@ export class NoiseFilter {
     }
 
     try {
-      // 1. Highpass filter (remove low frequency noise: cut below 80Hz)
+      // 1. Highpass filter (remove low frequency noise: cut below 50Hz, 深い男性の声を保護)
       this.highpassFilter = this.audioContext.createBiquadFilter();
       this.highpassFilter.type = 'highpass';
       this.highpassFilter.frequency.setValueAtTime(this.config.highpassFreq, this.audioContext.currentTime);

@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 PitchPro v1.2.9-FINAL 設定検証テスト</title>
+
+    <!-- 完全キャッシュ回避設定 -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #4CAF50;
+            border-radius: 8px;
+        }
+
+        .test-section {
+            background: #333;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .config-display {
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border: 2px solid #FFD700;
+        }
+
+        .value-highlight {
+            background: #FFD700;
+            color: #000;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .success { color: #4CAF50; }
+        .error { color: #F44336; }
+        .warning { color: #FF9800; }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        .log-entry {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            margin: 3px 0;
+            padding: 3px 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 PitchPro v1.2.9-FINAL 設定検証テスト</h1>
+            <p>完全新規ファイル - キャッシュ問題回避専用</p>
+        </div>
+
+        <div class="test-section">
+            <h2>🎯 期待する設定値</h2>
+            <div class="config-display">
+                <div><strong>minVolumeAbsolute:</strong> <span class="value-highlight">0.020</span> (10%閾値)</div>
+                <div><strong>ノイズゲート閾値:</strong> <span class="value-highlight">10.0%</span> (0.020 × 500)</div>
+                <div><strong>目標:</strong> 環境ノイズ(3.8%-6.2%)をブロック、有効音声(10%超)を通過</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 実際の設定値確認</h2>
+            <div id="actualConfig" class="config-display">
+                <div id="configStatus">テスト実行前...</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🧪 テスト実行</h2>
+            <button id="startBtn" onclick="runConfigTest()">設定値検証テスト開始</button>
+            <button id="stopBtn" onclick="stopTest()" disabled>テスト停止</button>
+            <button onclick="clearLogs()">ログクリア</button>
+            <button onclick="exportLogs()">ログをコピー</button>
+        </div>
+
+        <div class="test-section">
+            <h2>📋 テストログ</h2>
+            <div id="testLogs" style="max-height: 400px; overflow-y: auto;">
+                <!-- ログがここに表示されます -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 完全キャッシュ回避でライブラリ読み込み
+        const timestamp = Date.now();
+        const randomId = Math.random().toString(36).substring(2);
+        const script = document.createElement('script');
+
+        // 複数のキャッシュバスト手法を組み合わせ
+        script.src = `dist/pitchpro.umd.js?v=final-${timestamp}&r=${randomId}&_cb=${Date.now()}&nocache=true`;
+        script.onload = function() {
+            addLog('success', '✅ PitchPro ライブラリ読み込み完了');
+            addLog('info', `📝 URL: ${script.src}`);
+
+            // UMDライブラリの構造確認
+            addLog('info', '🔍 ライブラリ構造確認中...');
+
+            // PitchProオブジェクトの確認
+            if (typeof window.PitchPro !== 'undefined') {
+                addLog('success', '✅ PitchPro オブジェクト発見');
+                console.log('PitchPro contents:', Object.keys(window.PitchPro));
+
+                if (window.PitchPro.PitchDetector) {
+                    addLog('success', '✅ PitchPro.PitchDetector 確認完了');
+                    window.PitchDetector = window.PitchPro; // グローバル設定
+                } else {
+                    addLog('error', '❌ PitchPro.PitchDetector が見つかりません');
+                }
+            } else if (typeof window.PitchDetector !== 'undefined') {
+                addLog('success', '✅ PitchDetector クラス確認完了');
+            } else {
+                addLog('error', '❌ PitchDetector/PitchPro どちらも見つかりません');
+                addLog('info', '🔍 利用可能なオブジェクト:');
+                const pitchRelated = Object.keys(window).filter(key =>
+                    key.toLowerCase().includes('pitch') || key.toLowerCase().includes('audio')
+                );
+                console.log('Pitch/Audio related objects:', pitchRelated);
+                pitchRelated.forEach(key => addLog('info', `  - ${key}`));
+            }
+        };
+        script.onerror = function(error) {
+            addLog('error', `❌ ライブラリ読み込み失敗: ${error}`);
+            addLog('info', `🔍 試行URL: ${script.src}`);
+        };
+        document.head.appendChild(script);
+
+        let audioManager = null;
+        let pitchDetector = null;
+        let testTimeout = null;
+        let isTestRunning = false;
+        let logBuffer = [];
+
+        function addLog(type, message) {
+            const logContainer = document.getElementById('testLogs');
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            const logText = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logEntry.innerHTML = logText;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+
+            // ログバッファに追加（エクスポート用）
+            logBuffer.push(logText);
+        }
+
+        function clearLogs() {
+            document.getElementById('testLogs').innerHTML = '';
+            logBuffer = [];
+            addLog('info', '📄 ログクリア完了');
+        }
+
+        function exportLogs() {
+            const logText = logBuffer.join('\n');
+            navigator.clipboard.writeText(logText).then(() => {
+                addLog('success', '✅ ログをクリップボードにコピーしました');
+            }).catch(err => {
+                addLog('error', '❌ ログのコピーに失敗しました');
+                console.error('Copy error:', err);
+            });
+        }
+
+        function stopTest() {
+            isTestRunning = false;
+
+            // タイムアウトをクリア
+            if (testTimeout) {
+                clearTimeout(testTimeout);
+                testTimeout = null;
+            }
+
+            // ピッチ検出を停止
+            if (pitchDetector) {
+                pitchDetector.stopDetection();
+                addLog('info', '⏹️ ピッチ検出停止');
+            }
+
+            // リソースをクリーンアップ
+            if (audioManager) {
+                audioManager.forceCleanup();
+                audioManager = null;
+                addLog('info', '🧹 AudioManagerクリーンアップ完了');
+            }
+
+            pitchDetector = null;
+
+            // ボタン状態を更新
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+
+            addLog('info', '🛑 テスト停止完了');
+        }
+
+        async function runConfigTest() {
+            try {
+                // ボタン状態を更新
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('stopBtn').disabled = false;
+                isTestRunning = true;
+
+                addLog('info', '🚀 設定値検証テスト開始');
+
+                // ライブラリオブジェクトの取得
+                let PitchProLib = null;
+                if (typeof window.PitchPro !== 'undefined') {
+                    PitchProLib = window.PitchPro;
+                    addLog('success', '✅ PitchPro ライブラリ使用');
+                } else if (typeof window.PitchDetector !== 'undefined') {
+                    PitchProLib = window.PitchDetector;
+                    addLog('success', '✅ PitchDetector ライブラリ使用');
+                } else {
+                    addLog('error', '❌ ライブラリが未定義 - 読み込み確認が必要');
+                    return;
+                }
+
+                // AudioManager初期化
+                if (!PitchProLib.AudioManager) {
+                    addLog('error', '❌ AudioManager クラスが見つかりません');
+                    console.log('Available classes:', Object.keys(PitchProLib));
+                    return;
+                }
+
+                audioManager = new PitchProLib.AudioManager();
+                await audioManager.initialize();
+                addLog('success', '✅ AudioManager初期化完了');
+
+                // PitchDetector初期化（設定上書きなし）
+                if (!PitchProLib.PitchDetector) {
+                    addLog('error', '❌ PitchDetector クラスが見つかりません');
+                    return;
+                }
+
+                pitchDetector = new PitchProLib.PitchDetector(audioManager);
+                addLog('info', '🔧 PitchDetector初期化中...');
+
+                await pitchDetector.initialize();
+                addLog('success', '✅ PitchDetector初期化完了');
+
+                // 設定値の詳細確認
+                const config = pitchDetector.config;
+                addLog('info', '📊 設定値詳細確認:');
+
+                // minVolumeAbsolute確認
+                const actualMinVolume = config.minVolumeAbsolute;
+                addLog('info', `  minVolumeAbsolute: ${actualMinVolume}`);
+
+                if (actualMinVolume === 0.020) {
+                    addLog('success', '✅ minVolumeAbsolute = 0.020 (期待値と一致)');
+                } else {
+                    addLog('error', `❌ minVolumeAbsolute = ${actualMinVolume} (期待値: 0.020)`);
+                }
+
+                // ノイズゲート閾値計算
+                const NOISE_GATE_SCALING_FACTOR = 500;
+                const calculatedThreshold = actualMinVolume * NOISE_GATE_SCALING_FACTOR;
+                addLog('info', `  計算されたノイズゲート閾値: ${calculatedThreshold.toFixed(2)}%`);
+
+                if (Math.abs(calculatedThreshold - 10.0) < 0.1) {
+                    addLog('success', '✅ ノイズゲート閾値 = 10.0% (期待値と一致)');
+                } else {
+                    addLog('error', `❌ ノイズゲート閾値 = ${calculatedThreshold.toFixed(2)}% (期待値: 10.0%)`);
+                }
+
+                // 設定表示を更新
+                document.getElementById('configStatus').innerHTML = `
+                    <div><strong>実際のminVolumeAbsolute:</strong> <span class="value-highlight">${actualMinVolume}</span></div>
+                    <div><strong>実際のノイズゲート閾値:</strong> <span class="value-highlight">${calculatedThreshold.toFixed(2)}%</span></div>
+                    <div><strong>判定:</strong> <span class="${actualMinVolume === 0.020 ? 'success' : 'error'}">${actualMinVolume === 0.020 ? '✅ 正常' : '❌ 異常'}</span></div>
+                `;
+
+                // リアルタイムテスト（オプション）
+                addLog('info', '🎤 リアルタイム動作テスト開始（5秒間）');
+
+                let updateCount = 0;
+                pitchDetector.setCallbacks({
+                    onPitchUpdate: function(result) {
+                        if (!isTestRunning) return;
+
+                        const volume = result.volume || 0;
+                        if (volume > 0) {
+                            updateCount++;
+                            if (updateCount <= 5) { // 最初の5回のみログ表示
+                                addLog('success', `🔊 有効信号: ${volume.toFixed(1)}%`);
+                            }
+                        }
+                    }
+                });
+
+                const started = pitchDetector.startDetection();
+                if (started) {
+                    addLog('success', '✅ ピッチ検出開始');
+
+                    // 5秒後に自動停止
+                    testTimeout = setTimeout(() => {
+                        if (isTestRunning) {
+                            stopTest();
+                            addLog('info', '✅ リアルタイムテスト完了（5秒経過）');
+                        }
+                    }, 5000);
+                } else {
+                    addLog('error', '❌ ピッチ検出開始失敗');
+                    document.getElementById('startBtn').disabled = false;
+                    document.getElementById('stopBtn').disabled = true;
+                }
+
+            } catch (error) {
+                addLog('error', `❌ テストエラー: ${error.message}`);
+                console.error('Test error:', error);
+
+                // エラー時のクリーンアップ
+                stopTest();
+            }
+        }
+    </script>
+</body>
+</html>

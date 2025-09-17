@@ -1,6 +1,6 @@
 var He = Object.defineProperty;
-var Ue = (l, e, t) => e in l ? He(l, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : l[e] = t;
-var q = (l, e, t) => Ue(l, typeof e != "symbol" ? e + "" : e, t);
+var Ve = (l, e, t) => e in l ? He(l, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : l[e] = t;
+var q = (l, e, t) => Ve(l, typeof e != "symbol" ? e + "" : e, t);
 const w = class w {
   /**
    * Detect current device and return optimized specifications
@@ -84,7 +84,7 @@ const w = class w {
       default:
         return {
           sensitivity: 1.8,
-          // Optimized sensitivity for PC microphones (上昇速度調整)
+          // 📊 v1.2.9確定値に復元 (SCALING_FACTOR=123.46)
           noiseGate: 0.035,
           // v1.1.8: Increased noise gate for better ambient noise filtering
           divisor: 6,
@@ -256,7 +256,7 @@ class Ae extends D {
     super(e, "MICROPHONE_ACCESS_DENIED", t), this.name = "MicrophoneAccessError";
   }
 }
-class Ve extends D {
+class Ue extends D {
   constructor(e, t, i, s) {
     super(
       e,
@@ -581,28 +581,29 @@ class xe {
             // Basic settings: Safari WebKit stability focused
             echoCancellation: this.config.echoCancellation,
             noiseSuppression: this.config.noiseSuppression,
+            // ✅ 設定値を尊重
             autoGainControl: this.config.autoGainControl,
-            // HOTFIX: Enhanced AGC disable for all platforms to prevent level drop
+            // ブラウザ固有制御: noiseSuppression設定に基づく条件付き適用
             ...window.chrome && {
               googAutoGainControl: !1,
-              // Google AGC complete disable
-              googNoiseSuppression: !1,
-              // Google noise suppression disable
-              googEchoCancellation: !1,
-              // Google echo cancellation disable
+              // AGCは常に無効（音量問題回避）
+              googNoiseSuppression: this.config.noiseSuppression,
+              // ✅ 設定値に従う
+              googEchoCancellation: this.config.echoCancellation,
+              // ✅ 設定値に従う
               googHighpassFilter: !1,
-              // Google highpass filter disable
-              googTypingNoiseDetection: !1,
-              // Typing noise detection disable
-              googBeamforming: !1
-              // Beamforming disable
+              // ハイパスフィルターは独自実装を使用
+              googTypingNoiseDetection: this.config.noiseSuppression,
+              // ノイズ抑制と連動
+              googBeamforming: this.config.noiseSuppression
+              // ノイズ抑制と連動
             },
             // Mozilla-specific constraints
             ...navigator.userAgent.includes("Firefox") && {
               mozAutoGainControl: !1,
-              // Mozilla AGC disable
-              mozNoiseSuppression: !1
-              // Mozilla noise suppression disable
+              // AGCは常に無効
+              mozNoiseSuppression: this.config.noiseSuppression
+              // ✅ 設定値に従う
             },
             // Safari compatibility: Explicit quality settings  
             sampleRate: this.config.sampleRate,
@@ -612,12 +613,15 @@ class xe {
             deviceId: { ideal: "default" }
           }
         };
-        console.log("🎤 [AudioManager] Getting MediaStream with Safari-compatible settings:", t), this.mediaStream = await navigator.mediaDevices.getUserMedia(t), console.log("✅ [AudioManager] MediaStream acquisition complete");
+        console.log("🎤 [AudioManager] Getting MediaStream with noiseSuppression settings:", {
+          noiseSuppression: this.config.noiseSuppression,
+          constraints: t
+        }), this.mediaStream = await navigator.mediaDevices.getUserMedia(t), console.log("✅ [AudioManager] MediaStream acquisition complete");
         const i = this.mediaStream.getAudioTracks()[0];
         if (i && typeof i.getConstraints == "function" && typeof i.getSettings == "function")
           try {
             const s = i.getConstraints(), o = i.getSettings();
-            console.log("🔍 [DIAGNOSTIC] Requested autoGainControl:", t.audio && t.audio.autoGainControl), console.log("🔍 [DIAGNOSTIC] Actually applied constraints:", s), console.log("🔍 [DIAGNOSTIC] Actual MediaStream settings:", o), o.autoGainControl === !0 ? (console.warn("⚠️ [DIAGNOSTIC] CRITICAL: Browser ignored autoGainControl: false setting!"), console.warn("⚠️ [DIAGNOSTIC] This explains the gain drift issues - browser is automatically adjusting gain")) : console.log("✅ [DIAGNOSTIC] autoGainControl successfully disabled by browser");
+            console.log("🔍 [DIAGNOSTIC] Requested noiseSuppression:", this.config.noiseSuppression), console.log("🔍 [DIAGNOSTIC] Actually applied constraints:", s), console.log("🔍 [DIAGNOSTIC] Actual MediaStream settings:", o), o.noiseSuppression !== this.config.noiseSuppression ? (console.warn("⚠️ [DIAGNOSTIC] noiseSuppression setting mismatch!"), console.warn(`⚠️ [DIAGNOSTIC] Requested: ${this.config.noiseSuppression}, Applied: ${o.noiseSuppression}`)) : console.log("✅ [DIAGNOSTIC] noiseSuppression successfully applied by browser"), o.autoGainControl === !0 ? (console.warn("⚠️ [DIAGNOSTIC] CRITICAL: Browser ignored autoGainControl: false setting!"), console.warn("⚠️ [DIAGNOSTIC] This explains the gain drift issues - browser is automatically adjusting gain")) : console.log("✅ [DIAGNOSTIC] autoGainControl successfully disabled by browser");
           } catch {
             console.log("ℹ️ [DIAGNOSTIC] MediaTrack constraint inspection not available in this environment");
           }
@@ -698,11 +702,11 @@ class xe {
       throw I.logError(s, "Filter chain creation"), s;
     }
     const e = this.audioContext.createBiquadFilter();
-    e.type = "highpass", e.frequency.setValueAtTime(80, this.audioContext.currentTime), e.Q.setValueAtTime(0.7, this.audioContext.currentTime);
+    e.type = "highpass", e.frequency.setValueAtTime(50, this.audioContext.currentTime), e.Q.setValueAtTime(0.7, this.audioContext.currentTime);
     const t = this.audioContext.createBiquadFilter();
     t.type = "lowpass", t.frequency.setValueAtTime(800, this.audioContext.currentTime), t.Q.setValueAtTime(0.7, this.audioContext.currentTime);
     const i = this.audioContext.createBiquadFilter();
-    return i.type = "notch", i.frequency.setValueAtTime(60, this.audioContext.currentTime), i.Q.setValueAtTime(10, this.audioContext.currentTime), { highpass: e, lowpass: t, notch: i };
+    return i.type = "notch", i.frequency.setValueAtTime(50, this.audioContext.currentTime), i.Q.setValueAtTime(10, this.audioContext.currentTime), { highpass: e, lowpass: t, notch: i };
   }
   /**
    * Removes a specific analyser and its associated filter chain
@@ -1176,7 +1180,7 @@ R.prototype._transform4 = function() {
     var m = o >>> 2;
     for (n = 0; n < t; n += o)
       for (var u = n + m, d = n, f = 0; d < u; d += 2, f += s) {
-        const g = d, v = g + m, y = v + m, S = y + m, M = e[g], p = e[g + 1], b = e[v], P = e[v + 1], B = e[y], k = e[y + 1], X = e[S], O = e[S + 1], z = M, $ = p, L = h[f], H = c * h[f + 1], U = b * L - P * H, V = b * H + P * L, J = h[2 * f], Y = c * h[2 * f + 1], K = B * J - k * Y, Z = B * Y + k * J, ee = h[3 * f], te = c * h[3 * f + 1], A = X * ee - O * te, T = X * te + O * ee, E = z + K, G = $ + Z, F = z - K, _ = $ - Z, se = U + A, oe = V + T, ne = c * (U - A), ae = c * (V - T), he = E + se, fe = G + oe, ge = E - se, pe = G - oe, ye = F + ae, ve = _ - ne, Se = F - ae, Ce = _ + ne;
+        const g = d, v = g + m, y = v + m, S = y + m, M = e[g], p = e[g + 1], b = e[v], P = e[v + 1], B = e[y], O = e[y + 1], X = e[S], k = e[S + 1], z = M, $ = p, L = h[f], H = c * h[f + 1], V = b * L - P * H, U = b * H + P * L, J = h[2 * f], Y = c * h[2 * f + 1], K = B * J - O * Y, Z = B * Y + O * J, ee = h[3 * f], te = c * h[3 * f + 1], A = X * ee - k * te, T = X * te + k * ee, E = z + K, G = $ + Z, F = z - K, _ = $ - Z, se = V + A, oe = U + T, ne = c * (V - A), ae = c * (U - T), he = E + se, fe = G + oe, ge = E - se, pe = G - oe, ye = F + ae, ve = _ - ne, Se = F - ae, Ce = _ + ne;
         e[g] = he, e[g + 1] = fe, e[v] = ye, e[v + 1] = ve, e[y] = ge, e[y + 1] = pe, e[S] = Se, e[S + 1] = Ce;
       }
   }
@@ -1186,8 +1190,8 @@ R.prototype._singleTransform2 = function(e, t, i) {
   s[e] = h, s[e + 1] = m, s[e + 2] = u, s[e + 3] = d;
 };
 R.prototype._singleTransform4 = function(e, t, i) {
-  const s = this._out, o = this._data, n = this._inv ? -1 : 1, r = i * 2, a = i * 3, c = o[t], h = o[t + 1], m = o[t + i], u = o[t + i + 1], d = o[t + r], f = o[t + r + 1], g = o[t + a], v = o[t + a + 1], y = c + d, S = h + f, M = c - d, p = h - f, b = m + g, P = u + v, B = n * (m - g), k = n * (u - v), X = y + b, O = S + P, z = M + k, $ = p - B, L = y - b, H = S - P, U = M - k, V = p + B;
-  s[e] = X, s[e + 1] = O, s[e + 2] = z, s[e + 3] = $, s[e + 4] = L, s[e + 5] = H, s[e + 6] = U, s[e + 7] = V;
+  const s = this._out, o = this._data, n = this._inv ? -1 : 1, r = i * 2, a = i * 3, c = o[t], h = o[t + 1], m = o[t + i], u = o[t + i + 1], d = o[t + r], f = o[t + r + 1], g = o[t + a], v = o[t + a + 1], y = c + d, S = h + f, M = c - d, p = h - f, b = m + g, P = u + v, B = n * (m - g), O = n * (u - v), X = y + b, k = S + P, z = M + O, $ = p - B, L = y - b, H = S - P, V = M - O, U = p + B;
+  s[e] = X, s[e + 1] = k, s[e + 2] = z, s[e + 3] = $, s[e + 4] = L, s[e + 5] = H, s[e + 6] = V, s[e + 7] = U;
 };
 R.prototype._realTransform4 = function() {
   var e = this._out, t = this._csize, i = this._width, s = 1 << i, o = t / s << 1, n, r, a = this._bitrev;
@@ -1207,15 +1211,15 @@ R.prototype._realTransform4 = function() {
     var m = o >>> 1, u = m >>> 1, d = u >>> 1;
     for (n = 0; n < t; n += o)
       for (var f = 0, g = 0; f <= d; f += 2, g += s) {
-        var v = n + f, y = v + u, S = y + u, M = S + u, p = e[v], b = e[v + 1], P = e[y], B = e[y + 1], k = e[S], X = e[S + 1], O = e[M], z = e[M + 1], $ = p, L = b, H = h[g], U = c * h[g + 1], V = P * H - B * U, J = P * U + B * H, Y = h[2 * g], K = c * h[2 * g + 1], Z = k * Y - X * K, ee = k * K + X * Y, te = h[3 * g], A = c * h[3 * g + 1], T = O * te - z * A, E = O * A + z * te, G = $ + Z, F = L + ee, _ = $ - Z, se = L - ee, oe = V + T, ne = J + E, ae = c * (V - T), he = c * (J - E), fe = G + oe, ge = F + ne, pe = _ + he, ye = se - ae;
+        var v = n + f, y = v + u, S = y + u, M = S + u, p = e[v], b = e[v + 1], P = e[y], B = e[y + 1], O = e[S], X = e[S + 1], k = e[M], z = e[M + 1], $ = p, L = b, H = h[g], V = c * h[g + 1], U = P * H - B * V, J = P * V + B * H, Y = h[2 * g], K = c * h[2 * g + 1], Z = O * Y - X * K, ee = O * K + X * Y, te = h[3 * g], A = c * h[3 * g + 1], T = k * te - z * A, E = k * A + z * te, G = $ + Z, F = L + ee, _ = $ - Z, se = L - ee, oe = U + T, ne = J + E, ae = c * (U - T), he = c * (J - E), fe = G + oe, ge = F + ne, pe = _ + he, ye = se - ae;
         if (e[v] = fe, e[v + 1] = ge, e[y] = pe, e[y + 1] = ye, f === 0) {
           var ve = G - oe, Se = F - ne;
           e[S] = ve, e[S + 1] = Se;
           continue;
         }
         if (f !== d) {
-          var Ce = _, Ie = -se, Ne = G, Re = -F, Pe = -c * he, _e = -c * ae, qe = -c * ne, ke = -c * oe, Oe = Ce + Pe, ze = Ie + _e, $e = Ne + ke, Le = Re - qe, be = n + u - f, we = n + m - f;
-          e[be] = Oe, e[be + 1] = ze, e[we] = $e, e[we + 1] = Le;
+          var Ce = _, Ie = -se, Ne = G, Re = -F, Pe = -c * he, _e = -c * ae, qe = -c * ne, Oe = -c * oe, ke = Ce + Pe, ze = Ie + _e, $e = Ne + Oe, Le = Re - qe, be = n + u - f, we = n + m - f;
+          e[be] = ke, e[be + 1] = ze, e[we] = $e, e[we + 1] = Le;
         }
       }
   }
@@ -1633,8 +1637,8 @@ class Ke {
       // 揺れ防止のため強化 (0.1 → 0.9)
       clarityThreshold: 0.4,
       // 0.8から0.4に現実的な値に変更
-      minVolumeAbsolute: 0.01,
-      // v1.1.8: 音程変化対応極限調整 (0.011→0.010)
+      minVolumeAbsolute: 0.02,
+      // 🔧 環境適応ノイズゲート: 10%閾値でマイクノイズを確実にブロック
       noiseGate: 0.02,
       // v1.1.8: デフォルトnoiseGate値
       deviceOptimization: !0,
@@ -1835,8 +1839,8 @@ class Ke {
    * redundant calculations and efficient buffer operations
    */
   detectPitch() {
-    var O, z, $, L, H, U, V, J, Y, K, Z, ee, te;
-    const e = typeof process < "u" && ((O = process.env) == null ? void 0 : O.NODE_ENV) === "development" || typeof window < "u", t = performance.now();
+    var k, z, $, L, H, V, U, J, Y, K, Z, ee, te;
+    const e = typeof process < "u" && ((k = process.env) == null ? void 0 : k.NODE_ENV) === "development" || typeof window < "u", t = performance.now();
     if (!this.frameRateLimiter.shouldProcess()) {
       this.animationFrame = requestAnimationFrame(() => this.detectPitch());
       return;
@@ -1857,7 +1861,7 @@ class Ke {
       n += Math.abs(s[A]);
     const r = Math.sqrt(n / i);
     typeof process < "u" && ((L = process.env) == null ? void 0 : L.NODE_ENV) === "development" && console.log(`[Debug] RMS計算: sum=${n.toFixed(6)}, rms=${r.toFixed(6)}`);
-    const a = this.deviceSpecs, c = r * a.gainCompensation, h = a.sensitivity, m = 400 / (h * h), u = 1500, d = c * m, f = Math.min(100, Math.max(0, d));
+    const a = this.deviceSpecs, c = r * a.gainCompensation, h = a.sensitivity, m = 400 / (h * h), u = 500, d = c * m, f = Math.min(100, Math.max(0, d));
     e && (console.log("[Debug] 音量計算詳細:"), console.log(`  rms=${r.toFixed(6)}`), console.log(`  adjustedRms=${c.toFixed(6)}`), console.log(`  SCALING_FACTOR=${m}`), console.log(`  計算前: adjustedRms * SCALING_FACTOR = ${d.toFixed(6)}`), console.log(`  計算後volumePercent=${f.toFixed(2)}%`), console.log(`  クリップされた？: ${d > 100 ? "YES" : "NO"}`), console.log(`  プラットフォーム: gain=${a.gainCompensation}, divisor=${a.divisor}`));
     let g = 0;
     for (let A = 0; A < o.length; A++)
@@ -1865,11 +1869,11 @@ class Ke {
     const y = Math.sqrt(g / o.length) * a.gainCompensation, S = Math.min(100, Math.max(0, y * m));
     this.addToVolumeHistory(f), this.stableVolume = this.calculateVolumeAverage(), e && console.log(`[Debug] 平滑化結果: volumePercent=${f.toFixed(2)}%, stableVolume=${this.stableVolume.toFixed(2)}%`);
     const M = this.config.minVolumeAbsolute * u, p = f < M;
-    if (e && (console.log("[Debug] ノイズゲート判定:"), console.log(`  閾値: ${M.toFixed(2)}%`), console.log(`  現在値: ${f.toFixed(2)}%`), console.log(`  判定: ${p ? "ノイズとしてブロック" : "有効信号として通過"}`)), p)
+    if (e && (console.log("[Debug] ノイズゲート判定:"), console.log(`  閾値: ${M.toFixed(2)}% (minVolumeAbsolute=${this.config.minVolumeAbsolute} × ${u})`), console.log(`  現在値: ${f.toFixed(2)}%`), console.log(`  判定: ${p ? "ノイズとしてブロック" : "有効信号として通過"}`)), p)
       this.currentVolume = 0, this.rawVolume = 0, this.currentFrequency = 0, this.detectedNote = "--", this.detectedOctave = null, this.pitchClarity = 0, this.resetHarmonicHistory(), typeof process < "u" && ((H = process.env) == null ? void 0 : H.NODE_ENV) === "development" && console.log(`[Debug] ノイズゲート作動: 入力音量=${f.toFixed(3)} < 閾値=${M}, stableVolume=${this.stableVolume.toFixed(3)}（保持）`);
     else {
       this.currentVolume = this.stableVolume, this.rawVolume = S;
-      const A = ((U = this.analyser.context) == null ? void 0 : U.sampleRate) || 44100;
+      const A = ((V = this.analyser.context) == null ? void 0 : V.sampleRate) || 44100;
       let T = 0, E = 0;
       try {
         const F = this.pitchDetector.findPitch(s, A);
@@ -1887,12 +1891,12 @@ class Ke {
         if (console.warn("⚠️ [PitchDetector] Pitch detection error (recoverable):", _.toJSON()), De(_))
           T = 0, E = 0;
         else {
-          (J = (V = this.callbacks).onError) == null || J.call(V, _);
+          (J = (U = this.callbacks).onError) == null || J.call(U, _);
           return;
         }
       }
       typeof process < "u" && ((Y = process.env) == null ? void 0 : Y.NODE_ENV) === "development" && (console.log(`[Debug] Pitchy結果: pitch=${(T == null ? void 0 : T.toFixed(1)) || "null"}, clarity=${(E == null ? void 0 : E.toFixed(3)) || "null"}, volume=${(K = this.currentVolume) == null ? void 0 : K.toFixed(1)}%, sampleRate=${A.toString()}`), console.log(`[Debug] Pitchyバッファー: 最初5要素=${Array.from(s.slice(0, 5)).map((F) => F.toFixed(6)).join(", ")}`));
-      const G = T >= 65 && T <= 1200;
+      const G = T >= 45 && T <= 1200;
       if (typeof process < "u" && ((Z = process.env) == null ? void 0 : Z.NODE_ENV) === "development" && console.log(`[Debug] 判定条件: pitch=${!!T}, clarity=${E == null ? void 0 : E.toFixed(3)}>${this.config.clarityThreshold}, volume=${(ee = this.currentVolume) == null ? void 0 : ee.toFixed(1)}>${this.config.minVolumeAbsolute}, range=${G}`), T && E > this.config.clarityThreshold && this.currentVolume > this.config.minVolumeAbsolute && G) {
         let F = T;
         if (!this.disableHarmonicCorrection) {
@@ -1916,8 +1920,8 @@ class Ke {
       cents: this.currentFrequency > 0 ? this.frequencyToCents(this.currentFrequency) : void 0
     };
     this.processAudioData(P), this.updateVisuals(P);
-    const k = performance.now() - t;
-    this.frameRateLimiter.getStats().frameDrops === 0 && this.frameRateLimiter.recoverPerformance(), typeof process < "u" && ((te = process.env) == null ? void 0 : te.NODE_ENV) === "development" && k > 16.67 && console.warn(`[PitchDetector] Frame processing took ${k.toFixed(2)}ms (>16.67ms threshold)`), this.animationFrame = requestAnimationFrame(() => this.detectPitch());
+    const O = performance.now() - t;
+    this.frameRateLimiter.getStats().frameDrops === 0 && this.frameRateLimiter.recoverPerformance(), typeof process < "u" && ((te = process.env) == null ? void 0 : te.NODE_ENV) === "development" && O > 16.67 && console.warn(`[PitchDetector] Frame processing took ${O.toFixed(2)}ms (>16.67ms threshold)`), this.animationFrame = requestAnimationFrame(() => this.detectPitch());
   }
   /**
    * Harmonic correction system with configurable parameters
@@ -2361,9 +2365,11 @@ class st {
    */
   constructor(e, t = {}) {
     this.highpassFilter = null, this.lowpassFilter = null, this.notchFilter = null, this.isConnected = !1, this.inputNode = null, this.outputNode = null, this.audioContext = e, this.config = {
-      highpassFreq: 80,
+      highpassFreq: 50,
+      // 深い男性の声に対応（G1 49Hzまで）
       lowpassFreq: 800,
-      notchFreq: 60,
+      notchFreq: 50,
+      // 🔧 日本の電源周波数50Hzに合わせて電源ハムノイズを除去
       highpassQ: 0.7,
       lowpassQ: 0.7,
       notchQ: 10,
@@ -2984,7 +2990,7 @@ class Ze {
             }
           }, this.config.autoRecoveryDelayMs);
         else {
-          const n = new Ve(
+          const n = new Ue(
             `Microphone health check failed after ${this.autoRecoveryAttempts} recovery attempts. Monitoring stopped to prevent infinite error loop.`,
             o,
             this.autoRecoveryAttempts,
@@ -4713,7 +4719,8 @@ const j = class j {
       frequencySelector: e.frequencySelector,
       noteSelector: e.noteSelector,
       clarityThreshold: e.clarityThreshold ?? 0.4,
-      minVolumeAbsolute: e.minVolumeAbsolute ?? 3e-3,
+      minVolumeAbsolute: e.minVolumeAbsolute ?? 0.02,
+      // 🔧 環境適応ノイズゲート: 10%閾値でマイクノイズを確実にブロック
       fftSize: e.fftSize ?? 4096,
       smoothing: e.smoothing ?? 0.1,
       deviceOptimization: e.deviceOptimization ?? !0,
@@ -5105,7 +5112,7 @@ const j = class j {
     const e = {
       PC: {
         volumeMultiplier: 3,
-        // ✅ 最適化済み (v1.2.9)
+        // 📊 v1.2.9確定値に復元
         sensitivityMultiplier: 2.5,
         minVolumeAbsolute: this.deviceSpecs.noiseGate * 0.25
         // Based on DeviceDetection noiseGate
@@ -5293,7 +5300,13 @@ const j = class j {
     var o, n, r;
     if (!e) return null;
     const t = { ...e }, i = ((o = this.deviceSettings) == null ? void 0 : o.volumeMultiplier) ?? 1, s = e.volume * i;
-    return ((n = this.deviceSpecs) == null ? void 0 : n.deviceType) !== "PC" && e.volume > 0.1 && console.log(`📱 [VolumeAdjustment] Device: ${(r = this.deviceSpecs) == null ? void 0 : r.deviceType}, Raw: ${e.volume.toFixed(2)}%, Multiplier: ${i}, Final: ${Math.min(100, Math.max(0, s)).toFixed(2)}%`), t.volume = Math.min(100, Math.max(0, s)), t;
+    return e.volume > 0.1 && (console.log(`📊 [VolumeAdjustment] Device: ${(n = this.deviceSpecs) == null ? void 0 : n.deviceType}, Raw: ${e.volume.toFixed(2)}%, Multiplier: ${i}, Final: ${Math.min(100, Math.max(0, s)).toFixed(2)}%`), console.log("🔍 [CRITICAL] _getProcessedResult details:", {
+      inputVolume: e.volume,
+      deviceType: (r = this.deviceSpecs) == null ? void 0 : r.deviceType,
+      volumeMultiplier: i,
+      calculatedFinal: s,
+      clampedFinal: Math.min(100, Math.max(0, s))
+    })), t.volume = Math.min(100, Math.max(0, s)), t;
   }
   /**
    * Updates component state and notifies callbacks
@@ -6241,21 +6254,29 @@ const ut = "1.2.1", dt = (/* @__PURE__ */ new Date()).toISOString(), mt = {
     smoothing: 0.1,
     clarityThreshold: 0.4,
     // 現実的な値に修正
-    minVolumeAbsolute: 3e-3
-    // 現実的な値に修正
+    minVolumeAbsolute: 0.02
+    // 🔧 環境適応ノイズゲート: 10%閾値でマイクノイズを確実にブロック
   },
   audioManager: {
     sampleRate: 44100,
     channelCount: 1,
     echoCancellation: !1,
     noiseSuppression: !1,
+    // 独自フィルター優先（PitchPro 3段階フィルタリング使用）
     autoGainControl: !1
   },
   noiseFilter: {
-    highpassFreq: 80,
+    highpassFreq: 50,
+    // 深い男性の声に対応（G1 49Hzまで）
     lowpassFreq: 800,
-    notchFreq: 60,
-    Q: 0.7
+    notchFreq: 50,
+    // 🔧 日本の電源周波数50Hzに合わせて電源ハムノイズを除去
+    highpassQ: 0.7,
+    // 個別に設定
+    lowpassQ: 0.7,
+    // 個別に設定
+    notchQ: 10
+    // ノッチフィルターは通常、より高いQ値を持つ
   }
 };
 export {
@@ -6271,7 +6292,7 @@ export {
   de as LogLevel,
   le as Logger,
   tt as MicrophoneController,
-  Ve as MicrophoneHealthError,
+  Ue as MicrophoneHealthError,
   Ze as MicrophoneLifecycleManager,
   Fe as MusicTheory,
   st as NoiseFilter,

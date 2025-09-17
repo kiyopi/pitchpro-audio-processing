@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎤 PitchPro v1.2.9-FINAL 音量バーテスト</title>
+
+    <!-- 完全キャッシュ回避 -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            border-radius: 15px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.95;
+            font-size: 14px;
+        }
+
+        .status-section {
+            background: #2d2d30;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .config-display {
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        .config-display div {
+            margin: 5px 0;
+        }
+
+        .value-highlight {
+            background: #FFD700;
+            color: #000;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        /* 音量バースタイル */
+        .volume-section {
+            background: #2d2d30;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .volume-container {
+            margin: 15px 0;
+        }
+
+        .volume-label {
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: #b0b0b0;
+        }
+
+        .volume-bar-wrapper {
+            background: #111;
+            height: 40px;
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .volume-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50 0%, #8BC34A 50%, #CDDC39 75%, #FFC107 90%, #FF5722 100%);
+            width: 0%;
+            transition: width 0.1s ease-out;
+            border-radius: 20px;
+            position: relative;
+        }
+
+        .volume-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: bold;
+            font-size: 16px;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            z-index: 1;
+        }
+
+        /* 閾値インジケーター */
+        .threshold-line {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #FF5722;
+            box-shadow: 0 0 4px rgba(255,87,34,0.8);
+        }
+
+        .threshold-label {
+            position: absolute;
+            top: -20px;
+            transform: translateX(-50%);
+            font-size: 11px;
+            color: #FF5722;
+            white-space: nowrap;
+        }
+
+        /* 周波数・音符表示 */
+        .detection-display {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            padding: 15px;
+            background: #1e1e1e;
+            border-radius: 10px;
+        }
+
+        .detection-item {
+            text-align: center;
+        }
+
+        .detection-label {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .detection-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        /* コントロールボタン */
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76,175,80,0.4);
+        }
+
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ログセクション */
+        .log-section {
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+        }
+
+        .log-entry {
+            margin: 3px 0;
+            padding: 3px 8px;
+            border-radius: 3px;
+        }
+
+        .log-info { background: rgba(33,150,243,0.2); }
+        .log-success { background: rgba(76,175,80,0.2); }
+        .log-error { background: rgba(244,67,54,0.2); }
+        .log-warning { background: rgba(255,152,0,0.2); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎤 PitchPro 音量バーテスト</h1>
+            <p>v1.2.9-FINAL - 10%ノイズゲート閾値確認</p>
+        </div>
+
+        <div class="status-section">
+            <h3>⚙️ 現在の設定</h3>
+            <div class="config-display">
+                <div>minVolumeAbsolute: <span id="minVolumeValue" class="value-highlight">確認中...</span></div>
+                <div>ノイズゲート閾値: <span id="thresholdValue" class="value-highlight">確認中...</span></div>
+                <div>デバイス: <span id="deviceType" class="value-highlight">確認中...</span></div>
+                <div>感度: <span id="sensitivityValue" class="value-highlight">確認中...</span></div>
+            </div>
+        </div>
+
+        <div class="volume-section">
+            <h3>📊 音量モニター</h3>
+
+            <div class="volume-container">
+                <div class="volume-label">処理済み音量（最終出力）</div>
+                <div class="volume-bar-wrapper">
+                    <div id="volumeBar" class="volume-bar"></div>
+                    <div id="volumeText" class="volume-text">0.0%</div>
+                    <div id="thresholdIndicator" class="threshold-line" style="left: 10%;">
+                        <span class="threshold-label">閾値 10%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="volume-container">
+                <div class="volume-label">生音量（フィルター前）</div>
+                <div class="volume-bar-wrapper">
+                    <div id="rawVolumeBar" class="volume-bar"></div>
+                    <div id="rawVolumeText" class="volume-text">0.0%</div>
+                </div>
+            </div>
+
+            <div class="detection-display">
+                <div class="detection-item">
+                    <div class="detection-label">周波数</div>
+                    <div id="frequencyValue" class="detection-value">0.0 Hz</div>
+                </div>
+                <div class="detection-item">
+                    <div class="detection-label">音符</div>
+                    <div id="noteValue" class="detection-value">--</div>
+                </div>
+                <div class="detection-item">
+                    <div class="detection-label">明瞭度</div>
+                    <div id="clarityValue" class="detection-value">0%</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="startBtn" onclick="startDetection()">🎤 検出開始</button>
+            <button id="stopBtn" onclick="stopDetection()" disabled>⏹️ 停止</button>
+            <button onclick="clearLog()">📄 ログクリア</button>
+        </div>
+
+        <div class="log-section" id="logSection">
+            <!-- ログがここに表示 -->
+        </div>
+    </div>
+
+    <script>
+        // キャッシュ回避でライブラリ読み込み
+        const timestamp = Date.now();
+        const script = document.createElement('script');
+        script.src = `dist/pitchpro.umd.js?v=${timestamp}&cb=${Math.random()}`;
+        script.onload = function() {
+            addLog('success', '✅ ライブラリ読み込み完了');
+            initializeApp();
+        };
+        script.onerror = function() {
+            addLog('error', '❌ ライブラリ読み込み失敗');
+        };
+        document.head.appendChild(script);
+
+        let audioManager = null;
+        let audioDetection = null;
+        let isRunning = false;
+
+        function addLog(type, message) {
+            const logSection = document.getElementById('logSection');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logSection.appendChild(entry);
+            logSection.scrollTop = logSection.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('logSection').innerHTML = '';
+            addLog('info', '📄 ログクリア完了');
+        }
+
+        async function initializeApp() {
+            try {
+                const PitchProLib = window.PitchPro || window.PitchDetector;
+                if (!PitchProLib) {
+                    addLog('error', '❌ ライブラリが見つかりません');
+                    return;
+                }
+
+                // AudioManager初期化
+                audioManager = new PitchProLib.AudioManager();
+                await audioManager.initialize();
+                addLog('success', '✅ AudioManager初期化完了');
+
+                // AudioDetectionComponent初期化（設定上書きなし！）
+                audioDetection = new PitchProLib.AudioDetectionComponent(audioManager, {
+                    // minVolumeAbsoluteは指定しない - ライブラリのデフォルト値を使用
+                    autoUpdateUI: false,
+                    debug: true
+                });
+
+                await audioDetection.initialize();
+                addLog('success', '✅ AudioDetectionComponent初期化完了');
+
+                // 設定値の確認と表示
+                const config = audioDetection.config;
+                const deviceSpecs = audioDetection.deviceSpecs;
+
+                document.getElementById('minVolumeValue').textContent = config.minVolumeAbsolute.toFixed(3);
+                document.getElementById('thresholdValue').textContent = `${(config.minVolumeAbsolute * 500).toFixed(1)}%`;
+                document.getElementById('deviceType').textContent = deviceSpecs.deviceType;
+                document.getElementById('sensitivityValue').textContent = `${deviceSpecs.sensitivity}x`;
+
+                // 閾値ラインの位置を更新
+                const thresholdPercent = config.minVolumeAbsolute * 500;
+                document.getElementById('thresholdIndicator').style.left = `${Math.min(100, thresholdPercent)}%`;
+                document.querySelector('.threshold-label').textContent = `閾値 ${thresholdPercent.toFixed(1)}%`;
+
+                addLog('info', `📊 設定確認: minVolumeAbsolute=${config.minVolumeAbsolute}, 閾値=${thresholdPercent.toFixed(1)}%`);
+
+                // コールバック設定
+                audioDetection.setCallbacks({
+                    onPitchUpdate: updateDisplay,
+                    onError: (error) => {
+                        addLog('error', `❌ エラー: ${error.message}`);
+                    }
+                });
+
+            } catch (error) {
+                addLog('error', `❌ 初期化エラー: ${error.message}`);
+                console.error('Initialization error:', error);
+            }
+        }
+
+        function updateDisplay(result) {
+            // 音量バー更新
+            const volume = result.volume || 0;
+            const rawVolume = (result.rawVolume !== undefined) ? result.rawVolume : volume;
+
+            // 処理済み音量
+            document.getElementById('volumeBar').style.width = `${Math.min(100, volume)}%`;
+            document.getElementById('volumeText').textContent = `${volume.toFixed(1)}%`;
+
+            // 生音量
+            document.getElementById('rawVolumeBar').style.width = `${Math.min(100, rawVolume)}%`;
+            document.getElementById('rawVolumeText').textContent = `${rawVolume.toFixed(1)}%`;
+
+            // 周波数・音符
+            document.getElementById('frequencyValue').textContent = result.frequency ?
+                `${result.frequency.toFixed(1)} Hz` : '0.0 Hz';
+            document.getElementById('noteValue').textContent = result.note || '--';
+            document.getElementById('clarityValue').textContent = result.clarity ?
+                `${(result.clarity * 100).toFixed(0)}%` : '0%';
+
+            // ノイズゲート動作の確認（最初の数回のみ）
+            if (volume === 0 && rawVolume > 0 && rawVolume < 10) {
+                if (!this.gateLogCount) this.gateLogCount = 0;
+                if (this.gateLogCount < 3) {
+                    addLog('info', `🚫 ノイズゲート作動: 生音量 ${rawVolume.toFixed(1)}% < 閾値 10%`);
+                    this.gateLogCount++;
+                }
+            } else if (volume > 0) {
+                this.gateLogCount = 0; // リセット
+            }
+        }
+
+        async function startDetection() {
+            if (!audioDetection) {
+                addLog('error', '❌ 初期化が完了していません');
+                return;
+            }
+
+            try {
+                const started = audioDetection.startDetection();
+                if (started) {
+                    isRunning = true;
+                    document.getElementById('startBtn').disabled = true;
+                    document.getElementById('stopBtn').disabled = false;
+                    addLog('success', '🎤 ピッチ検出開始');
+                } else {
+                    addLog('error', '❌ 検出開始に失敗');
+                }
+            } catch (error) {
+                addLog('error', `❌ 開始エラー: ${error.message}`);
+            }
+        }
+
+        function stopDetection() {
+            if (!audioDetection) return;
+
+            audioDetection.stopDetection();
+            isRunning = false;
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+
+            // バーをリセット
+            document.getElementById('volumeBar').style.width = '0%';
+            document.getElementById('volumeText').textContent = '0.0%';
+            document.getElementById('rawVolumeBar').style.width = '0%';
+            document.getElementById('rawVolumeText').textContent = '0.0%';
+            document.getElementById('frequencyValue').textContent = '0.0 Hz';
+            document.getElementById('noteValue').textContent = '--';
+            document.getElementById('clarityValue').textContent = '0%';
+
+            addLog('info', '⏹️ ピッチ検出停止');
+        }
+
+        // 初期ログ
+        addLog('info', '🚀 音量バーテスト起動中...');
+    </script>
+</body>
+</html>

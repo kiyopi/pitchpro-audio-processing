@@ -58,19 +58,21 @@ export const DEFAULT_CONFIG = {
     fftSize: 4096,
     smoothing: 0.1,
     clarityThreshold: 0.4,    // 現実的な値に修正
-    minVolumeAbsolute: 0.003  // 現実的な値に修正
+    minVolumeAbsolute: 0.020  // 🔧 環境適応ノイズゲート: 10%閾値でマイクノイズを確実にブロック
   },
   audioManager: {
     sampleRate: 44100,
     channelCount: 1,
     echoCancellation: false,
-    noiseSuppression: false,
+    noiseSuppression: false, // 独自フィルター優先（PitchPro 3段階フィルタリング使用）
     autoGainControl: false
   },
   noiseFilter: {
-    highpassFreq: 80,
+    highpassFreq: 50,  // 深い男性の声に対応（G1 49Hzまで）
     lowpassFreq: 800,
-    notchFreq: 60,
-    Q: 0.7
+    notchFreq: 50,     // 🔧 日本の電源周波数50Hzに合わせて電源ハムノイズを除去
+    highpassQ: 0.7,    // 個別に設定
+    lowpassQ: 0.7,     // 個別に設定
+    notchQ: 10.0       // ノッチフィルターは通常、より高いQ値を持つ
   }
-} as const;
+} as const;;
