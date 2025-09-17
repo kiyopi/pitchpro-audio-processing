@@ -651,7 +651,7 @@ export class PitchDetector {
     // 🔧 動的SCALING_FACTOR計算 (sensitivity値に基づく)
     const currentSensitivity = platformSpecs.sensitivity;
     const SCALING_FACTOR = 400 / (currentSensitivity * currentSensitivity);
-    const NOISE_GATE_SCALING_FACTOR = 300; // 📊 iPhone環境ノイズ6%対策: 6%閾値（環境ノイズ<6%, 音声>6%）
+    const NOISE_GATE_SCALING_FACTOR = 200; // 📊 iPad環境ノイズ対策: 4%閾値（iPad環境ノイズ<4%, 音声>4%）
     
     // ハードクリッピング（シンプルなリニア変換）
     const rawVolumeValue = adjustedRms * SCALING_FACTOR;
