@@ -476,32 +476,45 @@
             console.log('  - window.PitchPro:', typeof window.PitchPro);
             console.log('  - window.PitchDetector:', typeof window.PitchDetector);
 
-            if (!audioDetection) {
-                addLog('error', '❌ AudioDetectionComponentが初期化されていません');
-                addLog('warning', '🔄 自動初期化を再試行中...');
-                console.error('❌ [Debug] AudioDetectionComponent not initialized');
+            // 🔧 修正: 初期化状態を確実にチェックし、必要に応じて待機
+            let initializationAttempts = 0;
+            const maxAttempts = 3;
 
-                // 自動初期化を再試行
+            while ((!audioDetection || !audioManager) && initializationAttempts < maxAttempts) {
+                initializationAttempts++;
+                addLog('warning', `🔄 初期化試行 ${initializationAttempts}/${maxAttempts}...`);
+
                 try {
                     await initializeApp();
 
-                    // 初期化後に再度チェック
-                    if (audioDetection) {
-                        addLog('success', '✅ 自動初期化完了 - 検出を開始します');
-                    } else {
-                        addLog('error', '❌ 自動初期化に失敗しました');
-                        return;
+                    // 初期化完了まで少し待機
+                    await new Promise(resolve => setTimeout(resolve, 500));
+
+                    if (audioDetection && audioManager) {
+                        addLog('success', '✅ 初期化完了 - 検出を開始します');
+                        break;
                     }
                 } catch (error) {
-                    addLog('error', `❌ 自動初期化エラー: ${error.message}`);
-                    console.error('❌ [Debug] Auto-initialization failed:', error);
-                    return;
+                    addLog('error', `❌ 初期化試行${initializationAttempts}失敗: ${error.message}`);
+                    console.error('❌ [Debug] Initialization attempt failed:', error);
+
+                    if (initializationAttempts >= maxAttempts) {
+                        addLog('error', '❌ 最大試行回数に達しました。ページを再読み込みしてください。');
+                        return;
+                    }
                 }
             }
 
+            // 最終チェック
+            if (!audioDetection) {
+                addLog('error', '❌ AudioDetectionComponentの初期化に失敗しました');
+                console.error('❌ [Debug] AudioDetectionComponent initialization failed');
+                return;
+            }
+
             if (!audioManager) {
-                addLog('error', '❌ AudioManagerが初期化されていません');
-                console.error('❌ [Debug] AudioManager not initialized');
+                addLog('error', '❌ AudioManagerの初期化に失敗しました');
+                console.error('❌ [Debug] AudioManager initialization failed');
                 return;
             }
 
