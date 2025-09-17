@@ -110,6 +110,7 @@ export interface DeviceSpecs {
     gainCompensation: number;
     noiseThreshold: number;
     smoothingFactor: number;
+    volumeMultiplier: number;
 }
 export interface MediaStreamResources {
     audioContext: AudioContext;

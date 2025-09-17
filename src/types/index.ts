@@ -136,6 +136,7 @@ export interface DeviceSpecs {
   gainCompensation: number;
   noiseThreshold: number;
   smoothingFactor: number;
+  volumeMultiplier: number;
 }
 
 // Lifecycle management types

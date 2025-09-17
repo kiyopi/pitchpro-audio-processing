@@ -49,7 +49,7 @@ export class DeviceDetection {
     const isIPhone = /iPhone/.test(userAgent);
     const isIPad = /iPad/.test(userAgent);
     
-    // iPadOS 13+ reports as "Macintosh" but has touch support
+    // iPadOS 13+ reports as \"Macintosh\" but has touch support
     const isIPadOS = /Macintosh/.test(userAgent) && 'ontouchend' in document;
     
     // Additional iOS detection methods
@@ -79,10 +79,12 @@ export class DeviceDetection {
       isIOS,
       sensitivity: optimizations.sensitivity,
       noiseGate: optimizations.noiseGate,
-      divisor: optimizations.divisor,
-      gainCompensation: optimizations.gainCompensation,
-      noiseThreshold: optimizations.noiseThreshold,
-      smoothingFactor: optimizations.smoothingFactor
+      volumeMultiplier: optimizations.volumeMultiplier,
+      smoothingFactor: optimizations.smoothingFactor,
+      // 後方互換性のため残す（将来的に削除予定）
+      divisor: 6.0,
+      gainCompensation: 1.0,
+      noiseThreshold: 7.0
     };
   }
 
@@ -142,15 +144,19 @@ export class DeviceDetection {
    * Get default specifications for SSR or fallback
    */
   private static getDefaultSpecs(): DeviceSpecs {
+    // SSR環境などでデフォルトとして使用される値
+    // getDeviceOptimizationsのPC設定と完全に一致させる
     return {
       deviceType: 'PC',
       isIOS: false,
-      sensitivity: 1.8,        // Updated to match optimized PC value
-      noiseGate: 0.035,        // v1.1.8: Improved default noise gate
+      sensitivity: 2.5,           // 🎤 PC最適化値と統一
+      noiseGate: 0.009,           // 🚪 PC最適化値と統一 (0.9%)
+      volumeMultiplier: 3.0,      // 🔊 PC最適化値と統一
+      smoothingFactor: 0.25,      // 📊 PC最適化値と統一
+      // 後方互換性のため残す（将来的に削除予定）
       divisor: 6.0,
       gainCompensation: 1.0,
-      noiseThreshold: 7.0,     // v1.1.8: Improved default noise threshold
-      smoothingFactor: 0.25    // v1.1.8: Improved default smoothing
+      noiseThreshold: 7.0
     };
   }
 

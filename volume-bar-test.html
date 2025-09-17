@@ -3,12 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎤 PitchPro v1.2.9-FINAL 音量バーテスト</title>
+    <title>🎤 PitchPro v1.2.9 + バランス最適化</title>
 
-    <!-- 完全キャッシュ回避 -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
+    <!-- 🚀 最強キャッシュクリア機能 -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0, s-maxage=0, proxy-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
+    <meta http-equiv="Expires" content="-1">
+    <meta name="cache-control" content="no-cache">
+    <meta name="expires" content="0">
+    <meta name="pragma" content="no-cache">
+    <meta name="robots" content="noarchive, nosnippet, noimageindex">
+
+    <!-- 🔄 動的バージョニング -->
+    <meta name="build-version" content="v1.2.9-final-nocache">
+    <meta name="timestamp" content="DYNAMIC_TIMESTAMP">
 
     <style>
         body {
@@ -228,8 +236,8 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎤 PitchPro 音量バーテスト</h1>
-            <p>v1.2.9 + CACHE-BUST - 強力キャッシュクリア実装</p>
+            <h1>🎤 PitchPro v1.2.9 + バランス最適化</h1>
+            <p>🎯 sensitivity=1.7 + noiseGate=1.8% でバランス調整</p>
             <div style="font-size: 12px; color: #FFD700; margin-top: 10px;">
                 📅 <span id="loadTimestamp">Loading...</span><br>
                 🔧 <span id="cacheStatus">キャッシュ状態確認中...</span>
@@ -298,13 +306,18 @@
     <script>
         // 🚀 ULTRA CACHE BUSTING - 強力なキャッシュ無効化実装
 
-        // 1. Service Workerの強制更新
+        // 1. Service Workerの完全削除と強制更新
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.getRegistrations().then(function(registrations) {
                 for(let registration of registrations) {
-                    registration.update();
-                    addLog('info', '🔄 ServiceWorker強制更新実行');
+                    registration.unregister(); // 完全削除
+                    addLog('info', '🗑️ ServiceWorker完全削除実行');
                 }
+            }).then(() => {
+                // 新規登録を試行
+                navigator.serviceWorker.ready.then(() => {
+                    addLog('info', '🔄 ServiceWorker強制更新実行');
+                });
             });
         }
 
@@ -339,7 +352,7 @@
         const isGitHubPages = window.location.hostname.includes('github.io');
         const basePath = isGitHubPages ? 'https://kiyopi.github.io/pitchpro-audio-processing/' : './';
 
-        // 5. 極限のキャッシュバスティングURL構築
+        // 5. 🔥 ULTIMATE キャッシュバスティングURL構築
         const cacheBustParams = [
             `v=${ultraTimestamp.epoch}`,
             `cb=${ultraTimestamp.random1}`,
@@ -352,7 +365,18 @@
             `reload=true`,
             `github=bypass`,
             `critical=cache-bust-debug`,
-            `timestamp=${now.toISOString().replace(/[^0-9]/g, '')}`
+            `timestamp=${now.toISOString().replace(/[^0-9]/g, '')}`,
+            // 🔥 NEW: 追加の極限パラメータ
+            `nocache=${Date.now()}`,
+            `refresh=${Math.random().toString(36)}`,
+            `bypass=${performance.now()}`,
+            `ultimate=${btoa(Math.random().toString())}`,
+            `destroy=${window.location.href.length}`,
+            `nuclear=${navigator.userAgent.length}`,
+            `final=${Math.floor(Math.random() * 999999)}`,
+            `extreme=true`,
+            `version=v1.2.9-ULTIMATE`,
+            `build=${ultraTimestamp.epoch.toString(36)}`
         ];
 
         // 6. 動的scriptタグ作成（完全なキャッシュ回避）
