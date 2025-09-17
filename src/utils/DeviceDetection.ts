@@ -113,7 +113,7 @@ export class DeviceDetection {
     switch (deviceType) {
       case 'iPad':
         return {
-          sensitivity: 5.0,        // 📱 テスト導出最適値: マイク感度 5.0x
+          sensitivity: 3.5,        // 📱 iPhoneと同じ感度に調整 (音量バー動作改善)
           noiseGate: 0.015,        // 📱 テスト導出最適値: 音量閾値 1.5% (0.015)
           divisor: 4.0,            // Volume calculation divisor
           gainCompensation: 1.5,   // Gain compensation for low-frequency cut
