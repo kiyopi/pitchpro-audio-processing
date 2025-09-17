@@ -92,17 +92,17 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎯 PitchPro v1.2.9 + sensitivity=1.7 + noiseGate=0.45% デバイス最適化</h1>
-            <p>PC用デバイス固有ノイズゲート閾値最適化版</p>
+            <h1>🎤 PitchPro v1.2.9 + バランス最適化</h1>
+            <p>🎯 sensitivity=1.7 + noiseGate=1.8% でバランス調整</p>
         </div>
 
         <div class="test-section">
-            <h2>🎯 v1.2.9+ 最適化設定値</h2>
+            <h2>🎯 v1.2.9+ バランス最適化設定</h2>
             <div class="config-display">
-                <div><strong>PC sensitivity:</strong> <span class="value-highlight">1.7</span> (適切バランス調整: 1.8→1.5→1.7)</div>
-                <div><strong>PC noiseGate:</strong> <span class="value-highlight">0.018</span> (デバイス固有設定)</div>
-                <div><strong>実効閾値:</strong> <span class="value-highlight">0.45%</span> (noiseGate × 0.25 係数)</div>
-                <div><strong>目標:</strong> 8%常時ノイズをブロック、音量バランス最適化</div>
+                <div><strong>PC sensitivity:</strong> <span class="value-highlight">1.7</span> (2.5→1.7でバランス調整)</div>
+                <div><strong>PC noiseGate:</strong> <span class="value-highlight">0.018</span> (1.8%)</div>
+                <div><strong>期待効果:</strong> <span class="value-highlight">ノイズブロック + 音量バランス最適化</span></div>
+                <div><strong>目標:</strong> 普通の声で15-25%、常時ノイズをブロック</div>
             </div>
         </div>
 
@@ -310,37 +310,37 @@
                 // 🔍 デバッグ: config オブジェクト全体を確認
                 console.log('🔍 [Debug] Full config object:', config);
                 console.log('🔍 [Debug] config keys:', Object.keys(config));
-                addLog('info', `  期待値（PC用0.45%）: 0.0045`);
+                addLog('info', `  期待値（PC用1.8%）: 0.018`);
 
-                if (Math.abs(actualMinVolume - 0.0045) < 0.0001) {
-                    addLog('success', '✅ minVolumeAbsolute = 0.0045 (PC用修正値と一致)');
-                } else if (actualMinVolume === 0.004) {
-                    addLog('warning', '⚠️ minVolumeAbsolute = 0.004 (修正前の値、キャッシュ問題の可能性)');
+                if (Math.abs(actualMinVolume - 0.018) < 0.0001) {
+                    addLog('success', '✅ minVolumeAbsolute = 0.018 (PC用バランス調整値と一致)');
+                } else if (actualMinVolume === 0.009) {
+                    addLog('warning', '⚠️ minVolumeAbsolute = 0.009 (前回の値、キャッシュ問題の可能性)');
                 } else {
-                    addLog('error', `❌ minVolumeAbsolute = ${actualMinVolume} (期待値: 0.0045)`);
+                    addLog('error', `❌ minVolumeAbsolute = ${actualMinVolume} (期待値: 0.018)`);
                 }
 
-                // ノイズゲート閾値計算
+                // ノイズゲート閾値計算（PitchDetectorでの実際の計算方法）
                 const NOISE_GATE_SCALING_FACTOR = 500;
                 const calculatedThreshold = actualMinVolume * NOISE_GATE_SCALING_FACTOR;
                 addLog('info', `  計算されたノイズゲート閾値: ${calculatedThreshold.toFixed(2)}%`);
-                addLog('info', `  期待値（PC用）: 2.25%`);
+                addLog('info', `  期待値（PC用1.8%）: 9.0%`);
 
-                if (Math.abs(calculatedThreshold - 2.25) < 0.1) {
-                    addLog('success', '✅ ノイズゲート閾値 = 2.25% (PC用修正値と一致)');
-                } else if (Math.abs(calculatedThreshold - 2.0) < 0.1) {
-                    addLog('warning', '⚠️ ノイズゲート閾値 = 2.0% (修正前の値)');
+                if (Math.abs(calculatedThreshold - 9.0) < 0.2) {
+                    addLog('success', '✅ ノイズゲート閾値 = 9.0% (PC用バランス調整値と一致)');
+                } else if (Math.abs(calculatedThreshold - 4.5) < 0.2) {
+                    addLog('warning', '⚠️ ノイズゲート閾値 = 4.5% (前回の値、キャッシュ問題の可能性)');
                 } else {
-                    addLog('error', `❌ ノイズゲート閾値 = ${calculatedThreshold.toFixed(2)}% (期待値: 2.25%)`);
+                    addLog('error', `❌ ノイズゲート閾値 = ${calculatedThreshold.toFixed(2)}% (期待値: 9.0%)`);
                 }
 
                 // 設定表示を更新
-                const isCorrectValue = Math.abs(actualMinVolume - 0.0045) < 0.0001;
+                const isCorrectValue = Math.abs(actualMinVolume - 0.018) < 0.0001;
                 document.getElementById('configStatus').innerHTML = `
                     <div><strong>実際のminVolumeAbsolute:</strong> <span class="value-highlight">${actualMinVolume}</span></div>
                     <div><strong>実際のノイズゲート閾値:</strong> <span class="value-highlight">${calculatedThreshold.toFixed(2)}%</span></div>
-                    <div><strong>期待値:</strong> <span class="value-highlight">0.0045 (2.25%)</span></div>
-                    <div><strong>判定:</strong> <span class="${isCorrectValue ? 'success' : 'error'}">${isCorrectValue ? '✅ PC用修正値' : '❌ キャッシュ問題'}</span></div>
+                    <div><strong>期待値:</strong> <span class="value-highlight">0.018 (9.0%)</span></div>
+                    <div><strong>判定:</strong> <span class="${isCorrectValue ? 'success' : 'error'}">${isCorrectValue ? '✅ PC用バランス調整値' : '❌ キャッシュ問題'}</span></div>
                 `;
 
                 // 📊 シンプルログテスト - 重要情報のみ表示
@@ -388,10 +388,10 @@
                                 addLog('info', `📈 音量範囲: ${minVolume.toFixed(1)}% - ${maxVolume.toFixed(1)}%`);
 
                                 // ノイズゲート効果の判定
-                                if (minVolume > 2.25) {
-                                    addLog('success', '✅ ノイズゲート正常動作 (2.25%以上の信号のみ通過)');
+                                if (minVolume > 9.0) {
+                                    addLog('success', '✅ ノイズゲート正常動作 (9.0%以上の信号のみ通過)');
                                 } else {
-                                    addLog('warning', '⚠️ 2.25%未満の信号が通過 (設定要確認)');
+                                    addLog('warning', '⚠️ 9.0%未満の信号が通過 (設定要確認)');
                                 }
                             }
 
