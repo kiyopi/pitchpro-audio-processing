@@ -1861,7 +1861,7 @@ class Ke {
       n += Math.abs(s[A]);
     const r = Math.sqrt(n / i);
     typeof process < "u" && ((L = process.env) == null ? void 0 : L.NODE_ENV) === "development" && console.log(`[Debug] RMS計算: sum=${n.toFixed(6)}, rms=${r.toFixed(6)}`);
-    const a = this.deviceSpecs, c = r * a.gainCompensation, h = a.sensitivity, m = 400 / (h * h), u = 150, d = c * m, f = Math.min(100, Math.max(0, d));
+    const a = this.deviceSpecs, c = r * a.gainCompensation, h = a.sensitivity, m = 400 / (h * h), u = 125, d = c * m, f = Math.min(100, Math.max(0, d));
     e && (console.log("[Debug] 音量計算詳細:"), console.log(`  rms=${r.toFixed(6)}`), console.log(`  adjustedRms=${c.toFixed(6)}`), console.log(`  SCALING_FACTOR=${m}`), console.log(`  計算前: adjustedRms * SCALING_FACTOR = ${d.toFixed(6)}`), console.log(`  計算後volumePercent=${f.toFixed(2)}%`), console.log(`  クリップされた？: ${d > 100 ? "YES" : "NO"}`), console.log(`  プラットフォーム: gain=${a.gainCompensation}, divisor=${a.divisor}`));
     let g = 0;
     for (let A = 0; A < o.length; A++)
