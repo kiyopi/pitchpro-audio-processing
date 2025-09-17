@@ -96,7 +96,7 @@
     <div class="container">
         <div class="header">
             <h1>🔧 PitchPro ノイズゲート検証ツール</h1>
-            <p>v1.2.9 - 10%閾値設定の検証</p>
+            <p>v1.2.9 + CACHE-BUST - 10%閾値設定の検証</p>
         </div>
 
         <div class="test-section expected">
@@ -127,22 +127,105 @@
     </div>
 
     <script>
-        // 強制キャッシュ回避でライブラリ読み込み
-        const timestamp = new Date().getTime();
+        // 🚀 ULTRA CACHE BUSTING - verify-noise-gate.html版
+
+        // 1. Service Workerの強制更新
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for(let registration of registrations) {
+                    registration.update();
+                    console.log('🔄 [Verification] ServiceWorker強制更新実行');
+                }
+            });
+        }
+
+        // 2. ブラウザキャッシュの完全無効化
+        if ('caches' in window) {
+            caches.keys().then(function(names) {
+                for (let name of names) {
+                    caches.delete(name);
+                    console.log(`🗑️ [Verification] キャッシュ削除: ${name}`);
+                }
+            });
+        }
+
+        // 3. 複数階層のタイムスタンプ生成
+        const now = new Date();
+        const ultraTimestamp = {
+            epoch: Date.now(),
+            year: now.getFullYear(),
+            month: now.getMonth() + 1,
+            day: now.getDate(),
+            hour: now.getHours(),
+            minute: now.getMinutes(),
+            second: now.getSeconds(),
+            ms: now.getMilliseconds(),
+            random1: Math.random().toString(36).substring(2),
+            random2: Math.random().toString(36).substring(2),
+            userAgent: btoa(navigator.userAgent.substring(0, 10)),
+            performance: Math.floor(performance.now() * 1000)
+        };
+
+        // 4. GitHub Pages専用のキャッシュ回避戦略
+        const isGitHubPages = window.location.hostname.includes('github.io');
+        const basePath = isGitHubPages ? 'https://kiyopi.github.io/pitchpro-audio-processing/' : './';
+
+        // 5. 極限のキャッシュバスティングURL構築
+        const cacheBustParams = [
+            `v=${ultraTimestamp.epoch}`,
+            `cb=${ultraTimestamp.random1}`,
+            `t=${ultraTimestamp.performance}`,
+            `r=${ultraTimestamp.random2}`,
+            `bust=${ultraTimestamp.year}${ultraTimestamp.month}${ultraTimestamp.day}${ultraTimestamp.hour}${ultraTimestamp.minute}`,
+            `force=${ultraTimestamp.ms}`,
+            `ua=${ultraTimestamp.userAgent}`,
+            `cache=false`,
+            `reload=true`,
+            `github=bypass`,
+            `critical=cache-bust-verify`,
+            `timestamp=${now.toISOString().replace(/[^0-9]/g, '')}`
+        ];
+
         const script = document.createElement('script');
-        script.src = `./dist/pitchpro.umd.js?v=20250916-v129&t=${timestamp}&r=${Math.random()}&force=${Date.now()}&cache=bust-verify`;
+        script.src = `${basePath}dist/pitchpro.umd.js?${cacheBustParams.join('&')}`;
+
+        // 追加のキャッシュ無効化ヘッダー設定
+        script.setAttribute('cache-control', 'no-cache, no-store, must-revalidate, max-age=0');
+        script.setAttribute('pragma', 'no-cache');
+        script.setAttribute('expires', '0');
+
+        console.log('🚀 [Verification] ULTRA CACHE BUSTING開始');
+        console.log('📡 [Verification] Script URL:', script.src);
+
         script.onload = function() {
-            console.log('🔧 [Verification] PitchPro library loaded with cache busting');
+            console.log('🔧 [Verification] PitchPro library loaded with ULTRA cache busting');
             console.log('📝 [Verification] Script URL:', script.src);
         };
         script.onerror = function() {
             console.error('❌ Failed to load PitchPro library for verification');
+            console.error('🔍 [Verification] Failed URL:', script.src);
             document.getElementById('actualResults').innerHTML = `
                 <div class="log-entry" style="color: #F44336;">
-                    ❌ ライブラリの読み込みに失敗しました
+                    ❌ ライブラリの読み込みに失敗しました（ULTRA CACHE BUSTING実行済み）
                 </div>
             `;
         };
+
+        // メタタグによるキャッシュ制御
+        const metaTags = [
+            { 'http-equiv': 'Cache-Control', content: 'no-cache, no-store, must-revalidate, max-age=0' },
+            { 'http-equiv': 'Pragma', content: 'no-cache' },
+            { 'http-equiv': 'Expires', content: '0' }
+        ];
+
+        metaTags.forEach(meta => {
+            const metaTag = document.createElement('meta');
+            Object.keys(meta).forEach(key => {
+                metaTag.setAttribute(key, meta[key]);
+            });
+            document.head.appendChild(metaTag);
+        });
+
         document.head.appendChild(script);
 
         let audioManager = null;

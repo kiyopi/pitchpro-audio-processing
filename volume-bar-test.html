@@ -229,7 +229,11 @@
     <div class="container">
         <div class="header">
             <h1>🎤 PitchPro 音量バーテスト</h1>
-            <p>v1.2.9-FINAL - 10%ノイズゲート閾値確認</p>
+            <p>v1.2.9 + CACHE-BUST - 強力キャッシュクリア実装</p>
+            <div style="font-size: 12px; color: #FFD700; margin-top: 10px;">
+                📅 <span id="loadTimestamp">Loading...</span><br>
+                🔧 <span id="cacheStatus">キャッシュ状態確認中...</span>
+            </div>
         </div>
 
         <div class="status-section">
@@ -292,13 +296,87 @@
     </div>
 
     <script>
-        // キャッシュ回避でライブラリ読み込み
-        const timestamp = Date.now();
+        // 🚀 ULTRA CACHE BUSTING - 強力なキャッシュ無効化実装
+
+        // 1. Service Workerの強制更新
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for(let registration of registrations) {
+                    registration.update();
+                    addLog('info', '🔄 ServiceWorker強制更新実行');
+                }
+            });
+        }
+
+        // 2. ブラウザキャッシュの完全無効化
+        if ('caches' in window) {
+            caches.keys().then(function(names) {
+                for (let name of names) {
+                    caches.delete(name);
+                    addLog('info', `🗑️ キャッシュ削除: ${name}`);
+                }
+            });
+        }
+
+        // 3. 複数階層のタイムスタンプ生成
+        const now = new Date();
+        const ultraTimestamp = {
+            epoch: Date.now(),
+            year: now.getFullYear(),
+            month: now.getMonth() + 1,
+            day: now.getDate(),
+            hour: now.getHours(),
+            minute: now.getMinutes(),
+            second: now.getSeconds(),
+            ms: now.getMilliseconds(),
+            random1: Math.random().toString(36).substring(2),
+            random2: Math.random().toString(36).substring(2),
+            userAgent: btoa(navigator.userAgent.substring(0, 10)),
+            performance: Math.floor(performance.now() * 1000)
+        };
+
+        // 4. GitHub Pages専用のキャッシュ回避戦略
+        const isGitHubPages = window.location.hostname.includes('github.io');
+        const basePath = isGitHubPages ? 'https://kiyopi.github.io/pitchpro-audio-processing/' : './';
+
+        // 5. 極限のキャッシュバスティングURL構築
+        const cacheBustParams = [
+            `v=${ultraTimestamp.epoch}`,
+            `cb=${ultraTimestamp.random1}`,
+            `t=${ultraTimestamp.performance}`,
+            `r=${ultraTimestamp.random2}`,
+            `bust=${ultraTimestamp.year}${ultraTimestamp.month}${ultraTimestamp.day}${ultraTimestamp.hour}${ultraTimestamp.minute}`,
+            `force=${ultraTimestamp.ms}`,
+            `ua=${ultraTimestamp.userAgent}`,
+            `cache=false`,
+            `reload=true`,
+            `github=bypass`,
+            `critical=cache-bust-debug`,
+            `timestamp=${now.toISOString().replace(/[^0-9]/g, '')}`
+        ];
+
+        // 6. 動的scriptタグ作成（完全なキャッシュ回避）
         const script = document.createElement('script');
-        script.src = `dist/pitchpro.umd.js?v=${timestamp}&cb=${Math.random()}`;
+        script.src = `${basePath}dist/pitchpro.umd.js?${cacheBustParams.join('&')}`;
+
+        // 7. 追加のキャッシュ無効化ヘッダー設定
+        script.setAttribute('cache-control', 'no-cache, no-store, must-revalidate, max-age=0');
+        script.setAttribute('pragma', 'no-cache');
+        script.setAttribute('expires', '0');
+
+        // タイムスタンプとキャッシュ状態の表示
+        document.getElementById('loadTimestamp').textContent =
+            `ページ読み込み: ${now.toLocaleString('ja-JP')} (${ultraTimestamp.epoch})`;
+        document.getElementById('cacheStatus').textContent =
+            `キャッシュクリア: ${cacheBustParams.length}個のパラメータで強制回避中`;
+
+        addLog('info', `🚀 ULTRA CACHE BUSTING開始`);
+        addLog('debug', `📡 URL: ${script.src}`);
+        console.log('🔧 [ULTRA-CACHE-BUST] Script URL:', script.src);
+
         script.onload = function() {
-            addLog('success', '✅ ライブラリ読み込み完了');
-            console.log('🔍 [Debug] Script loaded, calling initializeApp()');
+            addLog('success', '✅ ライブラリ読み込み完了（キャッシュ完全回避）');
+            console.log('🔍 [Debug] Script loaded with ULTRA cache busting, calling initializeApp()');
 
             // 少し待ってから初期化（ライブラリの完全な読み込み待機）
             setTimeout(() => {
@@ -307,8 +385,25 @@
             }, 100);
         };
         script.onerror = function() {
-            addLog('error', '❌ ライブラリ読み込み失敗');
+            addLog('error', '❌ ライブラリ読み込み失敗（キャッシュ回避実行済み）');
+            addLog('debug', `🔍 失敗URL: ${script.src}`);
         };
+
+        // 8. DOM挿入前のメタタグによるキャッシュ制御
+        const metaTags = [
+            { 'http-equiv': 'Cache-Control', content: 'no-cache, no-store, must-revalidate, max-age=0' },
+            { 'http-equiv': 'Pragma', content: 'no-cache' },
+            { 'http-equiv': 'Expires', content: '0' }
+        ];
+
+        metaTags.forEach(meta => {
+            const metaTag = document.createElement('meta');
+            Object.keys(meta).forEach(key => {
+                metaTag.setAttribute(key, meta[key]);
+            });
+            document.head.appendChild(metaTag);
+        });
+
         document.head.appendChild(script);
 
         let audioManager = null;
