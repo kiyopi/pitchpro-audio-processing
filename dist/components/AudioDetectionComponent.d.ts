@@ -163,6 +163,11 @@ export interface AudioDetectionConfig {
      * });
      */
     autoUpdateUI?: boolean;
+    /**
+     * Callback function called on each pitch detection update.
+     * @param result - The processed pitch detection result including rawVolume and clarity.
+     */
+    onPitchUpdate?: (result: PitchDetectionResult) => void;
     debug?: boolean;
     logPrefix?: string;
 }
@@ -351,11 +356,12 @@ export declare class AudioDetectionComponent {
         isInitialized: boolean;
         deviceSpecs: DeviceSpecs | null;
         deviceSettings: DeviceSettings | null;
-        config: Required<Omit<AudioDetectionConfig, "volumeBarSelector" | "volumeTextSelector" | "frequencySelector" | "noteSelector">> & {
+        config: Required<Omit<AudioDetectionConfig, "volumeBarSelector" | "volumeTextSelector" | "frequencySelector" | "noteSelector" | "onPitchUpdate">> & {
             volumeBarSelector?: string | undefined;
             volumeTextSelector?: string | undefined;
             frequencySelector?: string | undefined;
             noteSelector?: string | undefined;
+            onPitchUpdate?: ((result: PitchDetectionResult) => void) | undefined;
         };
         lastError: PitchProError | null;
         pitchDetectorStatus: {

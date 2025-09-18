@@ -187,6 +187,13 @@ export interface AudioDetectionConfig {
    */
   autoUpdateUI?: boolean;
   
+  // Callback Settings (for convenience)
+  /**
+   * Callback function called on each pitch detection update.
+   * @param result - The processed pitch detection result including rawVolume and clarity.
+   */
+  onPitchUpdate?: (result: PitchDetectionResult) => void;
+  
   // Debug Settings
   debug?: boolean;
   logPrefix?: string;
@@ -219,11 +226,12 @@ export class AudioDetectionComponent {
   private static readonly UI_RESTART_DELAY_MS = 200;
 
   /** @private Configuration with applied defaults */
-  private config: Required<Omit<AudioDetectionConfig, 'volumeBarSelector' | 'volumeTextSelector' | 'frequencySelector' | 'noteSelector'>> & {
+  private config: Required<Omit<AudioDetectionConfig, 'volumeBarSelector' | 'volumeTextSelector' | 'frequencySelector' | 'noteSelector' | 'onPitchUpdate'>> & {
     volumeBarSelector?: string;
     volumeTextSelector?: string;
     frequencySelector?: string;
     noteSelector?: string;
+    onPitchUpdate?: (result: PitchDetectionResult) => void;
   };
   
   /** @private AudioManager instance for resource management */
@@ -332,6 +340,8 @@ export class AudioDetectionComponent {
       
       uiUpdateInterval: config.uiUpdateInterval ?? 50, // 20fps
       autoUpdateUI: config.autoUpdateUI ?? true,
+      
+      onPitchUpdate: config.onPitchUpdate, // コールバック関数はオプショナル
       
       debug: config.debug ?? false,
       logPrefix: config.logPrefix ?? '🎵 AudioDetection'
@@ -484,6 +494,15 @@ export class AudioDetectionComponent {
         },
         onStateChange: (state) => {
           this.debugLog('PitchDetector state:', state);
+          // 🎯 Start UI updates when detection begins
+          if (state === 'detecting' && this.config.autoUpdateUI) {
+            this.debugLog('🔄 Starting UI updates (state: detecting)');
+            this.startUIUpdates();
+          } else if (state !== 'detecting' && this.uiUpdateTimer) {
+            this.debugLog('⏹️ Stopping UI updates (state: ' + state + ')');
+            clearInterval(this.uiUpdateTimer);
+            this.uiUpdateTimer = null;
+          }
         }
       });
 
@@ -1009,7 +1028,8 @@ export class AudioDetectionComponent {
     }
     
     this.uiUpdateTimer = window.setInterval(() => {
-      if (this.pitchDetector && this.currentState === 'detecting') {
+      // 🎯 修正: PitchDetectorの実際の状態をチェック
+      if (this.pitchDetector && this.pitchDetector.getStatus().componentState === 'detecting') {
         // Get the latest pitch detection result
         const rawResult = this.pitchDetector.getLatestResult();
         
@@ -1017,17 +1037,36 @@ export class AudioDetectionComponent {
         const processedResult = this._getProcessedResult(rawResult);
         
         if (processedResult) {
-          // 加工後の結果でUIを更新
-          this.updateUI(processedResult);
+          // 🔥 自動UI更新が有効な場合のみupdateUIを呼び出し
+          if (this.config.autoUpdateUI) {
+            this.updateUI(processedResult);
+          }
+          
+          // 🔥 コールバック関数が設定されている場合は常に呼び出し
+          if (this.config.onPitchUpdate) {
+            this.debugLog('Calling onPitchUpdate callback with result:', processedResult);
+            this.config.onPitchUpdate(processedResult);
+          } else {
+            this.debugLog('onPitchUpdate callback not set - skipping callback execution');
+          }
         } else {
           // When no result, ensure UI shows reset state
-          this.updateUI({
+          const resetResult = {
             frequency: 0,
             note: '-',
             octave: 0,
             volume: 0,
+            rawVolume: 0,
             clarity: 0
-          });
+          };
+          
+          if (this.config.autoUpdateUI) {
+            this.updateUI(resetResult);
+          }
+          
+          if (this.config.onPitchUpdate) {
+            this.config.onPitchUpdate(resetResult);
+          }
         }
       }
     }, this.config.uiUpdateInterval);
@@ -1095,6 +1134,12 @@ export class AudioDetectionComponent {
     const volumeMultiplier = this.deviceSpecs?.volumeMultiplier ?? 1.0;
     const finalVolume = rawResult.volume * volumeMultiplier;
     
+    // 🎯 生音量（フィルター前）データを追加
+    processedResult.rawVolume = rawResult.volume;
+    
+    // 🎯 明瞭度データを追加（元のPitchDetectionResultにあるclarity値を保持）
+    processedResult.clarity = rawResult.clarity;
+    
     // Log volume adjustment details when debug is enabled and volume is significant
     if (this.config.debug && rawResult.volume > 0.1) {
       this.debugLog('VolumeAdjustment:', {
@@ -1102,12 +1147,14 @@ export class AudioDetectionComponent {
         rawVolume: `${rawResult.volume.toFixed(2)}%`,
         multiplier: volumeMultiplier,
         finalVolume: `${Math.min(100, Math.max(0, finalVolume)).toFixed(2)}%`,
+        clarity: `${((rawResult.clarity || 0) * 100).toFixed(1)}%`,
         details: {
           inputVolume: rawResult.volume,
           deviceType: this.deviceSpecs?.deviceType,
           volumeMultiplier: volumeMultiplier,
           calculatedFinal: finalVolume,
-          clampedFinal: Math.min(100, Math.max(0, finalVolume))
+          clampedFinal: Math.min(100, Math.max(0, finalVolume)),
+          rawClarity: rawResult.clarity
         }
       });
     }
