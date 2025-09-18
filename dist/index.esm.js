@@ -66,11 +66,11 @@ const A = class A {
       case "iPhone":
         return {
           sensitivity: 3.5,
-          // 🎤 マイク感度
-          noiseGate: 0.02,
-          // 🚪 ノイズゲート閾値 (iPhone専用値)
-          volumeMultiplier: 9.5,
-          // 🔊 表示音量補正
+          // 🎤 マイク感度 (iPhone最適化値)
+          noiseGate: 0.01,
+          // 🚪 ノイズゲート閾値 (0.015→0.010 70Hz検出強化)
+          volumeMultiplier: 11.5,
+          // 🔊 表示音量補正 (9.5→11.5 音量スケール改善)
           smoothingFactor: 0.25
           // 📊 平滑化係数
         };
@@ -78,11 +78,11 @@ const A = class A {
       default:
         return {
           sensitivity: 1.7,
-          // 🎤 マイク感度 
-          noiseGate: 0.06,
-          // 🚪 ノイズゲート閾値 (PC専用の厳しめ値 6.0%)
-          volumeMultiplier: 3,
-          // 🔊 表示音量補正
+          // 🎤 マイク感度 (PC環境安定性重視)
+          noiseGate: 0.025,
+          // 🚪 ノイズゲート閾値 (0.015→0.025 保守的調整)
+          volumeMultiplier: 7.5,
+          // 🔊 表示音量補正 (8.0→7.5 再調整)
           smoothingFactor: 0.25
           // 📊 平滑化係数
         };
@@ -6071,7 +6071,7 @@ E.SCALE_PATTERNS = {
   12: "Perfect Octave"
 };
 let Fe = E;
-const ut = "1.2.1.5", dt = (/* @__PURE__ */ new Date()).toISOString(), mt = {
+const ut = "1.2.2", dt = (/* @__PURE__ */ new Date()).toISOString(), mt = {
   pitchDetector: {
     fftSize: 4096,
     smoothing: 0.1,
