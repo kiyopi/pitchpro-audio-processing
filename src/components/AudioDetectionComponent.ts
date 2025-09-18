@@ -1129,10 +1129,10 @@ export class AudioDetectionComponent {
 
     const processedResult = { ...rawResult };
     
-    // Step 1: 生のRMS値に調整されたSCALING_FACTORを掛けて初期音量を計算
-    // 🚨 緊急修正: BASE_SCALING_FACTOR 1500 → 150 (90%削減) でオーバーフロー防止
-    // iPad計算例: 0.017 × 150 × 17 = 43.35% (適正レベル)
-    const BASE_SCALING_FACTOR = 150; 
+    // Step 1: 生のRMS値に大幅調整されたSCALING_FACTORを掛けて初期音量を計算
+    // 🚨 追加修正: BASE_SCALING_FACTOR 150 → 30 (80%追加削減) で無音時0-10%を実現
+    // iPad計算例: 0.022 × 30 × 17 = 11.22% (無音時適正レベル)
+    const BASE_SCALING_FACTOR = 30; 
     const initialVolume = rawResult.volume * BASE_SCALING_FACTOR;
     
     // Step 2: DeviceDetectionからデバイス固有のノイズゲート閾値を取得
