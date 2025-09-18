@@ -115,10 +115,10 @@ export class DeviceDetection {
     switch (deviceType) {
       case 'iPad':
         return {
-          sensitivity: 8.0,           // 🎤 マイク感度 (7.0→8.0で100Hz対応強化)
-          noiseGate: 0.008,           // 🚪 ノイズゲート閾値 (0.010→0.008で低音通しやすく)
-          volumeMultiplier: 15.0,     // 🔊 表示音量補正 (16%到達確認済み、維持)
-          smoothingFactor: 0.15       // 📊 平滑化係数 (0.20→0.15で低周波追従向上)
+          sensitivity: 12.0,          // 🎤 マイク感度 (8.0→12.0で極低周波数強化)
+          noiseGate: 0.005,           // 🚪 ノイズゲート閾値 (0.008→0.005で90Hz対応)
+          volumeMultiplier: 18.0,     // 🔊 表示音量補正 (15.0→18.0で低音可視化)
+          smoothingFactor: 0.10       // 📊 平滑化係数 (0.15→0.10で極低周波追従)
         };
         
       case 'iPhone':
