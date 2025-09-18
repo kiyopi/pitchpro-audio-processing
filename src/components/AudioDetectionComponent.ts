@@ -1129,13 +1129,13 @@ export class AudioDetectionComponent {
 
     const processedResult = { ...rawResult };
     
-    // Step 1: 🎯 最適化されたSCALING_FACTOR (80→60に調整)
-    // 計算例 - 新しい60の場合:
-    // - 70Hz低周波 (0.02 raw): 0.02 × 60 × 13 = 15.6% ✅ 検出可能
-    // - 通常の声 (0.06 raw): 0.06 × 60 × 13 = 46.8% → volumeMultiplier調整必要
-    // - 強い声 (0.08 raw): 0.08 × 60 × 13 = 62.4% ✅ 適正範囲
-    // - 非常に強い (0.10 raw): 0.10 × 60 × 13 = 78% ✅ 飽和回避
-    const BASE_SCALING_FACTOR = 60; 
+    // Step 1: 🎯 最終最適化 SCALING_FACTOR (60→50)
+    // 計算例 - 新しい50の場合:
+    // - 70Hz低周波 (0.025 raw): 0.025 × 50 × 13.5 = 16.9% ✅ ノイズゲート2.5%を大幅に上回る
+    // - 通常の声 (0.06 raw): 0.06 × 50 × 13.5 = 40.5% ✅ 適度な上昇率
+    // - 強い声 (0.08 raw): 0.08 × 50 × 13.5 = 54% ✅ 良好な範囲
+    // - 非常に強い (0.10 raw): 0.10 × 50 × 13.5 = 67.5% ✅ 飽和回避
+    const BASE_SCALING_FACTOR = 50; 
     const initialVolume = rawResult.volume * BASE_SCALING_FACTOR;
     
     // Step 2: DeviceDetectionからデバイス固有のノイズゲート閾値を取得
@@ -1151,12 +1151,12 @@ export class AudioDetectionComponent {
     }
     
     // Step 4: ノイズゲートを通過した場合、デバイス固有のvolumeMultiplierで最終的な表示音量を計算
-    // iPad用に15.0に調整して通常の声で60%超を達成
+    // iPad最終調整: 音量上昇率を抑制 (15.0 → 13.5)
     let volumeMultiplier = this.deviceSpecs?.volumeMultiplier ?? 1.0;
     
-    // iPad特別調整: BASE_SCALING_FACTOR減少分を補償
+    // iPad特別調整: 低音検出向上 + 音量上昇率抑制
     if (this.deviceSpecs?.deviceType === 'iPad') {
-      volumeMultiplier = 15.0; // 13.0 → 15.0 (15%増加で60%目標を達成)
+      volumeMultiplier = 13.5; // 15.0 → 13.5 (10%削減で上昇率を抑制)
     }
     
     const finalVolume = initialVolume * volumeMultiplier;

@@ -5114,11 +5114,11 @@ const N = class N {
   _getProcessedResult(e) {
     var a, c, l, m, u;
     if (!e) return null;
-    const t = { ...e }, s = e.volume * 60, o = (((a = this.deviceSpecs) == null ? void 0 : a.noiseGate) ?? 0.06) * 100;
+    const t = { ...e }, s = e.volume * 50, o = (((a = this.deviceSpecs) == null ? void 0 : a.noiseGate) ?? 0.06) * 100;
     if (s < o)
       return t.volume = 0, t.frequency = 0, t.note = "--", t.rawVolume = e.volume, t;
     let n = ((c = this.deviceSpecs) == null ? void 0 : c.volumeMultiplier) ?? 1;
-    ((l = this.deviceSpecs) == null ? void 0 : l.deviceType) === "iPad" && (n = 15);
+    ((l = this.deviceSpecs) == null ? void 0 : l.deviceType) === "iPad" && (n = 13.5);
     const r = s * n;
     return t.volume = Math.min(100, Math.max(0, r)), t.rawVolume = e.volume, this.config.debug && e.volume > 1e-3 && this.debugLog("UnifiedVolumeProcessing:", {
       device: (m = this.deviceSpecs) == null ? void 0 : m.deviceType,
