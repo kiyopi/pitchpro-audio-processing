@@ -56,12 +56,12 @@ const b = class b {
         return {
           sensitivity: 5,
           // 🎤 マイク感度 (PitchDetector用)
-          noiseGate: 0.0225,
-          // 🚪 ノイズゲート閾値 (0.075 * 0.3) - 統合計算済み
-          volumeMultiplier: 20,
-          // 🔊 表示音量補正 (AudioDetectionComponent用)
-          smoothingFactor: 0.3
-          // 📊 平滑化係数
+          noiseGate: 0.02,
+          // 🚪 ノイズゲート閾値 (iPhone成功パターン適用)
+          volumeMultiplier: 12,
+          // 🔊 表示音量補正 (20.0→12.0で安定化)
+          smoothingFactor: 0.25
+          // 📊 平滑化係数 (iPhone成功パターン適用)
         };
       case "iPhone":
         return {
