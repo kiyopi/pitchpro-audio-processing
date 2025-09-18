@@ -489,7 +489,11 @@
 
                 audioDetection = new PitchProLib.AudioDetectionComponent({
                     // minVolumeAbsoluteは指定しない - ライブラリのデフォルト値を使用
-                    autoUpdateUI: false,
+                    volumeBarSelector: '#volumeBar',
+                    volumeTextSelector: '#volumeText',
+                    frequencySelector: '#frequencyValue',
+                    noteSelector: '#noteValue',
+                    autoUpdateUI: true,  // 自動UI更新を有効化
                     debug: true
                 });
                 addLog('info', '🔧 AudioDetectionComponent インスタンス作成完了');
@@ -524,22 +528,11 @@
 
                 addLog('success', `📊 設定確認完了: minVolumeAbsolute=${config.minVolumeAbsolute}, 閾値=${thresholdPercent.toFixed(1)}%`);
 
-                // MicrophoneControllerから コールバック設定
-                addLog('info', '🔗 コールバック設定中...');
-                const micController = audioDetection.microphoneController;
+                // autoUpdateUI: trueなので、UIは自動的に更新される
+                addLog('info', '🔗 自動UI更新モード有効（コールバック設定不要）');
 
-                if (micController) {
-                    micController.setCallbacks({
-                        onPitchUpdate: updateDisplay,
-                        onError: (error) => {
-                            addLog('error', `❌ 検出エラー: ${error.message}`);
-                            console.error('🔍 [Debug] Detection error:', error);
-                        }
-                    });
-                    addLog('success', '✅ コールバック設定完了');
-                } else {
-                    addLog('error', '❌ MicrophoneController が利用不可');
-                }
+                // updateDisplay関数は手動テスト用に残す
+                addLog('success', '✅ UI自動更新設定完了');
 
                 addLog('success', '🎉 初期化プロセス完全完了！');
                 console.log('🔍 [Debug] Initialization process completed successfully');
