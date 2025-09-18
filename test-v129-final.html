@@ -287,13 +287,20 @@
                 await audioManager.initialize();
                 addLog('success', '✅ AudioManager初期化完了');
 
-                // PitchDetector初期化（設定上書きなし）
+                // PitchDetector初期化（DeviceDetectionの設定を適用）
                 if (!PitchProLib.PitchDetector) {
                     addLog('error', '❌ PitchDetector クラスが見つかりません');
                     return;
                 }
 
-                pitchDetector = new PitchProLib.PitchDetector(audioManager);
+                // DeviceDetectionから設定を取得
+                const deviceSpecs = PitchProLib.DeviceDetection.getDeviceSpecs();
+                addLog('info', `📱 Device: ${deviceSpecs.deviceType}, noiseGate: ${deviceSpecs.noiseGate}`);
+
+                // PitchDetectorにDeviceDetectionの設定を渡す
+                pitchDetector = new PitchProLib.PitchDetector(audioManager, {
+                    minVolumeAbsolute: deviceSpecs.noiseGate  // 0.018を適用
+                });
                 addLog('info', '🔧 PitchDetector初期化中...');
 
                 await pitchDetector.initialize();
