@@ -58,8 +58,8 @@ const A = class A {
           // 🎤 マイク感度 (PitchDetector用)
           noiseGate: 0.025,
           // 🚪 ノイズゲート閾値 (iPad専用の緩い値)
-          volumeMultiplier: 17,
-          // 🔊 表示音量補正
+          volumeMultiplier: 13,
+          // 🔊 表示音量補正 (17.0→13.0 23%削減で最適化)
           smoothingFactor: 0.25
           // 📊 平滑化係数
         };
@@ -6068,7 +6068,7 @@ E.SCALE_PATTERNS = {
   12: "Perfect Octave"
 };
 let Fe = E;
-const ut = "1.2.2", dt = (/* @__PURE__ */ new Date()).toISOString(), mt = {
+const ut = "1.2.3", dt = (/* @__PURE__ */ new Date()).toISOString(), mt = {
   pitchDetector: {
     fftSize: 4096,
     smoothing: 0.1,
