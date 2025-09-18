@@ -116,7 +116,7 @@ export class DeviceDetection {
       case 'iPad':
         return {
           sensitivity: 4.0,           // 🎤 マイク感度 (PitchDetector用)
-          noiseGate: 0.025,           // 🚪 ノイズゲート閾値 (iPad専用の緩い値)
+          noiseGate: 0.020,           // 🚪 ノイズゲート閾値 (2.5%→2.0% 70Hz検出強化)
           volumeMultiplier: 13.0,     // 🔊 表示音量補正 (17.0→13.0 23%削減で最適化)
           smoothingFactor: 0.25       // 📊 平滑化係数
         };
