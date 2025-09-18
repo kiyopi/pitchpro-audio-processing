@@ -56,8 +56,8 @@ const A = class A {
         return {
           sensitivity: 4,
           // 🎤 マイク感度 (PitchDetector用)
-          noiseGate: 0.01,
-          // 🚪 ノイズゲート閾値 (2.0%→1.0% 70Hz検出最大強化)
+          noiseGate: 0.015,
+          // 🚪 ノイズゲート閾値 (1.0%→1.5% バランス調整)
           volumeMultiplier: 13,
           // 🔊 表示音量補正 (17.0→13.0 23%削減で最適化)
           smoothingFactor: 0.25
@@ -6071,7 +6071,7 @@ E.SCALE_PATTERNS = {
   12: "Perfect Octave"
 };
 let Fe = E;
-const ut = "1.2.1.3", dt = (/* @__PURE__ */ new Date()).toISOString(), mt = {
+const ut = "1.2.1.4", dt = (/* @__PURE__ */ new Date()).toISOString(), mt = {
   pitchDetector: {
     fftSize: 4096,
     smoothing: 0.1,
