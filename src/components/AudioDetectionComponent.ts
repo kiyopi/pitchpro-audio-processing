@@ -1127,40 +1127,43 @@ export class AudioDetectionComponent {
   private _getProcessedResult(rawResult: PitchDetectionResult | null): PitchDetectionResult | null {
     if (!rawResult) return null;
 
-    // 元のオブジェクトを変更しないようにコピーを作成
     const processedResult = { ...rawResult };
-
-    // ⬇️ deviceSettingsではなくdeviceSpecsからvolumeMultiplierを取得
-    const volumeMultiplier = this.deviceSpecs?.volumeMultiplier ?? 1.0;
-    const finalVolume = rawResult.volume * volumeMultiplier;
     
-    // 🎯 生音量（フィルター前）データを追加
-    processedResult.rawVolume = rawResult.volume;
+    // Step 1: 生のRMS値に固定SCALING_FACTORを掛けて初期音量を計算
+    const BASE_SCALING_FACTOR = 1500; 
+    const initialVolume = rawResult.volume * BASE_SCALING_FACTOR;
     
-    // 🎯 明瞭度データを追加（元のPitchDetectionResultにあるclarity値を保持）
-    processedResult.clarity = rawResult.clarity;
+    // Step 2: DeviceDetectionからデバイス固有のノイズゲート閾値を取得
+    const noiseGateThreshold = (this.deviceSpecs?.noiseGate ?? 0.060) * 100; // %に変換
     
-    // Log volume adjustment details when debug is enabled and volume is significant
-    if (this.config.debug && rawResult.volume > 0.1) {
-      this.debugLog('VolumeAdjustment:', {
-        device: this.deviceSpecs?.deviceType,
-        rawVolume: `${rawResult.volume.toFixed(2)}%`,
-        multiplier: volumeMultiplier,
-        finalVolume: `${Math.min(100, Math.max(0, finalVolume)).toFixed(2)}%`,
-        clarity: `${((rawResult.clarity || 0) * 100).toFixed(1)}%`,
-        details: {
-          inputVolume: rawResult.volume,
-          deviceType: this.deviceSpecs?.deviceType,
-          volumeMultiplier: volumeMultiplier,
-          calculatedFinal: finalVolume,
-          clampedFinal: Math.min(100, Math.max(0, finalVolume)),
-          rawClarity: rawResult.clarity
-        }
-      });
+    // Step 3: ノイズゲートを適用
+    if (initialVolume < noiseGateThreshold) {
+      processedResult.volume = 0; // 閾値以下なら音量を0にする
+      processedResult.frequency = 0; // 周波数も0にする
+      processedResult.note = '--';
+      processedResult.rawVolume = rawResult.volume; // 生の値は保持
+      return processedResult; // ここで処理を終了
     }
     
-    // 最終的な音量を0-100の範囲に丸めて、結果オブジェクトを更新
+    // Step 4: ノイズゲートを通過した場合、デバイス固有のvolumeMultiplierで最終的な表示音量を計算
+    const volumeMultiplier = this.deviceSpecs?.volumeMultiplier ?? 1.0;
+    const finalVolume = initialVolume * volumeMultiplier;
+    
+    // 最終的な値を0-100の範囲に丸めて設定
     processedResult.volume = Math.min(100, Math.max(0, finalVolume));
+    processedResult.rawVolume = rawResult.volume; // 生の値は保持
+
+    // デバッグログ（70Hz問題のトラッキング用）
+    if (this.config.debug && rawResult.volume > 0.001) {
+      this.debugLog('UnifiedVolumeProcessing:', {
+        device: this.deviceSpecs?.deviceType,
+        step1_rawRMS: rawResult.volume.toFixed(6),
+        step2_initial: initialVolume.toFixed(2),
+        step3_noiseGate: `${noiseGateThreshold.toFixed(2)}% (${initialVolume >= noiseGateThreshold ? 'PASS' : 'BLOCK'})`,
+        step4_multiplier: volumeMultiplier,
+        step5_final: `${processedResult.volume.toFixed(2)}%`
+      });
+    }
 
     return processedResult;
   }    // 元のオブジェクトを変更しないようにコピーを作成\n    const processedResult = { ...rawResult };\n\n    // ⬇️ deviceSettingsではなくdeviceSpecsからvolumeMultiplierを取得\n    const volumeMultiplier = this.deviceSpecs?.volumeMultiplier ?? 1.0;\n    const finalVolume = rawResult.volume * volumeMultiplier;\n    \n    // 🔍 v1.2.1.20: 全デバイスでvolumeMultiplier処理をログ出力\n    if (rawResult.volume > 0.1) {\n      console.log(`📊 [VolumeAdjustment] Device: ${this.deviceSpecs?.deviceType}, Raw: ${rawResult.volume.toFixed(2)}%, Multiplier: ${volumeMultiplier}, Final: ${Math.min(100, Math.max(0, finalVolume)).toFixed(2)}%`);\n      console.log(`🔍 [CRITICAL] _getProcessedResult details:`, {\n        inputVolume: rawResult.volume,\n        deviceType: this.deviceSpecs?.deviceType,\n        volumeMultiplier: volumeMultiplier,\n        calculatedFinal: finalVolume,\n        clampedFinal: Math.min(100, Math.max(0, finalVolume))\n      });\n    }\n    \n    // 最終的な音量を0-100の範囲に丸めて、結果オブジェクトを更新\n    processedResult.volume = Math.min(100, Math.max(0, finalVolume));\n\n    return processedResult;\n  }

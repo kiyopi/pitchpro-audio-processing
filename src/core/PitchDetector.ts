@@ -163,11 +163,7 @@ export class PitchDetector {
   /** @private Pitch detection clarity/confidence (0-1) */
   private pitchClarity = 0;
   
-  /** @private Circular buffer for volume stabilization */
-  private volumeHistory: number[] | Float32Array = [];
-  
-  /** @private Stabilized volume after filtering */
-  private stableVolume = 0;
+  // 削除: volumeHistory, stableVolume（統合音量処理でAudioDetectionComponentに移管）
   
   /** @private Previous frequency for harmonic correction */
   // @ts-ignore - Used in correctHarmonic method for frequency tracking
@@ -323,8 +319,7 @@ export class PitchDetector {
       ...config.volumeHistory
     };
     
-    // Initialize volume history buffer
-    this.initializeVolumeHistory();
+    // 削除: initializeVolumeHistory (統合音量処理でAudioDetectionComponentに移管)
     
     // Set disableHarmonicCorrection based on harmonic config
     this.disableHarmonicCorrection = !this.harmonicConfig.enabled;
@@ -618,56 +613,21 @@ export class PitchDetector {
       sum += Math.abs(buffer[i]);
     }
     const rms = Math.sqrt(sum / bufferLength);
-    
-    // Platform-specific volume calculation
-    const platformSpecs = this.deviceSpecs;
-    const adjustedRms = rms * platformSpecs.gainCompensation;
-    
-    // 🔧 動的SCALING_FACTOR計算 (sensitivity値に基づく)
-    const currentSensitivity = platformSpecs.sensitivity;
-    const SCALING_FACTOR = 400 / (currentSensitivity * currentSensitivity);
-    // ハードクリッピング（シンプルなリニア変換）
-    const rawVolumeValue = adjustedRms * SCALING_FACTOR;
-    const volumePercent = Math.min(100, Math.max(0, rawVolumeValue));
 
-    // Raw volume calculation (pre-filter)
-    let rawSum = 0;
-    for (let i = 0; i < rawBuffer.length; i++) {
-      rawSum += Math.abs(rawBuffer[i]);
-    }
-    const rawRms = Math.sqrt(rawSum / rawBuffer.length);
-    const rawAdjustedRms = rawRms * platformSpecs.gainCompensation;
-    const rawVolumePercent = Math.min(100, Math.max(0, rawAdjustedRms * SCALING_FACTOR));
+    // ⭐ リファクタリング: 生のRMS値をそのまま使用（音量処理はAudioDetectionComponentで一元化）
+    const volumePercent = rms; // 生のRMS値を直接volume として扱う
 
-    // Volume stabilization with configurable history length
-    this.addToVolumeHistory(volumePercent);
-    this.stableVolume = this.calculateVolumeAverage();
+    // 🔧 削除: SCALING_FACTOR, ノイズゲート処理はAudioDetectionComponentに移管
+    // 常にピッチ検出を実行（ノイズゲート判定を除去）
 
-    // ⭐⭐⭐ デバイス固有ノイズゲート処理（ログ分析提案実装） ⭐⭐⭐
-    // minVolumeAbsoluteを直接パーセント閾値として使用（DeviceDetectionから渡される）
-    const NOISE_GATE_THRESHOLD = this.config.minVolumeAbsolute * 100; // 📊 デバイス固有閾値をパーセント変換
-    const isSignalBelowNoiseGate = volumePercent < NOISE_GATE_THRESHOLD; // 平滑化前の値で判定
-    
-    if (isSignalBelowNoiseGate) {
-      // 閾値以下の場合は、検出結果をクリアするが、stableVolumeは保持（スムージング維持）
-      this.currentVolume = 0;
-      this.rawVolume = 0;
-      // this.stableVolume = 0; <- 削除：スムージング履歴を保持
-      this.currentFrequency = 0;
-      this.detectedNote = '--';
-      this.detectedOctave = null;
-      this.pitchClarity = 0;
-      this.resetHarmonicHistory();
-    } else {
-      // 閾値以上の信号がある場合のみ、ピッチ検出を実行
-      this.currentVolume = this.stableVolume;
-      this.rawVolume = rawVolumePercent;
-      
-      // Pitch detection (using PitchDetector) with error handling
-      // AudioContextから実際のサンプルレートを動的に取得する
-      const sampleRate = this.analyser.context?.sampleRate || 44100; // フォールバック値
-      let pitch = 0;
-      let clarity = 0;
+    this.currentVolume = volumePercent;
+    this.rawVolume = volumePercent;
+
+    // Pitch detection (using PitchDetector) with error handling
+    // AudioContextから実際のサンプルレートを動的に取得する
+    const sampleRate = this.analyser.context?.sampleRate || 44100; // フォールバック値
+    let pitch = 0;
+    let clarity = 0;
     
     try {
       const pitchResult = this.pitchDetector.findPitch(buffer, sampleRate);
@@ -734,21 +694,17 @@ export class PitchDetector {
       this.detectedOctave = null;
       this.pitchClarity = 0;
       }
-    } // else節の終了
-    
-    // 最後に、表示音量を決定するロジック - ノイズゲート適用
-    const displayVolume = isSignalBelowNoiseGate ? 0 : this.stableVolume; // ノイズゲート適用後の表示値
-    
+
     // Process silence detection
     this.processSilenceDetection(this.currentVolume);
-    
-    // Send data to callback
+
+    // Send data to callback with raw volume data
     const result: PitchDetectionResult = {
       frequency: this.currentFrequency,
       note: this.detectedNote,
       octave: this.detectedOctave || undefined,
       clarity: this.pitchClarity,
-      volume: displayVolume,
+      volume: volumePercent, // 生のRMS値を送信（AudioDetectionComponentで処理）
       cents: this.currentFrequency > 0 ? this.frequencyToCents(this.currentFrequency) : undefined
     };
     
@@ -1019,10 +975,8 @@ export class PitchDetector {
     this.detectedNote = '--';
     this.detectedOctave = null;
     this.pitchClarity = 0;
-    this.stableVolume = 0;
-    
-    // Clear buffers
-    this.initializeVolumeHistory();
+
+    // 削除: stableVolume, initializeVolumeHistory (統合音量処理でAudioDetectionComponentに移管)
     
     // Reset harmonic correction
     this.resetHarmonicHistory();
@@ -1267,8 +1221,7 @@ export class PitchDetector {
     this.rawAnalyser = null;
     this.pitchDetector = null;
     
-    // Clear history
-    this.initializeVolumeHistory();
+    // 削除: initializeVolumeHistory (統合音量処理でAudioDetectionComponentに移管)
     this.resetHarmonicHistory();
     
   }
@@ -1359,86 +1312,19 @@ export class PitchDetector {
     };
   }
 
-  /**
-   * Initialize volume history buffer based on configuration
-   * 
-   * @private
-   * @description Creates either a regular array or TypedArray buffer based on config
-   */
-  private initializeVolumeHistory(): void {
-    const length = this.volumeHistoryConfig.historyLength;
-    
-    if (this.volumeHistoryConfig.useTypedArray) {
-      this.volumeHistory = new Float32Array(length);
-    } else {
-      this.volumeHistory = new Array(length).fill(0);
-    }
-  }
-
-  /**
-   * Add new volume value to history buffer with efficient circular buffer operation
-   * 
-   * @private
-   * @param volume - Volume value to add to history
-   */
-  private addToVolumeHistory(volume: number): void {
-    if (this.volumeHistory instanceof Float32Array) {
-      // Efficient circular buffer for TypedArray
-      this.volumeHistory.copyWithin(0, 1);
-      this.volumeHistory[this.volumeHistory.length - 1] = volume;
-    } else {
-      // Traditional array operations
-      this.volumeHistory.push(volume);
-      if (this.volumeHistory.length > this.volumeHistoryConfig.historyLength) {
-        this.volumeHistory.shift();
-      }
-    }
-  }
-
-  /**
-   * Calculate average volume from history buffer
-   * 
-   * @private
-   * @returns Average volume value
-   */
-  private calculateVolumeAverage(): number {
-    if (this.volumeHistory instanceof Float32Array) {
-      let sum = 0;
-      for (let i = 0; i < this.volumeHistory.length; i++) {
-        sum += this.volumeHistory[i];
-      }
-      return sum / this.volumeHistory.length;
-    } else {
-      return this.volumeHistory.reduce((sum, v) => sum + v, 0) / this.volumeHistory.length;
-    }
-  }
+  // 削除: initializeVolumeHistory, updateVolumeHistoryConfig（統合音量処理でAudioDetectionComponentに移管）
 
   /**
    * Update harmonic correction configuration
-   * 
+   *
    * @param config - Partial harmonic correction configuration to update
    */
   updateHarmonicConfig(config: Partial<HarmonicCorrectionConfig>): void {
     this.harmonicConfig = { ...this.harmonicConfig, ...config };
-    
+
     // Reset harmonic history when configuration changes
     this.resetHarmonicHistory();
-    
-    if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
-    }
-  }
 
-  /**
-   * Update volume history configuration
-   * 
-   * @param config - Partial volume history configuration to update
-   */
-  updateVolumeHistoryConfig(config: Partial<VolumeHistoryConfig>): void {
-    this.volumeHistoryConfig = { ...this.volumeHistoryConfig, ...config };
-    
-    // Reinitialize volume history with new configuration
-    this.initializeVolumeHistory();
-    
     if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
     }
   }

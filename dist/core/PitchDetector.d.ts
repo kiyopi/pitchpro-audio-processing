@@ -125,10 +125,6 @@ export declare class PitchDetector {
     private detectedOctave;
     /** @private Pitch detection clarity/confidence (0-1) */
     private pitchClarity;
-    /** @private Circular buffer for volume stabilization */
-    private volumeHistory;
-    /** @private Stabilized volume after filtering */
-    private stableVolume;
     /** @private Previous frequency for harmonic correction */
     private previousFrequency;
     /** @private History buffer for harmonic analysis */
@@ -569,37 +565,10 @@ export declare class PitchDetector {
         volumeHistoryConfig: Required<VolumeHistoryConfig>;
     };
     /**
-     * Initialize volume history buffer based on configuration
-     *
-     * @private
-     * @description Creates either a regular array or TypedArray buffer based on config
-     */
-    private initializeVolumeHistory;
-    /**
-     * Add new volume value to history buffer with efficient circular buffer operation
-     *
-     * @private
-     * @param volume - Volume value to add to history
-     */
-    private addToVolumeHistory;
-    /**
-     * Calculate average volume from history buffer
-     *
-     * @private
-     * @returns Average volume value
-     */
-    private calculateVolumeAverage;
-    /**
      * Update harmonic correction configuration
      *
      * @param config - Partial harmonic correction configuration to update
      */
     updateHarmonicConfig(config: Partial<HarmonicCorrectionConfig>): void;
-    /**
-     * Update volume history configuration
-     *
-     * @param config - Partial volume history configuration to update
-     */
-    updateVolumeHistoryConfig(config: Partial<VolumeHistoryConfig>): void;
 }
 //# sourceMappingURL=PitchDetector.d.ts.map
