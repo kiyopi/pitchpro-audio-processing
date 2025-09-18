@@ -5114,7 +5114,7 @@ const N = class N {
   _getProcessedResult(e) {
     var a, c, l;
     if (!e) return null;
-    const t = { ...e }, s = e.volume * 30, o = (((a = this.deviceSpecs) == null ? void 0 : a.noiseGate) ?? 0.06) * 100;
+    const t = { ...e }, s = e.volume * 80, o = (((a = this.deviceSpecs) == null ? void 0 : a.noiseGate) ?? 0.06) * 100;
     if (s < o)
       return t.volume = 0, t.frequency = 0, t.note = "--", t.rawVolume = e.volume, t;
     const n = ((c = this.deviceSpecs) == null ? void 0 : c.volumeMultiplier) ?? 1, r = s * n;
