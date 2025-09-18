@@ -117,7 +117,7 @@ export class DeviceDetection {
         return {
           sensitivity: 5.0,           // 🎤 マイク感度 (PitchDetector用)
           noiseGate: 0.020,           // 🚪 ノイズゲート閾値 (iPhone成功パターン適用)
-          volumeMultiplier: 12.0,     // 🔊 表示音量補正 (20.0→12.0で安定化)
+          volumeMultiplier: 18.0,     // 🔊 表示音量補正 (12.0→18.0で60%目標)
           smoothingFactor: 0.25       // 📊 平滑化係数 (iPhone成功パターン適用)
         };
         
