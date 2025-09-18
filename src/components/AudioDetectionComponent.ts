@@ -1129,11 +1129,13 @@ export class AudioDetectionComponent {
 
     const processedResult = { ...rawResult };
     
-    // Step 1: 生のRMS値にバランス調整されたSCALING_FACTORを掛けて初期音量を計算
-    // 🎯 最終調整: BASE_SCALING_FACTOR 30 → 80 でノイズゲート通過を確保
-    // iPad計算例: 0.024 × 80 × 17 = 32.64% (適正レベル、ノイズゲート通過)
-    // 無音時: 3-5%, 発声時: 30-100% の理想的なレンジを実現
-    const BASE_SCALING_FACTOR = 80; 
+    // Step 1: 🎯 最適化されたSCALING_FACTOR (80→60に調整)
+    // 計算例 - 新しい60の場合:
+    // - 70Hz低周波 (0.02 raw): 0.02 × 60 × 13 = 15.6% ✅ 検出可能
+    // - 通常の声 (0.06 raw): 0.06 × 60 × 13 = 46.8% → volumeMultiplier調整必要
+    // - 強い声 (0.08 raw): 0.08 × 60 × 13 = 62.4% ✅ 適正範囲
+    // - 非常に強い (0.10 raw): 0.10 × 60 × 13 = 78% ✅ 飽和回避
+    const BASE_SCALING_FACTOR = 60; 
     const initialVolume = rawResult.volume * BASE_SCALING_FACTOR;
     
     // Step 2: DeviceDetectionからデバイス固有のノイズゲート閾値を取得
@@ -1142,14 +1144,21 @@ export class AudioDetectionComponent {
     // Step 3: ノイズゲートを適用
     if (initialVolume < noiseGateThreshold) {
       processedResult.volume = 0; // 閾値以下なら音量を0にする
-      processedResult.frequency = 0; // 周波数も0にする
+      processedResult.frequency = 0; // 周波数を0にする
       processedResult.note = '--';
       processedResult.rawVolume = rawResult.volume; // 生の値は保持
       return processedResult; // ここで処理を終了
     }
     
     // Step 4: ノイズゲートを通過した場合、デバイス固有のvolumeMultiplierで最終的な表示音量を計算
-    const volumeMultiplier = this.deviceSpecs?.volumeMultiplier ?? 1.0;
+    // iPad用に15.0に調整して通常の声で60%超を達成
+    let volumeMultiplier = this.deviceSpecs?.volumeMultiplier ?? 1.0;
+    
+    // iPad特別調整: BASE_SCALING_FACTOR減少分を補償
+    if (this.deviceSpecs?.deviceType === 'iPad') {
+      volumeMultiplier = 15.0; // 13.0 → 15.0 (15%増加で60%目標を達成)
+    }
+    
     const finalVolume = initialVolume * volumeMultiplier;
     
     // 最終的な値を0-100の範囲に丸めて設定
@@ -1164,7 +1173,8 @@ export class AudioDetectionComponent {
         step2_initial: initialVolume.toFixed(2),
         step3_noiseGate: `${noiseGateThreshold.toFixed(2)}% (${initialVolume >= noiseGateThreshold ? 'PASS' : 'BLOCK'})`,
         step4_multiplier: volumeMultiplier,
-        step5_final: `${processedResult.volume.toFixed(2)}%`
+        step5_final: `${processedResult.volume.toFixed(2)}%`,
+        frequency: `${rawResult.frequency?.toFixed(2)}Hz`
       });
     }
 

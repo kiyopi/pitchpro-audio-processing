@@ -1172,7 +1172,7 @@ I.prototype._transform4 = function() {
     var m = o >>> 2;
     for (n = 0; n < t; n += o)
       for (var u = n + m, d = n, f = 0; d < u; d += 2, f += s) {
-        const p = d, y = p + m, v = y + m, S = v + m, b = e[p], g = e[p + 1], C = e[y], D = e[y + 1], P = e[v], q = e[v + 1], O = e[S], z = e[S + 1], L = b, U = g, B = l[f], $ = c * l[f + 1], H = C * B - D * $, V = C * $ + D * B, X = l[2 * f], Y = c * l[2 * f + 1], K = P * X - q * Y, Z = P * Y + q * X, ee = l[3 * f], te = c * l[3 * f + 1], ie = O * ee - z * te, se = O * te + z * ee, oe = L + K, G = U + Z, j = L - K, ne = U - Z, re = H + ie, Q = V + se, W = c * (H - ie), ae = c * (V - se), he = oe + re, fe = G + Q, ge = oe - re, pe = G - Q, ve = j + ae, ye = ne - W, Se = j - ae, Ce = ne + W;
+        const p = d, y = p + m, v = y + m, S = v + m, b = e[p], g = e[p + 1], C = e[y], D = e[y + 1], P = e[v], q = e[v + 1], z = e[S], O = e[S + 1], L = b, U = g, B = l[f], $ = c * l[f + 1], H = C * B - D * $, V = C * $ + D * B, X = l[2 * f], Y = c * l[2 * f + 1], K = P * X - q * Y, Z = P * Y + q * X, ee = l[3 * f], te = c * l[3 * f + 1], ie = z * ee - O * te, se = z * te + O * ee, oe = L + K, G = U + Z, j = L - K, ne = U - Z, re = H + ie, Q = V + se, W = c * (H - ie), ae = c * (V - se), he = oe + re, fe = G + Q, ge = oe - re, pe = G - Q, ve = j + ae, ye = ne - W, Se = j - ae, Ce = ne + W;
         e[p] = he, e[p + 1] = fe, e[y] = ve, e[y + 1] = ye, e[v] = ge, e[v + 1] = pe, e[S] = Se, e[S + 1] = Ce;
       }
   }
@@ -1182,8 +1182,8 @@ I.prototype._singleTransform2 = function(e, t, i) {
   s[e] = l, s[e + 1] = m, s[e + 2] = u, s[e + 3] = d;
 };
 I.prototype._singleTransform4 = function(e, t, i) {
-  const s = this._out, o = this._data, n = this._inv ? -1 : 1, r = i * 2, a = i * 3, c = o[t], l = o[t + 1], m = o[t + i], u = o[t + i + 1], d = o[t + r], f = o[t + r + 1], p = o[t + a], y = o[t + a + 1], v = c + d, S = l + f, b = c - d, g = l - f, C = m + p, D = u + y, P = n * (m - p), q = n * (u - y), O = v + C, z = S + D, L = b + q, U = g - P, B = v - C, $ = S - D, H = b - q, V = g + P;
-  s[e] = O, s[e + 1] = z, s[e + 2] = L, s[e + 3] = U, s[e + 4] = B, s[e + 5] = $, s[e + 6] = H, s[e + 7] = V;
+  const s = this._out, o = this._data, n = this._inv ? -1 : 1, r = i * 2, a = i * 3, c = o[t], l = o[t + 1], m = o[t + i], u = o[t + i + 1], d = o[t + r], f = o[t + r + 1], p = o[t + a], y = o[t + a + 1], v = c + d, S = l + f, b = c - d, g = l - f, C = m + p, D = u + y, P = n * (m - p), q = n * (u - y), z = v + C, O = S + D, L = b + q, U = g - P, B = v - C, $ = S - D, H = b - q, V = g + P;
+  s[e] = z, s[e + 1] = O, s[e + 2] = L, s[e + 3] = U, s[e + 4] = B, s[e + 5] = $, s[e + 6] = H, s[e + 7] = V;
 };
 I.prototype._realTransform4 = function() {
   var e = this._out, t = this._csize, i = this._width, s = 1 << i, o = t / s << 1, n, r, a = this._bitrev;
@@ -1203,15 +1203,15 @@ I.prototype._realTransform4 = function() {
     var m = o >>> 1, u = m >>> 1, d = u >>> 1;
     for (n = 0; n < t; n += o)
       for (var f = 0, p = 0; f <= d; f += 2, p += s) {
-        var y = n + f, v = y + u, S = v + u, b = S + u, g = e[y], C = e[y + 1], D = e[v], P = e[v + 1], q = e[S], O = e[S + 1], z = e[b], L = e[b + 1], U = g, B = C, $ = l[p], H = c * l[p + 1], V = D * $ - P * H, X = D * H + P * $, Y = l[2 * p], K = c * l[2 * p + 1], Z = q * Y - O * K, ee = q * K + O * Y, te = l[3 * p], ie = c * l[3 * p + 1], se = z * te - L * ie, oe = z * ie + L * te, G = U + Z, j = B + ee, ne = U - Z, re = B - ee, Q = V + se, W = X + oe, ae = c * (V - se), he = c * (X - oe), fe = G + Q, ge = j + W, pe = ne + he, ve = re - ae;
+        var y = n + f, v = y + u, S = v + u, b = S + u, g = e[y], C = e[y + 1], D = e[v], P = e[v + 1], q = e[S], z = e[S + 1], O = e[b], L = e[b + 1], U = g, B = C, $ = l[p], H = c * l[p + 1], V = D * $ - P * H, X = D * H + P * $, Y = l[2 * p], K = c * l[2 * p + 1], Z = q * Y - z * K, ee = q * K + z * Y, te = l[3 * p], ie = c * l[3 * p + 1], se = O * te - L * ie, oe = O * ie + L * te, G = U + Z, j = B + ee, ne = U - Z, re = B - ee, Q = V + se, W = X + oe, ae = c * (V - se), he = c * (X - oe), fe = G + Q, ge = j + W, pe = ne + he, ve = re - ae;
         if (e[y] = fe, e[y + 1] = ge, e[v] = pe, e[v + 1] = ve, f === 0) {
           var ye = G - Q, Se = j - W;
           e[S] = ye, e[S + 1] = Se;
           continue;
         }
         if (f !== d) {
-          var Ce = ne, xe = -re, Ne = G, Re = -j, Pe = -c * he, qe = -c * ae, _e = -c * W, ke = -c * Q, Oe = Ce + Pe, ze = xe + qe, Le = Ne + ke, Ue = Re - _e, Ae = n + u - f, we = n + m - f;
-          e[Ae] = Oe, e[Ae + 1] = ze, e[we] = Le, e[we + 1] = Ue;
+          var Ce = ne, xe = -re, Ne = G, Re = -j, Pe = -c * he, qe = -c * ae, _e = -c * W, ke = -c * Q, ze = Ce + Pe, Oe = xe + qe, Le = Ne + ke, Ue = Re - _e, Ae = n + u - f, we = n + m - f;
+          e[Ae] = ze, e[Ae + 1] = Oe, e[we] = Le, e[we + 1] = Ue;
         }
       }
   }
@@ -5112,19 +5112,22 @@ const N = class N {
    * @see {@link detectAndOptimizeDevice} デバイス設定の決定方法
    */
   _getProcessedResult(e) {
-    var a, c, l;
+    var a, c, l, m, u;
     if (!e) return null;
-    const t = { ...e }, s = e.volume * 80, o = (((a = this.deviceSpecs) == null ? void 0 : a.noiseGate) ?? 0.06) * 100;
+    const t = { ...e }, s = e.volume * 60, o = (((a = this.deviceSpecs) == null ? void 0 : a.noiseGate) ?? 0.06) * 100;
     if (s < o)
       return t.volume = 0, t.frequency = 0, t.note = "--", t.rawVolume = e.volume, t;
-    const n = ((c = this.deviceSpecs) == null ? void 0 : c.volumeMultiplier) ?? 1, r = s * n;
+    let n = ((c = this.deviceSpecs) == null ? void 0 : c.volumeMultiplier) ?? 1;
+    ((l = this.deviceSpecs) == null ? void 0 : l.deviceType) === "iPad" && (n = 15);
+    const r = s * n;
     return t.volume = Math.min(100, Math.max(0, r)), t.rawVolume = e.volume, this.config.debug && e.volume > 1e-3 && this.debugLog("UnifiedVolumeProcessing:", {
-      device: (l = this.deviceSpecs) == null ? void 0 : l.deviceType,
+      device: (m = this.deviceSpecs) == null ? void 0 : m.deviceType,
       step1_rawRMS: e.volume.toFixed(6),
       step2_initial: s.toFixed(2),
       step3_noiseGate: `${o.toFixed(2)}% (${s >= o ? "PASS" : "BLOCK"})`,
       step4_multiplier: n,
-      step5_final: `${t.volume.toFixed(2)}%`
+      step5_final: `${t.volume.toFixed(2)}%`,
+      frequency: `${(u = e.frequency) == null ? void 0 : u.toFixed(2)}Hz`
     }), t;
   }
   // 元のオブジェクトを変更しないようにコピーを作成\n    const processedResult = { ...rawResult };\n\n    // ⬇️ deviceSettingsではなくdeviceSpecsからvolumeMultiplierを取得\n    const volumeMultiplier = this.deviceSpecs?.volumeMultiplier ?? 1.0;\n    const finalVolume = rawResult.volume * volumeMultiplier;\n    \n    // 🔍 v1.2.1.20: 全デバイスでvolumeMultiplier処理をログ出力\n    if (rawResult.volume > 0.1) {\n      console.log(`📊 [VolumeAdjustment] Device: ${this.deviceSpecs?.deviceType}, Raw: ${rawResult.volume.toFixed(2)}%, Multiplier: ${volumeMultiplier}, Final: ${Math.min(100, Math.max(0, finalVolume)).toFixed(2)}%`);\n      console.log(`🔍 [CRITICAL] _getProcessedResult details:`, {\n        inputVolume: rawResult.volume,\n        deviceType: this.deviceSpecs?.deviceType,\n        volumeMultiplier: volumeMultiplier,\n        calculatedFinal: finalVolume,\n        clampedFinal: Math.min(100, Math.max(0, finalVolume))\n      });\n    }\n    \n    // 最終的な音量を0-100の範囲に丸めて、結果オブジェクトを更新\n    processedResult.volume = Math.min(100, Math.max(0, finalVolume));\n\n    return processedResult;\n  }
