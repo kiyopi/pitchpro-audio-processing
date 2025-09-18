@@ -96,9 +96,9 @@ const A = class A {
       deviceType: "PC",
       isIOS: !1,
       sensitivity: 1.7,
-      // 🎤 PC最適化値と統一 (2.5→1.7でバランス調整)
-      noiseGate: 0.018,
-      // 🚪 PC最適化値と統一 (1.8%) - v1.2.9+最適化値
+      // 🎤 PC最適化値と統一
+      noiseGate: 0.06,
+      // 🚪 PC最適化値と統一 (6.0%) - getDeviceOptimizationsと完全一致
       volumeMultiplier: 3,
       // 🔊 PC最適化値と統一
       smoothingFactor: 0.25,
