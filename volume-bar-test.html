@@ -524,15 +524,22 @@
 
                 addLog('success', `📊 設定確認完了: minVolumeAbsolute=${config.minVolumeAbsolute}, 閾値=${thresholdPercent.toFixed(1)}%`);
 
-                // コールバック設定
+                // MicrophoneControllerから コールバック設定
                 addLog('info', '🔗 コールバック設定中...');
-                audioDetection.setCallbacks({
-                    onPitchUpdate: updateDisplay,
-                    onError: (error) => {
-                        addLog('error', `❌ 検出エラー: ${error.message}`);
-                        console.error('🔍 [Debug] Detection error:', error);
-                    }
-                });
+                const micController = audioDetection.microphoneController;
+
+                if (micController) {
+                    micController.setCallbacks({
+                        onPitchUpdate: updateDisplay,
+                        onError: (error) => {
+                            addLog('error', `❌ 検出エラー: ${error.message}`);
+                            console.error('🔍 [Debug] Detection error:', error);
+                        }
+                    });
+                    addLog('success', '✅ コールバック設定完了');
+                } else {
+                    addLog('error', '❌ MicrophoneController が利用不可');
+                }
 
                 addLog('success', '🎉 初期化プロセス完全完了！');
                 console.log('🔍 [Debug] Initialization process completed successfully');
@@ -639,10 +646,17 @@
 
             try {
                 addLog('info', '🎤 ピッチ検出を開始中...');
-                console.log('🔍 [Debug] Calling audioDetection.startDetection()');
+                console.log('🔍 [Debug] Getting MicrophoneController');
 
-                const started = audioDetection.startDetection();
-                console.log('🔍 [Debug] startDetection() returned:', started);
+                const micController = audioDetection.microphoneController;
+                if (!micController) {
+                    addLog('error', '❌ MicrophoneController が利用不可');
+                    return;
+                }
+
+                console.log('🔍 [Debug] Calling micController.start()');
+                const started = micController.start();
+                console.log('🔍 [Debug] start() returned:', started);
 
                 if (started) {
                     isRunning = true;
@@ -651,8 +665,8 @@
                     addLog('success', '🎤 ピッチ検出開始成功');
                     console.log('🔍 [Debug] Detection started successfully');
                 } else {
-                    addLog('error', '❌ 検出開始に失敗 - startDetection()がfalseを返しました');
-                    console.error('❌ [Debug] Detection start failed - startDetection() returned false');
+                    addLog('error', '❌ 検出開始に失敗 - start()がfalseを返しました');
+                    console.error('❌ [Debug] Detection start failed - start() returned false');
                 }
             } catch (error) {
                 addLog('error', `❌ 検出開始エラー: ${error.message}`);
@@ -672,7 +686,10 @@
         function stopDetection() {
             if (!audioDetection) return;
 
-            audioDetection.stopDetection();
+            const micController = audioDetection.microphoneController;
+            if (micController) {
+                micController.reset();  // 停止とUIリセット
+            }
             isRunning = false;
             document.getElementById('startBtn').disabled = false;
             document.getElementById('stopBtn').disabled = true;
