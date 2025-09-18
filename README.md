@@ -45,17 +45,17 @@ Web音楽アプリケーション開発のための包括的な音響処理ツ�
 - **完全TypeScript対応**：strictモード対応、厳密な型定義とIntelliSense支援
 - **ES/CommonJS対応**：モダンバンドラーと従来環境の両対応
 
-## 🎯 重要：v1.2.0 音量値一貫性修正リリース
+## 🎯 最新リリース：v1.2.2 全デバイス70Hz検出完全制覇
 
-**音量値一貫性問題完全解決**：`6.139596009254456`のような異常値出力を修正し、コールバックとUI自動更新で完全に同じ値を保証
+**全プラットフォーム低周波数検出実現**：iPad/iPhone/PC環境での統一された高精度低周波数検出システムが完成。70Hz以下の音も安定して検出可能に
 - 要素セレクター検証システムによる完全な干渉防止
 - 自動noteSelector管理機能
 - 非アクティブモード時の確実なUI停止
 
-**対象ユーザー**：全ユーザー（クリティカルバグ修正のため即座の更新推奨）
+**対象ユーザー**：低周波数検出を必要とする全ユーザー（大幅な性能改善のため更新推奨）
 ```bash
-# 最新版へのアップデート  
-npm install @pitchpro/audio-processing@1.2.0
+# 最新版へのアップデート
+npm install @pitchpro/audio-processing@1.2.2
 ```
 
 ## 🔄 v1.1.3 マイクレベル修正（継続中）
@@ -83,11 +83,16 @@ import PitchPro from './dist/index.esm.js';
 
 NPM/CDNを利用している場合は変更不要です。
 
-### 🚀 新機能（v1.2.0）
+### 🚀 新機能（v1.2.2）
+- **🎯 全デバイス70Hz検出**：PC/iPhone/iPadで低周波数の安定検出を実現
+- **🔬 デバイス固有最適化**：マイク特性を科学的に分析し個別最適化
+- **📊 段階的調整手法**：体系的な最適化プロセスの確立
+- **✨ 統一処理アーキテクチャ**：全デバイスで一貫した処理フロー
+
+### 🚀 継続機能（v1.2.0）
 - **🎯 音量値一貫性保証**：コールバックとUI自動更新で完全に同じ値を提供
 - **⚠️ autoUpdateUI警告システム**：UI自動更新時の透明性向上
 - **🔧 一元的音量処理**：`_getProcessedResult()`による統合処理システム
-- **📊 完全な予測可能性**：6.139のような異常値を完全に排除
 
 ### 🚀 継続機能（v1.1.8）
 - **🛡️ クロスモード干渉防止**：要素セレクター検証による完全なUI保護
@@ -155,8 +160,8 @@ npm install @pitchpro/audio-processing
 ```
 
 #### 📥 直接ダウンロード
-- **最新版**: [v1.2.0 リリース](https://github.com/kiyopi/pitchpro-audio-processing/releases/latest)
-- **UMDファイル**: [pitchpro.umd.js](https://github.com/kiyopi/pitchpro-audio-processing/releases/download/v1.2.0/pitchpro.umd.js)
+- **最新版**: [v1.2.2 リリース](https://github.com/kiyopi/pitchpro-audio-processing/releases/latest)
+- **UMDファイル**: [pitchpro.umd.js](https://github.com/kiyopi/pitchpro-audio-processing/releases/download/v1.2.2/pitchpro.umd.js)
 - **デモページ**: [ワンクリックダウンロード＋デモ](https://kiyopi.github.io/pitchpro-audio-processing/quickstart-demo.html)
 
 ### 基本的な使用方法
