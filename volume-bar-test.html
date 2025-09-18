@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎤 PitchPro v1.2.9 + バランス最適化</title>
+    <title>🎤 PitchPro v1.2.10 + リファクタリング最適化</title>
 
     <!-- 🚀 最強キャッシュクリア機能 -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0, s-maxage=0, proxy-revalidate">
@@ -236,8 +236,8 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎤 PitchPro v1.2.9 + バランス最適化</h1>
-            <p>🎯 sensitivity=1.7 + noiseGate=1.8% でバランス調整</p>
+            <h1>🎤 PitchPro v1.2.10 + リファクタリング最適化</h1>
+            <p>🎯 autoUpdateUI活用: 基本UI自動更新 + 生音量・明瞭度手動制御</p>
             <div style="font-size: 12px; color: #FFD700; margin-top: 10px;">
                 📅 <span id="loadTimestamp">Loading...</span><br>
                 🔧 <span id="cacheStatus">キャッシュ状態確認中...</span>
@@ -257,8 +257,9 @@
         <div class="volume-section">
             <h3>📊 音量モニター</h3>
 
+            <!-- ✅ 自動更新される基本音量バー -->
             <div class="volume-container">
-                <div class="volume-label">処理済み音量（最終出力）</div>
+                <div class="volume-label">音量（自動更新）</div>
                 <div class="volume-bar-wrapper">
                     <div id="volumeBar" class="volume-bar"></div>
                     <div id="volumeText" class="volume-text">0.0%</div>
@@ -268,8 +269,9 @@
                 </div>
             </div>
 
+            <!-- 🆕 手動更新される生音量バー -->
             <div class="volume-container">
-                <div class="volume-label">生音量（フィルター前）</div>
+                <div class="volume-label">生音量（フィルター前・手動）</div>
                 <div class="volume-bar-wrapper">
                     <div id="rawVolumeBar" class="volume-bar"></div>
                     <div id="rawVolumeText" class="volume-text">0.0%</div>
@@ -277,16 +279,18 @@
             </div>
 
             <div class="detection-display">
+                <!-- ✅ 自動更新 -->
                 <div class="detection-item">
-                    <div class="detection-label">周波数</div>
+                    <div class="detection-label">周波数（自動）</div>
                     <div id="frequencyValue" class="detection-value">0.0 Hz</div>
                 </div>
                 <div class="detection-item">
-                    <div class="detection-label">音符</div>
+                    <div class="detection-label">音符（自動）</div>
                     <div id="noteValue" class="detection-value">--</div>
                 </div>
+                <!-- 🆕 手動更新 -->
                 <div class="detection-item">
-                    <div class="detection-label">明瞭度</div>
+                    <div class="detection-label">明瞭度（手動）</div>
                     <div id="clarityValue" class="detection-value">0%</div>
                 </div>
             </div>
@@ -487,13 +491,14 @@
                     throw new Error('AudioDetectionComponent クラスが見つかりません');
                 }
 
+                // ✅ autoUpdateUI機能を活用した最適化設定
                 audioDetection = new PitchProLib.AudioDetectionComponent({
-                    // minVolumeAbsoluteは指定しない - ライブラリのデフォルト値を使用
+                    // 基本UI要素は自動更新
                     volumeBarSelector: '#volumeBar',
                     volumeTextSelector: '#volumeText',
                     frequencySelector: '#frequencyValue',
                     noteSelector: '#noteValue',
-                    autoUpdateUI: true,  // 自動UI更新を有効化
+                    autoUpdateUI: true,  // 🎯 自動UI更新を有効化
                     debug: true
                 });
                 addLog('info', '🔧 AudioDetectionComponent インスタンス作成完了');
@@ -503,36 +508,17 @@
                 addLog('success', '✅ AudioDetectionComponent初期化完了');
                 console.log('🔍 [Debug] AudioDetectionComponent initialized successfully');
 
-                // 設定値の確認と表示
-                addLog('info', '📊 設定値の確認と表示中...');
-                const config = audioDetection.config;
-                const deviceSpecs = audioDetection.deviceSpecs;
+                // 🎯 DeviceDetection統合設定の表示
+                addLog('info', '📊 DeviceDetection統合設定の確認中...');
+                displayDeviceSettings();
 
-                if (!config || !deviceSpecs) {
-                    throw new Error('設定値またはデバイス情報の取得に失敗しました');
-                }
+                // 🎯 簡素化されたコールバック設定（基本UIは自動、追加データのみ手動）
+                addLog('info', '🔗 コールバック関数を設定中...');
 
-                addLog('info', `📱 検出されたデバイス: ${deviceSpecs.deviceType}`);
-                addLog('info', `⚙️ minVolumeAbsolute: ${config.minVolumeAbsolute}`);
-                addLog('info', `🎯 感度: ${deviceSpecs.sensitivity}x`);
+                // ✅ AudioDetectionComponentでは config.onPitchUpdate を直接設定
+                audioDetection.config.onPitchUpdate = updateAdditionalData;
 
-                document.getElementById('minVolumeValue').textContent = config.minVolumeAbsolute.toFixed(3);
-                document.getElementById('thresholdValue').textContent = `${(config.minVolumeAbsolute * 500).toFixed(1)}%`;
-                document.getElementById('deviceType').textContent = deviceSpecs.deviceType;
-                document.getElementById('sensitivityValue').textContent = `${deviceSpecs.sensitivity}x`;
-
-                // 閾値ラインの位置を更新
-                const thresholdPercent = config.minVolumeAbsolute * 500;
-                document.getElementById('thresholdIndicator').style.left = `${Math.min(100, thresholdPercent)}%`;
-                document.querySelector('.threshold-label').textContent = `閾値 ${thresholdPercent.toFixed(1)}%`;
-
-                addLog('success', `📊 設定確認完了: minVolumeAbsolute=${config.minVolumeAbsolute}, 閾値=${thresholdPercent.toFixed(1)}%`);
-
-                // autoUpdateUI: trueなので、UIは自動的に更新される
-                addLog('info', '🔗 自動UI更新モード有効（コールバック設定不要）');
-
-                // updateDisplay関数は手動テスト用に残す
-                addLog('success', '✅ UI自動更新設定完了');
+                addLog('success', '✅ コールバック設定完了（自動UI + 追加データ手動処理）');
 
                 addLog('success', '🎉 初期化プロセス完全完了！');
                 console.log('🔍 [Debug] Initialization process completed successfully');
@@ -552,35 +538,48 @@
             }
         }
 
-        function updateDisplay(result) {
-            // 音量バー更新
-            const volume = result.volume || 0;
-            const rawVolume = (result.rawVolume !== undefined) ? result.rawVolume : volume;
+        // 🎯 DeviceDetection統合設定の表示関数
+        function displayDeviceSettings() {
+            const deviceSpecs = audioDetection.deviceSpecs;
+            if (!deviceSpecs) {
+                addLog('error', '❌ DeviceSpecs情報の取得に失敗');
+                return;
+            }
 
-            // 処理済み音量
-            document.getElementById('volumeBar').style.width = `${Math.min(100, volume)}%`;
-            document.getElementById('volumeText').textContent = `${volume.toFixed(1)}%`;
+            // DeviceDetection.tsの統一設定を表示
+            document.getElementById('deviceType').textContent = deviceSpecs.deviceType;
+            document.getElementById('sensitivityValue').textContent = `${deviceSpecs.sensitivity}x`;
+            document.getElementById('minVolumeValue').textContent = deviceSpecs.noiseGate.toFixed(3);
+            document.getElementById('thresholdValue').textContent = `${(deviceSpecs.noiseGate * 100).toFixed(1)}%`;
 
-            // 生音量
+            // 閾値ラインの正確な位置設定
+            const thresholdPercent = deviceSpecs.noiseGate * 100;
+            document.getElementById('thresholdIndicator').style.left = `${Math.min(100, thresholdPercent)}%`;
+            document.querySelector('.threshold-label').textContent = `閾値 ${thresholdPercent.toFixed(1)}%`;
+
+            addLog('success', `📱 デバイス設定: ${deviceSpecs.deviceType}, ノイズゲート: ${thresholdPercent.toFixed(1)}%, 音量倍率: ${deviceSpecs.volumeMultiplier}x`);
+        }
+
+        // 🆕 追加データのみを処理する簡素化された関数
+        function updateAdditionalData(result) {
+            console.log('🔍 [updateAdditionalData] 受信データ:', result);
+
+            // 基本UI（volume, frequency, note）は自動更新される
+            // 追加データのみ手動で処理
+            const rawVolume = result.rawVolume || 0;
+            const clarity = result.clarity || 0;
+
+            // 🆕 生音量バー（自動UIに含まれない要素）
             document.getElementById('rawVolumeBar').style.width = `${Math.min(100, rawVolume)}%`;
             document.getElementById('rawVolumeText').textContent = `${rawVolume.toFixed(1)}%`;
 
-            // 周波数・音符
-            document.getElementById('frequencyValue').textContent = result.frequency ?
-                `${result.frequency.toFixed(1)} Hz` : '0.0 Hz';
-            document.getElementById('noteValue').textContent = result.note || '--';
-            document.getElementById('clarityValue').textContent = result.clarity ?
-                `${(result.clarity * 100).toFixed(0)}%` : '0%';
+            // 🆕 明瞭度（ピッチ検出信頼度）
+            document.getElementById('clarityValue').textContent = `${(clarity * 100).toFixed(0)}%`;
 
-            // ノイズゲート動作の確認（最初の数回のみ）
-            if (volume === 0 && rawVolume > 0 && rawVolume < 10) {
-                if (!this.gateLogCount) this.gateLogCount = 0;
-                if (this.gateLogCount < 3) {
-                    addLog('info', `🚫 ノイズゲート作動: 生音量 ${rawVolume.toFixed(1)}% < 閾値 10%`);
-                    this.gateLogCount++;
-                }
-            } else if (volume > 0) {
-                this.gateLogCount = 0; // リセット
+            // 🎯 簡潔なログ（最初の数回のみ）
+            if (rawVolume > 0 && (!window.logCount || window.logCount < 3)) {
+                addLog('success', `📊 生音量: ${rawVolume.toFixed(1)}%, 明瞭度: ${(clarity * 100).toFixed(0)}%`);
+                window.logCount = (window.logCount || 0) + 1;
             }
         }
 
@@ -687,7 +686,7 @@
             document.getElementById('startBtn').disabled = false;
             document.getElementById('stopBtn').disabled = true;
 
-            // バーをリセット
+            // 🎯 UI要素をリセット（自動UI要素も手動でリセット）
             document.getElementById('volumeBar').style.width = '0%';
             document.getElementById('volumeText').textContent = '0.0%';
             document.getElementById('rawVolumeBar').style.width = '0%';
