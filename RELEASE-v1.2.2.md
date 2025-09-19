@@ -96,13 +96,13 @@ if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
 - リアルタイムパフォーマンス調整
 - バージョン情報の統一管理とデバッグ表示
 
-### setCallbacks()メソッドの完全実装 ⭐
-**重要**: コメント内で使用例が示されていたsetCallbacks()メソッドを正式に実装しました。
-- AudioDetectionComponent.setCallbacks()の完全実装
-- PitchDetectorとの型安全なコールバック伝播
+### setCallbacks()メソッドの確認と文書化 ⭐
+**重要**: setCallbacks()メソッドが完全に実装済みであることを確認し、正確な使用方法を文書化しました。
+- AudioDetectionComponent.setCallbacks()の完全実装済み確認
+- PitchDetectorとの型安全なコールバック伝播機能
 - Error ⟷ PitchProError の自動型変換機能
-- 包括的なテストカバレッジ（4項目）追加
-- TypeScript型定義の自動生成と確認
+- 包括的なテストカバレッジ（4項目）で動作確認
+- TypeScript型定義とUMDビルドでの正常動作確認
 
 ## 💡 使用例
 
@@ -143,7 +143,9 @@ const audioDetector = new AudioDetectionComponent({
 await audioDetector.initialize();
 ```
 
-### setCallbacks()の活用（v1.2.2新機能）
+### 🎯 コールバック設定の2つの方法（v1.2.2）
+
+#### 方法1: setCallbacks()メソッド（全コールバック対応）
 ```javascript
 import { AudioDetectionComponent } from '@pitchpro/audio-processing';
 
@@ -154,7 +156,7 @@ const audioDetector = new AudioDetectionComponent({
 
 await audioDetector.initialize();
 
-// setCallbacks()でイベントハンドラーを設定
+// setCallbacks()で全コールバックを設定（推奨）
 audioDetector.setCallbacks({
   onPitchUpdate: (result) => {
     console.log('音程検出:', result);
@@ -171,10 +173,67 @@ audioDetector.setCallbacks({
   },
   onVolumeUpdate: (volume) => {
     console.log('音量更新:', volume + '%');
+  },
+  onDeviceDetected: (specs) => {
+    console.log('デバイス検出:', specs);
   }
 });
 
 await audioDetector.startDetection();
+```
+
+#### 方法2: コンストラクタ設定（onPitchUpdateのみ対応）
+```javascript
+import { AudioDetectionComponent } from '@pitchpro/audio-processing';
+
+// コンストラクタではonPitchUpdateのみ設定可能
+const audioDetector = new AudioDetectionComponent({
+  volumeBarSelector: '#volume-bar',
+  frequencySelector: '#frequency-display',
+  onPitchUpdate: (result) => {
+    console.log('音程検出:', result);
+    // 基本的な音程検出処理
+  }
+});
+
+// 他のコールバックはsetCallbacks()で追加
+audioDetector.setCallbacks({
+  onError: (error) => console.error('エラー:', error),
+  onStateChange: (state) => console.log('状態:', state)
+});
+
+await audioDetector.initialize();
+await audioDetector.startDetection();
+```
+
+#### 💡 推奨される使用パターン
+```javascript
+// ✅ 推奨: 基本設定はコンストラクタ、完全なコールバックはsetCallbacks()
+const audioDetector = new AudioDetectionComponent({
+  volumeBarSelector: '#volume-bar',
+  autoUpdateUI: true,
+  deviceOptimization: true,
+  onPitchUpdate: (result) => {
+    // 基本的な処理
+    console.log(`周波数: ${result.frequency}Hz`);
+  }
+});
+
+// 完全なエラーハンドリングと状態管理
+audioDetector.setCallbacks({
+  onError: (error) => {
+    console.error('音響エラー:', error.message);
+    // エラー処理ロジック
+  },
+  onStateChange: (state) => {
+    if (state === 'error') {
+      // エラー状態での UI 更新
+    }
+  },
+  onVolumeUpdate: (volume) => {
+    // カスタム音量表示
+  }
+});
 ```
 
 ## 🔄 v1.2.0からの移行

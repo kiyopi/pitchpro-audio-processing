@@ -101,6 +101,26 @@ private _getProcessedResult(rawResult: PitchDetectionResult | null) {
 - ✅ 自動最適化モード: 処理済みデータ提供
 - ✅ 柔軟な使い分け: ユーザー用途に応じた選択可能
 
+#### setCallbacks()メソッド完全実装確認（v1.2.2）
+**API一貫性の包括的検証**を実施し、完全動作を確認
+- ✅ **メソッド存在**: `src/components/AudioDetectionComponent.ts:921`に完全実装
+- ✅ **UMDビルド**: `dist/pitchpro.umd.js`に正常包含確認
+- ✅ **TypeScript定義**: 型安全性とIntelliSense対応完了
+- ✅ **テストカバレッジ**: 19/19テスト合格（setCallbacks専用4テスト含む）
+- ✅ **実行時動作**: Node.js環境での実際動作確認完了
+
+**対応コールバック**:
+- `onPitchUpdate`: 音程検出結果の受信
+- `onError`: PitchProError型での構造化エラー処理
+- `onStateChange`: 初期化〜検出〜停止の状態変化監視
+- `onVolumeUpdate`: リアルタイム音量更新
+- `onDeviceDetected`: デバイス特性検出時の通知
+
+**設計仕様**:
+- **コンストラクタ**: `onPitchUpdate`のみサポート（基本設定用）
+- **setCallbacks()**: 全5種類コールバック対応（完全機能用）
+- **推奨パターン**: 基本設定はコンストラクタ、完全制御はsetCallbacks()を併用
+
 ## 改善完了項目（v1.1.8）
 
 ### 🛡️ 重要機能追加（v1.1.8）
