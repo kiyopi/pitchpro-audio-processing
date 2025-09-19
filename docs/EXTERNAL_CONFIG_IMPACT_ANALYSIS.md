@@ -13,17 +13,17 @@ deviceProfilesを外部JSONファイル化する際の影響範囲と実装コ�
 // 現在のハードコード（967-984行）
 const deviceSettingsMap: Record<string, DeviceSettings> = {
   PC: {
-    volumeMultiplier: 3.0,        // v1.2.9確定値
+    volumeMultiplier: 3.0,        // v1.2.2確定値
     sensitivityMultiplier: 2.5,
     minVolumeAbsolute: this.deviceSpecs.noiseGate * 0.25
   },
   iPhone: {
-    volumeMultiplier: 7.5,        // v1.2.9確定値
+    volumeMultiplier: 7.5,        // v1.2.2確定値
     sensitivityMultiplier: 3.5,
     minVolumeAbsolute: this.deviceSpecs.noiseGate * 0.15
   },
   iPad: {
-    volumeMultiplier: 20.0,       // v1.2.9確定値
+    volumeMultiplier: 20.0,       // v1.2.2確定値
     sensitivityMultiplier: 5.0,
     minVolumeAbsolute: this.deviceSpecs.noiseGate * 0.10
   }
@@ -120,7 +120,7 @@ divisor: 6.0/4.0/4.0,         // デバイス別設定値
   },
   "metadata": {
     "lastModified": "2025-09-15",
-    "optimizedFor": "v1.2.9",
+    "optimizedFor": "v1.2.2",
     "description": "Device-specific audio optimization profiles"
   }
 }
@@ -298,7 +298,7 @@ class ConfigLoader {
 **推奨**: **v2.0での実装を推奨**
 
 **理由**:
-1. 現在のv1.2.9設定値は十分に最適化済み
+1. 現在のv1.2.2設定値は十分に最適化済み
 2. 12-15日の開発コストは大きい
 3. より大きなアーキテクチャ変更のタイミングで実施すべき
 4. 当面は現在のハードコード設定で十分運用可能

@@ -205,22 +205,27 @@ describe('AudioDetectionComponent - autoUpdateUI Feature', () => {
       };
 
       const component = new AudioDetectionComponent(config);
-      
-      // デバイス設定をモック
-      (component as any).deviceSettings = { volumeMultiplier: 1.5 };
-      
+
+      // デバイス設定をモック（実際の実装に合わせてdeviceSpecsを設定）
+      (component as any).deviceSpecs = {
+        volumeMultiplier: 1.5,
+        noiseGate: 0.02, // 2% noise gate
+        deviceType: 'PC'
+      };
+
       const rawResult = {
         frequency: 440,
         note: 'A4',
-        volume: 40, // 生の音量値
+        volume: 0.8, // 生のRMS値（0-1範囲）
         clarity: 0.8
       };
-      
+
       // プライベートメソッドを直接テスト
       const processedResult = (component as any)._getProcessedResult(rawResult);
-      
+
       expect(processedResult).not.toBeNull();
-      expect(processedResult.volume).toBe(60); // 40 * 1.5 = 60
+      // 計算: 0.8 * 50 (BASE_SCALING_FACTOR) * 1.5 (volumeMultiplier) = 60
+      expect(processedResult.volume).toBe(60);
       expect(processedResult.frequency).toBe(440); // 他の値は変更されない
       expect(processedResult.note).toBe('A4');
       expect(processedResult.clarity).toBe(0.8);
@@ -232,19 +237,23 @@ describe('AudioDetectionComponent - autoUpdateUI Feature', () => {
       };
 
       const component = new AudioDetectionComponent(config);
-      
+
       // 高い倍率のデバイス設定
-      (component as any).deviceSettings = { volumeMultiplier: 3.0 };
-      
+      (component as any).deviceSpecs = {
+        volumeMultiplier: 3.0,
+        noiseGate: 0.02,
+        deviceType: 'PC'
+      };
+
       const rawResult = {
         frequency: 440,
         note: 'A4',
-        volume: 50, // 50 * 3.0 = 150（上限を超過）
+        volume: 1.0, // 最大RMS値 1.0 * 50 * 3.0 = 150（上限を超過）
         clarity: 0.8
       };
-      
+
       const processedResult = (component as any)._getProcessedResult(rawResult);
-      
+
       expect(processedResult.volume).toBe(100); // 100に制限される
     });
 
@@ -254,32 +263,90 @@ describe('AudioDetectionComponent - autoUpdateUI Feature', () => {
       };
 
       const component = new AudioDetectionComponent(config);
-      
+
       const processedResult = (component as any)._getProcessedResult(null);
-      
+
       expect(processedResult).toBeNull();
     });
 
-    it('should use default multiplier when deviceSettings is undefined', () => {
+    it('should apply noise gate correctly', () => {
       const config: AudioDetectionConfig = {
         autoUpdateUI: true
       };
 
       const component = new AudioDetectionComponent(config);
-      
-      // deviceSettings未設定の状態
-      (component as any).deviceSettings = undefined;
-      
+
+      // ノイズゲートが5%のデバイス設定
+      (component as any).deviceSpecs = {
+        volumeMultiplier: 2.0,
+        noiseGate: 0.05, // 5% noise gate
+        deviceType: 'PC'
+      };
+
       const rawResult = {
         frequency: 440,
         note: 'A4',
-        volume: 50,
+        volume: 0.08, // 0.08 * 50 = 4% < 5%（ノイズゲート閾値）
         clarity: 0.8
       };
-      
+
       const processedResult = (component as any)._getProcessedResult(rawResult);
-      
-      expect(processedResult.volume).toBe(50); // 50 * 1.0（デフォルト） = 50
+
+      expect(processedResult).not.toBeNull();
+      expect(processedResult.volume).toBe(0); // ノイズゲートによって0になる
+      expect(processedResult.frequency).toBe(0); // 周波数も0になる
+      expect(processedResult.note).toBe('--'); // ノート表示も無効化
+    });
+
+    it('should handle iPad special case', () => {
+      const config: AudioDetectionConfig = {
+        autoUpdateUI: true
+      };
+
+      const component = new AudioDetectionComponent(config);
+
+      // iPad特別処理の設定
+      (component as any).deviceSpecs = {
+        volumeMultiplier: 15.0, // 設定値は15.0だが実際は13.5が使用される
+        noiseGate: 0.012,
+        deviceType: 'iPad'
+      };
+
+      const rawResult = {
+        frequency: 440,
+        note: 'A4',
+        volume: 0.1, // 0.1 * 50 * 13.5 = 67.5
+        clarity: 0.8
+      };
+
+      const processedResult = (component as any)._getProcessedResult(rawResult);
+
+      expect(processedResult).not.toBeNull();
+      // iPad特別処理: volumeMultiplier 13.5が適用される
+      expect(processedResult.volume).toBe(67.5);
+    });
+
+    it('should use default multiplier when deviceSpecs is undefined', () => {
+      const config: AudioDetectionConfig = {
+        autoUpdateUI: true
+      };
+
+      const component = new AudioDetectionComponent(config);
+
+      // deviceSpecs未設定の状態
+      (component as any).deviceSpecs = null;
+
+      const rawResult = {
+        frequency: 440,
+        note: 'A4',
+        volume: 1.0, // RMS値
+        clarity: 0.8
+      };
+
+      const processedResult = (component as any)._getProcessedResult(rawResult);
+
+      // 計算: 1.0 * 50 (BASE_SCALING_FACTOR) * 1.0（デフォルト） = 50
+      expect(processedResult.volume).toBe(50);
     });
   });
 });

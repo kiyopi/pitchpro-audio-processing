@@ -315,9 +315,9 @@ const SCALING_FACTOR = 400 / (platformSpecs.sensitivity * currentSensitivity);
 const NOISE_GATE_THRESHOLD = this.config.minVolumeAbsolute * NOISE_GATE_SCALING_FACTOR;
 ```
 
-#### v1.2.8 → v1.2.9: 最終調整
-**問題**: 上昇速度をもう少し抑制したい  
-**解決**: PC sensitivity 1.6 → 1.8 に微調整  
+#### v1.2.8 → v1.2.2: 最終調整（現行バージョン）
+**問題**: 上昇速度をもう少し抑制したい
+**解決**: PC sensitivity 1.6 → 1.8 に微調整
 **結果**: SCALING_FACTOR=123.46、理想的なバランス達成
 
 ### 🎯 修正で学んだ教訓
@@ -336,7 +336,7 @@ const NOISE_GATE_THRESHOLD = this.config.minVolumeAbsolute * NOISE_GATE_SCALING_
 | v1.2.6 | 256 (動的) | 1.5% | 50% | ⚠️ やや高い |
 | v1.2.7 | 156 (動的) | 1.5% | 30-40% | 🟡 改善 |
 | v1.2.8 | 156 (動的) | 1.5% | ブロック解除 | ✅ 機能回復 |
-| **v1.2.9** | **123** (動的) | **1.5%** | **15-25%** | **✅ 最適** |
+| **v1.2.2** | **123** (動的) | **1.5%** | **15-25%** | **✅ 最適** |
 
 ---
 
@@ -457,7 +457,7 @@ class Logger {
 ### 音量調整設定値（即座に確認可能）
 
 ```typescript
-// AudioDetectionComponent設定値（v1.2.9確定）
+// AudioDetectionComponent設定値（v1.2.2確定）
 const deviceSettingsMap = {
   PC: {
     volumeMultiplier: 3.0,      // ✅ 完了

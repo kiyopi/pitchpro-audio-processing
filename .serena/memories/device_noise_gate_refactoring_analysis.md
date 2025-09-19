@@ -120,5 +120,5 @@ PC: { minVolumeAbsolute: this.deviceSpecs.noiseGate * 0.5 }
 
 ## 🚀 実装日時
 - 実装: 2025年9月17日
-- バージョン: v1.2.9+
+- バージョン: v1.2.2+
 - 状態: テスト準備完了
