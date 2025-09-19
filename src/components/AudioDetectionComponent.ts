@@ -220,6 +220,169 @@ interface DeviceSettings {
   minVolumeAbsolute: number;
 }
 
+/**
+ * PitchPro Audio Processing Library
+ * High-precision pitch detection and audio processing for web applications
+ * 
+ * @description A comprehensive audio detection component that provides real-time pitch detection,
+ * volume analysis, and frequency display with automatic device optimization and UI management.
+ * 
+ * Supports unified management through MicrophoneController for centralized system control.
+ * 
+ * @version 1.2.2 (自動同期)
+ * @author PitchPro Team
+ * @license MIT
+ * 
+ * @example
+ * ```typescript
+ * // Basic usage with automatic device optimization
+ * const audioDetector = new AudioDetectionComponent({
+ *   volumeBarSelector: '#volume-bar',
+ *   frequencySelector: '#frequency-display'
+ * });
+ * 
+ * // Initialize the component
+ * await audioDetector.initialize();
+ * 
+ * // Start pitch detection (v1.2.2 API)
+ * const success = await audioDetector.startDetection();
+ * if (success) {
+ *   console.log('Detection started successfully');
+ * }
+ * 
+ * // Stop detection but preserve UI state
+ * audioDetector.stopDetection();
+ * 
+ * // Complete reset including UI (recommended)
+ * audioDetector.microphoneController?.reset();
+ * 
+ * // Clean up when done
+ * audioDetector.destroy();
+ * ```
+ * 
+ * @example
+ * ```typescript
+ * // Advanced configuration for custom processing
+ * const audioDetector = new AudioDetectionComponent({
+ *   clarityThreshold: 0.3,
+ *   minVolumeAbsolute: 0.001,
+ *   deviceOptimization: true,
+ *   autoUpdateUI: false, // Manual UI control
+ *   onPitchUpdate: (result) => {
+ *     // Custom processing with device-optimized results
+ *     console.log(`Frequency: ${result.frequency}Hz, Volume: ${result.volume}%`);
+ *   }
+ * });
+ * 
+ * await audioDetector.initialize();
+ * await audioDetector.startDetection();
+ * ```
+ * 
+ * @example
+ * ```typescript
+ * // Using MicrophoneController for unified system management
+ * const audioDetector = new AudioDetectionComponent({
+ *   volumeBarSelector: '#volume-bar',
+ *   frequencySelector: '#frequency-display'
+ * });
+ * 
+ * await audioDetector.initialize();
+ * const micController = audioDetector.microphoneController;
+ * 
+ * if (micController) {
+ *   // Unified system control
+ *   micController.start();     // Start detection
+ *   micController.toggleMute(); // Mute/unmute
+ *   micController.reset();      // Complete reset
+ * }
+ * ```
+ */
+
+export interface AudioDetectionConfig {
+  /**
+   * CSS selector for volume bar element (progress or div with width style)
+   * @example '#volume-bar', '.volume-display progress'
+   */
+  volumeBarSelector?: string;
+  
+  /**
+   * CSS selector for volume text display element
+   * @example '#volume-text', '.volume-percentage'
+   */
+  volumeTextSelector?: string;
+  
+  /**
+   * CSS selector for frequency display element  
+   * @example '#frequency-display', '.frequency-value'
+   */
+  frequencySelector?: string;
+  
+  /**
+   * CSS selector for musical note display element
+   * @example '#note-display', '.musical-note'
+   */
+  noteSelector?: string;
+  
+  // Audio processing parameters
+  clarityThreshold?: number;
+  minVolumeAbsolute?: number;
+  fftSize?: number;
+  smoothing?: number;
+  
+  /**
+   * Enable device-specific volume optimization
+   * 
+   * @description When enabled, applies device-specific volume multipliers:
+   * - PC: 7.5x (v1.2.2確定) 
+   * - iPhone: 11.5x (v1.2.2確定)
+   * - iPad: 13.0x (v1.2.2確定)
+   * 
+   * When disabled, returns raw volume values for custom processing.
+   * @default true
+   */
+  deviceOptimization?: boolean;
+  
+  // UI configuration
+  uiUpdateInterval?: number;
+  
+  /**
+   * Enable automatic UI updates using cached DOM elements
+   * 
+   * @description When true, automatically updates UI elements specified by selectors.
+   * When false, UI updates must be handled manually in onPitchUpdate callback.
+   * 
+   * @default true
+   */
+  autoUpdateUI?: boolean;
+  
+  // Event callbacks
+  onPitchUpdate?: (result: PitchDetectionResult) => void;
+  
+  // Debug configuration
+  debug?: boolean;
+  logPrefix?: string;
+}
+
+/**
+ * Event callbacks for AudioDetectionComponent
+ */
+export interface AudioDetectionCallbacks {
+  onPitchUpdate?: (result: PitchDetectionResult) => void;
+  onVolumeUpdate?: (volume: number) => void;
+  onStateChange?: (state: 'uninitialized' | 'initializing' | 'ready' | 'detecting' | 'stopped' | 'error') => void;
+  onError?: (error: PitchProError) => void;
+  onDeviceDetected?: (specs: DeviceSpecs) => void;
+}
+
+/**
+ * Device-specific settings for audio processing
+ */
+interface DeviceSettings {
+  volumeMultiplier: number;
+  sensitivityMultiplier: number;
+  minVolumeAbsolute: number;
+}
+
 export class AudioDetectionComponent {
   /** @private UI timing constants */
   private static readonly NOTE_RESET_DELAY_MS = 300;
@@ -297,7 +460,7 @@ export class AudioDetectionComponent {
    * @param config.fftSize - FFT size for analysis (default: 4096)
    * @param config.smoothing - Smoothing factor (default: 0.1)
    * @param config.deviceOptimization - デバイス固有の音量最適化を有効にする (default: true)
-   *   - true: 自動音量補正 (PC: 3.0x, iPhone: 7.5x, iPad: 20.0x)
+   *   - true: 自動音量補正 (PC: 7.5x, iPhone: 11.5x, iPad: 13.0x)
    *   - false: 生音量値を使用（独自処理向け）
    * @param config.uiUpdateInterval - UI update interval in ms (default: 50)
    * @param config.autoUpdateUI - Enable automatic UI updates (default: true)
@@ -913,6 +1076,123 @@ export class AudioDetectionComponent {
   }
 
   /**
+   * Starts pitch detection and UI updates
+   * 
+   * @description This method starts the pitch detection process and begins UI updates.
+   * It uses the unified MicrophoneController system for centralized management.
+   * 
+   * @returns Promise<boolean> - Returns true if detection started successfully, false otherwise
+   * 
+   * @example
+   * ```typescript
+   * // Start detection after initialization
+   * const success = await audioDetector.startDetection();
+   * if (success) {
+   *   console.log('Detection started successfully');
+   * } else {
+   *   console.error('Failed to start detection');
+   * }
+   * ```
+   */
+  async startDetection(): Promise<boolean> {
+    this.debugLog('Starting detection via AudioDetectionComponent...');
+    
+    if (!this.isInitialized) {
+      this.debugLog('Cannot start detection - component not initialized');
+      return false;
+    }
+    
+    if (!this.micController) {
+      this.debugLog('Cannot start detection - no MicrophoneController available');
+      return false;
+    }
+    
+    try {
+      // Use the unified MicrophoneController system
+      const started = this.micController.start();
+      
+      if (started) {
+        this.debugLog('✅ Detection started successfully via MicrophoneController');
+        this.updateState('detecting');
+        return true;
+      } else {
+        this.debugLog('❌ Failed to start detection via MicrophoneController');
+        return false;
+      }
+    } catch (error) {
+      const structuredError = this.createStructuredError(error as Error, 'start_detection');
+      this.debugLog('Error starting detection:', structuredError);
+      this.lastError = structuredError;
+      this.updateState('error');
+      return false;
+    }
+  }
+
+  /**
+   * Stops pitch detection but preserves UI state
+   * 
+   * @description This method stops the pitch detection process while keeping UI elements
+   * in their current state. For complete reset including UI, use reset() instead.
+   * 
+   * @returns boolean - Returns true if detection stopped successfully, false otherwise
+   * 
+   * @example
+   * ```typescript
+   * // Stop detection but keep UI values
+   * const stopped = audioDetector.stopDetection();
+   * if (stopped) {
+   *   console.log('Detection stopped, UI preserved');
+   * }
+   * 
+   * // For complete reset including UI:
+   * audioDetector.microphoneController?.reset();
+   * ```
+   */
+  /**
+   * Stops pitch detection but preserves UI state
+   * 
+   * @description This method stops the pitch detection process while keeping UI elements
+   * in their current state. For complete reset including UI, use reset() instead.
+   * 
+   * @returns boolean - Returns true if detection stopped successfully, false otherwise
+   * 
+   * @example
+   * ```typescript
+   * // Stop detection but keep UI values
+   * const stopped = audioDetector.stopDetection();
+   * if (stopped) {
+   *   console.log('Detection stopped, UI preserved');
+   * }
+   * 
+   * // For complete reset including UI:
+   * audioDetector.microphoneController?.reset();
+   * ```
+   */
+  stopDetection(): boolean {
+    this.debugLog('Stopping detection via AudioDetectionComponent...');
+    
+    if (!this.pitchDetector) {
+      this.debugLog('Cannot stop detection - no PitchDetector available');
+      return false;
+    }
+    
+    try {
+      // Use PitchDetector directly for stopping (preserves UI state)
+      this.pitchDetector.stopDetection(); // void型なので戻り値はチェックしない
+      
+      // 成功と仮定してUI状態を更新
+      this.debugLog('✅ Detection stopped successfully, UI state preserved');
+      this.updateState('ready');
+      return true;
+    } catch (error) {
+      const structuredError = this.createStructuredError(error as Error, 'stop_detection');
+      this.debugLog('Error stopping detection:', structuredError);
+      this.lastError = structuredError;
+      return false;
+    }
+  }
+
+  /**
    * Resets all UI elements to their initial state (0 values)
    * @private
    */
@@ -1098,9 +1378,9 @@ export class AudioDetectionComponent {
    * このメソッドがPitchProの音量調整の核心部分です。以下の処理を行います：
    *
    * 1. **デバイス固有の音量補正**: volumeMultiplierによる音量調整
-   *    - PC: 3.0x（v1.2.2確定）
-   *    - iPhone: 7.5x（v1.2.2確定）
-   *    - iPad: 20.0x（v1.2.2確定）
+   *    - PC: 7.5x（v1.2.2確定）
+   *    - iPhone: 11.5x（v1.2.2確定）
+   *    - iPad: 13.0x（v1.2.2確定）
    *
    * 2. **範囲制限**: 最終音量を0-100%の範囲に制限
    *
@@ -1114,12 +1394,12 @@ export class AudioDetectionComponent {
    * // PitchDetectorからの生結果
    * const rawResult = { frequency: 440, note: 'A4', volume: 15.2 };
    *
-   * // iPhone (volumeMultiplier: 7.5) での処理
+   * // iPhone (volumeMultiplier: 11.5) での処理
    * const processed = this._getProcessedResult(rawResult);
-   * // → { frequency: 440, note: 'A4', volume: 100 } (15.2 * 7.5 = 114 → 100に制限)
+   * // → { frequency: 440, note: 'A4', volume: 100 } (15.2 * 11.5 = 174.8 → 100に制限)
    *
-   * // PC (volumeMultiplier: 3.0) での処理
-   * // → { frequency: 440, note: 'A4', volume: 45.6 } (15.2 * 3.0 = 45.6)
+   * // PC (volumeMultiplier: 7.5) での処理
+   * // → { frequency: 440, note: 'A4', volume: 114 } (15.2 * 7.5 = 114 → 100に制限)
    * ```
    *
    * @since v1.2.0 デバイス固有音量調整システム導入

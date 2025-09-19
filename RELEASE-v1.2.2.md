@@ -71,25 +71,52 @@ private _getProcessedResult(rawResult: PitchDetectionResult | null) {
 }
 ```
 
+### デバッグシステムの改善
+v1.2.2ではデバッグシステムが環境自動判定方式に進化しました：
+
+```typescript
+// src/utils/version.ts で一元管理
+export const VERSION = '1.2.2';
+export const VERSION_STRING = `PitchPro v${VERSION}`;
+
+// 常時表示: バージョン情報付きコンストラクタログ
+console.log(`${VERSION_STRING} AudioDetectionComponent created with config:`, this.config);
+console.log(`${VERSION_STRING} PitchDetector created with config:`, this.config);
+
+// 開発環境のみ: 詳細デバッグ情報
+if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
+  console.log(`[Debug] Pitchyインスタンス作成: ${!!this.pitchDetector}, FFTサイズ: ${this.analyser.fftSize}`);
+  console.warn(`[PitchDetector] Frame processing took ${frameProcessTime.toFixed(2)}ms (>16.67ms threshold)`);
+}
+```
+
 ### デバイス検出の強化
 - より正確なデバイスタイプ判定
 - マイク特性に基づく個別最適化
 - リアルタイムパフォーマンス調整
+- バージョン情報の統一管理とデバッグ表示
 
 ## 💡 使用例
 
 ### 基本的な使用方法
 ```javascript
-import PitchDetector from '@pitchpro/audio-processing';
+import { AudioManager, PitchDetector } from '@pitchpro/audio-processing';
 
-const detector = new PitchDetector();
+const audioManager = new AudioManager();
+const detector = new PitchDetector(audioManager);
+// コンソールに "PitchPro v1.2.2 PitchDetector created with config: {...}" が表示
+
 await detector.initialize();
 
-detector.startDetection((result) => {
-  console.log(`周波数: ${result.frequency}Hz`);
-  console.log(`音量: ${result.volume}%`);
-  console.log(`音符: ${result.note}`);
+detector.setCallbacks({
+  onPitchUpdate: (result) => {
+    console.log(`周波数: ${result.frequency}Hz`);
+    console.log(`音量: ${result.volume}%`);
+    console.log(`音符: ${result.note}`);
+  }
 });
+
+detector.startDetection();
 ```
 
 ### デバイス最適化設定の活用
@@ -103,23 +130,40 @@ const audioDetector = new AudioDetectionComponent({
   frequencySelector: '#frequency',
   noteSelector: '#note'
 });
+// コンソールに "PitchPro v1.2.2 AudioDetectionComponent created with config: {...}" が表示
 
 await audioDetector.initialize();
 ```
 
 ## 🔄 v1.2.0からの移行
 
-v1.2.2は後方互換性を保持しています。特別な移行作業は必要ありません。
+v1.2.2は後方互換性を保持していますが、一部変更があります。
 
-**推奨される更新**:
+### ✅ 自動的に改善される点
+- バージョン情報が自動表示されるように
+- デバッグ情報が環境に応じて最適化される
+- デバイス固有最適化が標準で有効
+
+### ⚠️ 変更が必要な点
 ```javascript
-// v1.2.0
-const detector = new PitchDetector();
-
-// v1.2.2 (デバイス最適化を活用)
-const detector = new PitchDetector({
-  deviceOptimization: true  // 新機能：自動デバイス最適化
+// ❌ v1.2.0以前: debug パラメータは削除されました
+const detector = new PitchDetector(audioManager, {
+  debug: true  // このパラメータは無効になりました
 });
+
+// ✅ v1.2.2: 環境自動判定でデバッグレベルが決定
+const detector = new PitchDetector(audioManager, {
+  deviceOptimization: true  // デバイス最適化は引き続き利用可能
+});
+```
+
+### 💡 推奨される使用方法
+```javascript
+// AudioManagerも併せて利用することを推奨
+import { AudioManager, PitchDetector } from '@pitchpro/audio-processing';
+
+const audioManager = new AudioManager();
+const detector = new PitchDetector(audioManager);
 ```
 
 ## 📊 パフォーマンス改善
@@ -137,6 +181,9 @@ const detector = new PitchDetector({
 1. **低周波数検出不安定問題**: ノイズゲート調整により解決
 2. **デバイス間音量不一致**: volumeMultiplier個別最適化により解決
 3. **iPad低音域感度不足**: 専用パラメータ調整により解決
+4. **バージョン情報の不一致**: src/utils/version.ts での一元管理により解決
+5. **デバッグシステムの非効率性**: 環境自動判定方式への改善により解決
+6. **本番環境での不要なデバッグログ**: NODE_ENV条件分岐により解決
 
 ## ⚠️ 既知の問題
 
@@ -172,12 +219,27 @@ npm run test:device        # デバイス固有テスト
 
 ### デバッグ情報の取得
 ```javascript
-const detector = new PitchDetector({
-  debug: true  // デバッグモード有効化
-});
+// v1.2.2ではコンストラクタで自動的にバージョン表示
+const detector = new PitchDetector(audioManager);
+// コンソールに "PitchPro v1.2.2 PitchDetector created with config: {...}" が表示される
+
+const audioDetector = new AudioDetectionComponent();
+// コンソールに "PitchPro v1.2.2 AudioDetectionComponent created with config: {...}" が表示される
+
+// 開発環境でのデバッグ情報（NODE_ENV=development時のみ自動表示）
+// - Pitchyインスタンス作成詳細
+// - パフォーマンス警告（16.67ms超過時）
 
 // デバイス情報の確認
 console.log(detector.getDeviceSpecs());
+
+// バージョン情報の確認
+import { VERSION, VERSION_STRING } from '@pitchpro/audio-processing';
+console.log(VERSION);        // "1.2.2"
+console.log(VERSION_STRING); // "PitchPro v1.2.2"
+
+// 注意: 以前の debug: true パラメータは削除されました
+// 環境に応じて自動的にデバッグレベルが決定されます
 ```
 
 ## 🙏 謝辞

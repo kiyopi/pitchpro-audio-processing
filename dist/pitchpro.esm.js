@@ -275,7 +275,7 @@ class Te extends w {
     super(e, "PITCH_DETECTION_ERROR", t), this.name = "PitchDetectionError";
   }
 }
-function De(h) {
+function Ie(h) {
   return [
     "BUFFER_OVERFLOW",
     "PROCESSING_TIMEOUT",
@@ -414,7 +414,7 @@ class F {
         userAgent: typeof navigator < "u" ? navigator.userAgent : "unknown",
         timestamp: Date.now(),
         url: typeof window < "u" ? window.location.href : "unknown",
-        isRecoverable: De(e)
+        isRecoverable: Ie(e)
       }
     };
   }
@@ -1094,7 +1094,7 @@ class xe {
 function je(h) {
   return h && h.__esModule && Object.prototype.hasOwnProperty.call(h, "default") ? h.default : h;
 }
-function I(h) {
+function D(h) {
   if (this.size = h | 0, this.size <= 1 || this.size & this.size - 1)
     throw new Error("FFT size must be a power of two and bigger than 1");
   this._csize = h << 1;
@@ -1115,38 +1115,38 @@ function I(h) {
   }
   this._out = null, this._data = null, this._inv = 0;
 }
-var Qe = I;
-I.prototype.fromComplexArray = function(e, t) {
+var Qe = D;
+D.prototype.fromComplexArray = function(e, t) {
   for (var i = t || new Array(e.length >>> 1), s = 0; s < e.length; s += 2)
     i[s >>> 1] = e[s];
   return i;
 };
-I.prototype.createComplexArray = function() {
+D.prototype.createComplexArray = function() {
   const e = new Array(this._csize);
   for (var t = 0; t < e.length; t++)
     e[t] = 0;
   return e;
 };
-I.prototype.toComplexArray = function(e, t) {
+D.prototype.toComplexArray = function(e, t) {
   for (var i = t || this.createComplexArray(), s = 0; s < i.length; s += 2)
     i[s] = e[s >>> 1], i[s + 1] = 0;
   return i;
 };
-I.prototype.completeSpectrum = function(e) {
+D.prototype.completeSpectrum = function(e) {
   for (var t = this._csize, i = t >>> 1, s = 2; s < i; s += 2)
     e[t - s] = e[s], e[t - s + 1] = -e[s + 1];
 };
-I.prototype.transform = function(e, t) {
+D.prototype.transform = function(e, t) {
   if (e === t)
     throw new Error("Input and output buffers must be different");
   this._out = e, this._data = t, this._inv = 0, this._transform4(), this._out = null, this._data = null;
 };
-I.prototype.realTransform = function(e, t) {
+D.prototype.realTransform = function(e, t) {
   if (e === t)
     throw new Error("Input and output buffers must be different");
   this._out = e, this._data = t, this._inv = 0, this._realTransform4(), this._out = null, this._data = null;
 };
-I.prototype.inverseTransform = function(e, t) {
+D.prototype.inverseTransform = function(e, t) {
   if (e === t)
     throw new Error("Input and output buffers must be different");
   this._out = e, this._data = t, this._inv = 1, this._transform4();
@@ -1154,7 +1154,7 @@ I.prototype.inverseTransform = function(e, t) {
     e[i] /= this.size;
   this._out = null, this._data = null;
 };
-I.prototype._transform4 = function() {
+D.prototype._transform4 = function() {
   var e = this._out, t = this._csize, i = this._width, s = 1 << i, o = t / s << 1, n, r, a = this._bitrev;
   if (o === 4)
     for (n = 0, r = 0; n < t; n += o, r++) {
@@ -1172,20 +1172,20 @@ I.prototype._transform4 = function() {
     var m = o >>> 2;
     for (n = 0; n < t; n += o)
       for (var u = n + m, d = n, f = 0; d < u; d += 2, f += s) {
-        const p = d, y = p + m, v = y + m, S = v + m, b = e[p], g = e[p + 1], C = e[y], D = e[y + 1], P = e[v], q = e[v + 1], O = e[S], z = e[S + 1], L = b, U = g, B = l[f], $ = c * l[f + 1], H = C * B - D * $, V = C * $ + D * B, X = l[2 * f], Y = c * l[2 * f + 1], K = P * X - q * Y, Z = P * Y + q * X, ee = l[3 * f], te = c * l[3 * f + 1], ie = O * ee - z * te, se = O * te + z * ee, oe = L + K, G = U + Z, j = L - K, ne = U - Z, re = H + ie, Q = V + se, W = c * (H - ie), ae = c * (V - se), he = oe + re, fe = G + Q, ge = oe - re, pe = G - Q, ve = j + ae, ye = ne - W, Se = j - ae, Ce = ne + W;
+        const p = d, y = p + m, v = y + m, S = v + m, b = e[p], g = e[p + 1], C = e[y], I = e[y + 1], P = e[v], q = e[v + 1], z = e[S], O = e[S + 1], L = b, U = g, B = l[f], $ = c * l[f + 1], H = C * B - I * $, V = C * $ + I * B, X = l[2 * f], Y = c * l[2 * f + 1], K = P * X - q * Y, Z = P * Y + q * X, ee = l[3 * f], te = c * l[3 * f + 1], ie = z * ee - O * te, se = z * te + O * ee, oe = L + K, G = U + Z, j = L - K, ne = U - Z, re = H + ie, Q = V + se, W = c * (H - ie), ae = c * (V - se), he = oe + re, fe = G + Q, ge = oe - re, pe = G - Q, ve = j + ae, ye = ne - W, Se = j - ae, Ce = ne + W;
         e[p] = he, e[p + 1] = fe, e[y] = ve, e[y + 1] = ye, e[v] = ge, e[v + 1] = pe, e[S] = Se, e[S + 1] = Ce;
       }
   }
 };
-I.prototype._singleTransform2 = function(e, t, i) {
+D.prototype._singleTransform2 = function(e, t, i) {
   const s = this._out, o = this._data, n = o[t], r = o[t + 1], a = o[t + i], c = o[t + i + 1], l = n + a, m = r + c, u = n - a, d = r - c;
   s[e] = l, s[e + 1] = m, s[e + 2] = u, s[e + 3] = d;
 };
-I.prototype._singleTransform4 = function(e, t, i) {
-  const s = this._out, o = this._data, n = this._inv ? -1 : 1, r = i * 2, a = i * 3, c = o[t], l = o[t + 1], m = o[t + i], u = o[t + i + 1], d = o[t + r], f = o[t + r + 1], p = o[t + a], y = o[t + a + 1], v = c + d, S = l + f, b = c - d, g = l - f, C = m + p, D = u + y, P = n * (m - p), q = n * (u - y), O = v + C, z = S + D, L = b + q, U = g - P, B = v - C, $ = S - D, H = b - q, V = g + P;
-  s[e] = O, s[e + 1] = z, s[e + 2] = L, s[e + 3] = U, s[e + 4] = B, s[e + 5] = $, s[e + 6] = H, s[e + 7] = V;
+D.prototype._singleTransform4 = function(e, t, i) {
+  const s = this._out, o = this._data, n = this._inv ? -1 : 1, r = i * 2, a = i * 3, c = o[t], l = o[t + 1], m = o[t + i], u = o[t + i + 1], d = o[t + r], f = o[t + r + 1], p = o[t + a], y = o[t + a + 1], v = c + d, S = l + f, b = c - d, g = l - f, C = m + p, I = u + y, P = n * (m - p), q = n * (u - y), z = v + C, O = S + I, L = b + q, U = g - P, B = v - C, $ = S - I, H = b - q, V = g + P;
+  s[e] = z, s[e + 1] = O, s[e + 2] = L, s[e + 3] = U, s[e + 4] = B, s[e + 5] = $, s[e + 6] = H, s[e + 7] = V;
 };
-I.prototype._realTransform4 = function() {
+D.prototype._realTransform4 = function() {
   var e = this._out, t = this._csize, i = this._width, s = 1 << i, o = t / s << 1, n, r, a = this._bitrev;
   if (o === 4)
     for (n = 0, r = 0; n < t; n += o, r++) {
@@ -1203,26 +1203,26 @@ I.prototype._realTransform4 = function() {
     var m = o >>> 1, u = m >>> 1, d = u >>> 1;
     for (n = 0; n < t; n += o)
       for (var f = 0, p = 0; f <= d; f += 2, p += s) {
-        var y = n + f, v = y + u, S = v + u, b = S + u, g = e[y], C = e[y + 1], D = e[v], P = e[v + 1], q = e[S], O = e[S + 1], z = e[b], L = e[b + 1], U = g, B = C, $ = l[p], H = c * l[p + 1], V = D * $ - P * H, X = D * H + P * $, Y = l[2 * p], K = c * l[2 * p + 1], Z = q * Y - O * K, ee = q * K + O * Y, te = l[3 * p], ie = c * l[3 * p + 1], se = z * te - L * ie, oe = z * ie + L * te, G = U + Z, j = B + ee, ne = U - Z, re = B - ee, Q = V + se, W = X + oe, ae = c * (V - se), he = c * (X - oe), fe = G + Q, ge = j + W, pe = ne + he, ve = re - ae;
+        var y = n + f, v = y + u, S = v + u, b = S + u, g = e[y], C = e[y + 1], I = e[v], P = e[v + 1], q = e[S], z = e[S + 1], O = e[b], L = e[b + 1], U = g, B = C, $ = l[p], H = c * l[p + 1], V = I * $ - P * H, X = I * H + P * $, Y = l[2 * p], K = c * l[2 * p + 1], Z = q * Y - z * K, ee = q * K + z * Y, te = l[3 * p], ie = c * l[3 * p + 1], se = O * te - L * ie, oe = O * ie + L * te, G = U + Z, j = B + ee, ne = U - Z, re = B - ee, Q = V + se, W = X + oe, ae = c * (V - se), he = c * (X - oe), fe = G + Q, ge = j + W, pe = ne + he, ve = re - ae;
         if (e[y] = fe, e[y + 1] = ge, e[v] = pe, e[v + 1] = ve, f === 0) {
           var ye = G - Q, Se = j - W;
           e[S] = ye, e[S + 1] = Se;
           continue;
         }
         if (f !== d) {
-          var Ce = ne, Ne = -re, Re = G, Pe = -j, qe = -c * he, _e = -c * ae, ke = -c * W, Oe = -c * Q, ze = Ce + qe, Le = Ne + _e, Ue = Re + Oe, Be = Pe - ke, we = n + u - f, Ee = n + m - f;
-          e[we] = ze, e[we + 1] = Le, e[Ee] = Ue, e[Ee + 1] = Be;
+          var Ce = ne, Ne = -re, Re = G, Pe = -j, qe = -c * he, _e = -c * ae, ke = -c * W, ze = -c * Q, Oe = Ce + qe, Le = Ne + _e, Ue = Re + ze, Be = Pe - ke, we = n + u - f, Ee = n + m - f;
+          e[we] = Oe, e[we + 1] = Le, e[Ee] = Ue, e[Ee + 1] = Be;
         }
       }
   }
 };
-I.prototype._singleRealTransform2 = function(e, t, i) {
+D.prototype._singleRealTransform2 = function(e, t, i) {
   const s = this._out, o = this._data, n = o[t], r = o[t + i], a = n + r, c = n - r;
   s[e] = a, s[e + 1] = 0, s[e + 2] = c, s[e + 3] = 0;
 };
-I.prototype._singleRealTransform4 = function(e, t, i) {
-  const s = this._out, o = this._data, n = this._inv ? -1 : 1, r = i * 2, a = i * 3, c = o[t], l = o[t + i], m = o[t + r], u = o[t + a], d = c + m, f = c - m, p = l + u, y = n * (l - u), v = d + p, S = f, b = -y, g = d - p, C = f, D = y;
-  s[e] = v, s[e + 1] = 0, s[e + 2] = S, s[e + 3] = b, s[e + 4] = g, s[e + 5] = 0, s[e + 6] = C, s[e + 7] = D;
+D.prototype._singleRealTransform4 = function(e, t, i) {
+  const s = this._out, o = this._data, n = this._inv ? -1 : 1, r = i * 2, a = i * 3, c = o[t], l = o[t + i], m = o[t + r], u = o[t + a], d = c + m, f = c - m, p = l + u, y = n * (l - u), v = d + p, S = f, b = -y, g = d - p, C = f, I = y;
+  s[e] = v, s[e + 1] = 0, s[e + 2] = S, s[e + 3] = b, s[e + 4] = g, s[e + 5] = 0, s[e + 6] = C, s[e + 7] = I;
 };
 const We = /* @__PURE__ */ je(Qe);
 class ce {
@@ -1862,7 +1862,7 @@ class et {
           originalError: g instanceof Error ? g.message : String(g)
         }
       );
-      if (console.warn("⚠️ [PitchDetector] Pitch detection error (recoverable):", C.toJSON()), De(C))
+      if (console.warn("⚠️ [PitchDetector] Pitch detection error (recoverable):", C.toJSON()), Ie(C))
         c = 0, l = 0;
       else {
         (S = (v = this.callbacks).onError) == null || S.call(v, C);
@@ -1873,8 +1873,8 @@ class et {
     if (c && l > this.config.clarityThreshold && this.currentVolume > this.config.minVolumeAbsolute && m) {
       let g = c;
       if (!this.disableHarmonicCorrection) {
-        const D = Math.min(this.currentVolume / 100, 1);
-        g = this.correctHarmonic(c, D);
+        const I = Math.min(this.currentVolume / 100, 1);
+        g = this.correctHarmonic(c, I);
       }
       this.currentFrequency = g;
       const C = this.frequencyToNoteAndOctave(this.currentFrequency);
@@ -4596,6 +4596,83 @@ M.A4_FREQUENCY = 440, M.A4_MIDI_NUMBER = 69, M.NOTE_NAMES = ["C", "C#", "D", "D#
   octave: 12
 };
 let T = M;
+/**
+ * PitchPro Audio Processing Library
+ * High-precision pitch detection and audio processing for web applications
+ * 
+ * @description A comprehensive audio detection component that provides real-time pitch detection,
+ * volume analysis, and frequency display with automatic device optimization and UI management.
+ * 
+ * Supports unified management through MicrophoneController for centralized system control.
+ * 
+ * @version 1.2.2 (自動同期)
+ * @author PitchPro Team
+ * @license MIT
+ * 
+ * @example
+ * ```typescript
+ * // Basic usage with automatic device optimization
+ * const audioDetector = new AudioDetectionComponent({
+ *   volumeBarSelector: '#volume-bar',
+ *   frequencySelector: '#frequency-display'
+ * });
+ * 
+ * // Initialize the component
+ * await audioDetector.initialize();
+ * 
+ * // Start pitch detection (v1.2.2 API)
+ * const success = await audioDetector.startDetection();
+ * if (success) {
+ *   console.log('Detection started successfully');
+ * }
+ * 
+ * // Stop detection but preserve UI state
+ * audioDetector.stopDetection();
+ * 
+ * // Complete reset including UI (recommended)
+ * audioDetector.microphoneController?.reset();
+ * 
+ * // Clean up when done
+ * audioDetector.destroy();
+ * ```
+ * 
+ * @example
+ * ```typescript
+ * // Advanced configuration for custom processing
+ * const audioDetector = new AudioDetectionComponent({
+ *   clarityThreshold: 0.3,
+ *   minVolumeAbsolute: 0.001,
+ *   deviceOptimization: true,
+ *   autoUpdateUI: false, // Manual UI control
+ *   onPitchUpdate: (result) => {
+ *     // Custom processing with device-optimized results
+ *     console.log(`Frequency: ${result.frequency}Hz, Volume: ${result.volume}%`);
+ *   }
+ * });
+ * 
+ * await audioDetector.initialize();
+ * await audioDetector.startDetection();
+ * ```
+ * 
+ * @example
+ * ```typescript
+ * // Using MicrophoneController for unified system management
+ * const audioDetector = new AudioDetectionComponent({
+ *   volumeBarSelector: '#volume-bar',
+ *   frequencySelector: '#frequency-display'
+ * });
+ * 
+ * await audioDetector.initialize();
+ * const micController = audioDetector.microphoneController;
+ * 
+ * if (micController) {
+ *   // Unified system control
+ *   micController.start();     // Start detection
+ *   micController.toggleMute(); // Mute/unmute
+ *   micController.reset();      // Complete reset
+ * }
+ * ```
+ */
 const N = class N {
   /**
    * Creates a new AudioDetectionComponent with automatic device optimization
@@ -4610,7 +4687,7 @@ const N = class N {
    * @param config.fftSize - FFT size for analysis (default: 4096)
    * @param config.smoothing - Smoothing factor (default: 0.1)
    * @param config.deviceOptimization - デバイス固有の音量最適化を有効にする (default: true)
-   *   - true: 自動音量補正 (PC: 3.0x, iPhone: 7.5x, iPad: 20.0x)
+   *   - true: 自動音量補正 (PC: 7.5x, iPhone: 11.5x, iPad: 13.0x)
    *   - false: 生音量値を使用（独自処理向け）
    * @param config.uiUpdateInterval - UI update interval in ms (default: 50)
    * @param config.autoUpdateUI - Enable automatic UI updates (default: true)
@@ -4966,6 +5043,87 @@ const N = class N {
     this.resetAllUIElements();
   }
   /**
+   * Starts pitch detection and UI updates
+   * 
+   * @description This method starts the pitch detection process and begins UI updates.
+   * It uses the unified MicrophoneController system for centralized management.
+   * 
+   * @returns Promise<boolean> - Returns true if detection started successfully, false otherwise
+   * 
+   * @example
+   * ```typescript
+   * // Start detection after initialization
+   * const success = await audioDetector.startDetection();
+   * if (success) {
+   *   console.log('Detection started successfully');
+   * } else {
+   *   console.error('Failed to start detection');
+   * }
+   * ```
+   */
+  async startDetection() {
+    if (this.debugLog("Starting detection via AudioDetectionComponent..."), !this.isInitialized)
+      return this.debugLog("Cannot start detection - component not initialized"), !1;
+    if (!this.micController)
+      return this.debugLog("Cannot start detection - no MicrophoneController available"), !1;
+    try {
+      return this.micController.start() ? (this.debugLog("✅ Detection started successfully via MicrophoneController"), this.updateState("detecting"), !0) : (this.debugLog("❌ Failed to start detection via MicrophoneController"), !1);
+    } catch (e) {
+      const t = this.createStructuredError(e, "start_detection");
+      return this.debugLog("Error starting detection:", t), this.lastError = t, this.updateState("error"), !1;
+    }
+  }
+  /**
+   * Stops pitch detection but preserves UI state
+   * 
+   * @description This method stops the pitch detection process while keeping UI elements
+   * in their current state. For complete reset including UI, use reset() instead.
+   * 
+   * @returns boolean - Returns true if detection stopped successfully, false otherwise
+   * 
+   * @example
+   * ```typescript
+   * // Stop detection but keep UI values
+   * const stopped = audioDetector.stopDetection();
+   * if (stopped) {
+   *   console.log('Detection stopped, UI preserved');
+   * }
+   * 
+   * // For complete reset including UI:
+   * audioDetector.microphoneController?.reset();
+   * ```
+   */
+  /**
+   * Stops pitch detection but preserves UI state
+   * 
+   * @description This method stops the pitch detection process while keeping UI elements
+   * in their current state. For complete reset including UI, use reset() instead.
+   * 
+   * @returns boolean - Returns true if detection stopped successfully, false otherwise
+   * 
+   * @example
+   * ```typescript
+   * // Stop detection but keep UI values
+   * const stopped = audioDetector.stopDetection();
+   * if (stopped) {
+   *   console.log('Detection stopped, UI preserved');
+   * }
+   * 
+   * // For complete reset including UI:
+   * audioDetector.microphoneController?.reset();
+   * ```
+   */
+  stopDetection() {
+    if (this.debugLog("Stopping detection via AudioDetectionComponent..."), !this.pitchDetector)
+      return this.debugLog("Cannot stop detection - no PitchDetector available"), !1;
+    try {
+      return this.pitchDetector.stopDetection(), this.debugLog("✅ Detection stopped successfully, UI state preserved"), this.updateState("ready"), !0;
+    } catch (e) {
+      const t = this.createStructuredError(e, "stop_detection");
+      return this.debugLog("Error stopping detection:", t), this.lastError = t, !1;
+    }
+  }
+  /**
    * Resets all UI elements to their initial state (0 values)
    * @private
    */
@@ -5084,9 +5242,9 @@ const N = class N {
    * このメソッドがPitchProの音量調整の核心部分です。以下の処理を行います：
    *
    * 1. **デバイス固有の音量補正**: volumeMultiplierによる音量調整
-   *    - PC: 3.0x（v1.2.2確定）
-   *    - iPhone: 7.5x（v1.2.2確定）
-   *    - iPad: 20.0x（v1.2.2確定）
+   *    - PC: 7.5x（v1.2.2確定）
+   *    - iPhone: 11.5x（v1.2.2確定）
+   *    - iPad: 13.0x（v1.2.2確定）
    *
    * 2. **範囲制限**: 最終音量を0-100%の範囲に制限
    *
@@ -5100,12 +5258,12 @@ const N = class N {
    * // PitchDetectorからの生結果
    * const rawResult = { frequency: 440, note: 'A4', volume: 15.2 };
    *
-   * // iPhone (volumeMultiplier: 7.5) での処理
+   * // iPhone (volumeMultiplier: 11.5) での処理
    * const processed = this._getProcessedResult(rawResult);
-   * // → { frequency: 440, note: 'A4', volume: 100 } (15.2 * 7.5 = 114 → 100に制限)
+   * // → { frequency: 440, note: 'A4', volume: 100 } (15.2 * 11.5 = 174.8 → 100に制限)
    *
-   * // PC (volumeMultiplier: 3.0) での処理
-   * // → { frequency: 440, note: 'A4', volume: 45.6 } (15.2 * 3.0 = 45.6)
+   * // PC (volumeMultiplier: 7.5) での処理
+   * // → { frequency: 440, note: 'A4', volume: 114 } (15.2 * 7.5 = 114 → 100に制限)
    * ```
    *
    * @since v1.2.0 デバイス固有音量調整システム導入
@@ -6069,7 +6227,7 @@ E.SCALE_PATTERNS = {
   11: "Major Seventh",
   12: "Perfect Octave"
 };
-let Ie = E;
+let De = E;
 const ft = (/* @__PURE__ */ new Date()).toISOString(), gt = {
   pitchDetector: {
     fftSize: 4096,
@@ -6117,7 +6275,7 @@ export {
   st as MicrophoneController,
   Ge as MicrophoneHealthError,
   tt as MicrophoneLifecycleManager,
-  Ie as MusicTheory,
+  De as MusicTheory,
   rt as NoiseFilter,
   et as PitchDetector,
   Ve as VERSION,
