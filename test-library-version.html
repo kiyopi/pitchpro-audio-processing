@@ -83,8 +83,13 @@
 
             // 1. ライブラリオブジェクトの確認
             if (typeof window.PitchPro !== 'undefined') {
+                // バージョン情報の確認
+                const versionInfo = window.PitchPro.VERSION ?
+                    `バージョン: ${window.PitchPro.VERSION}` : 'バージョン情報なし';
+
                 addResult('success', '✅ PitchPro オブジェクト確認',
                     `PitchPro オブジェクトが正常に読み込まれています。<br>
+                    ${versionInfo}<br>
                     利用可能なクラス: ${Object.keys(window.PitchPro).join(', ')}`);
 
                 // 2. DeviceDetection の内容確認

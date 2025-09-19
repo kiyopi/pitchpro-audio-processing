@@ -368,7 +368,10 @@ export declare class AudioDetectionComponent {
             componentState: "error" | "uninitialized" | "initializing" | "ready" | "detecting";
             isInitialized: boolean;
             isDetecting: boolean;
-            isRunning: boolean;
+            isRunning: boolean; /**
+             * Handles errors with proper logging and callback notification
+             * @private
+             */
             currentVolume: number;
             rawVolume: number;
             currentFrequency: number;

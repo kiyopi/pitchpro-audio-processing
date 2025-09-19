@@ -2,10 +2,13 @@
  * PitchPro Audio Processing Library
  * High-precision pitch detection and audio processing for web applications
  * 
- * @version 1.2.1 (自動同期)
+ * @version 1.2.2 (自動同期)
  * @author PitchPro Team
  * @license MIT
  */
+
+// Version information
+export { VERSION, VERSION_STRING, BUILD_TIMESTAMP } from './utils/version';
 
 // Core exports
 export { AudioManager } from './core/AudioManager';
@@ -49,7 +52,6 @@ export type {
 } from './types';
 
 // Constants (自動注入 - package.jsonと同期)
-export const VERSION = process.env.npm_package_version || '1.2.1';
 export const BUILD_DATE = new Date().toISOString();
 
 // Default configurations

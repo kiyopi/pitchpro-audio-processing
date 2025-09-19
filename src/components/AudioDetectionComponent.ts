@@ -62,6 +62,7 @@ import { PitchDetector } from '../core/PitchDetector';
 import { MicrophoneController } from '../core/MicrophoneController';
 import { DeviceDetection } from '../utils/DeviceDetection';
 import { FrequencyUtils } from '../utils/FrequencyUtils';
+import { VERSION_STRING } from '../utils/version';
 import { 
   PitchProError, 
   ErrorMessageBuilder, 
@@ -364,7 +365,7 @@ export class AudioDetectionComponent {
     // UI自動更新機能の警告メッセージ
     this.checkAutoUpdateUIWarnings();
     
-    this.debugLog('AudioDetectionComponent created with config:', this.config);
+    this.debugLog(`${VERSION_STRING} AudioDetectionComponent created with config:`, this.config);
   }
 
   /**
@@ -427,7 +428,7 @@ export class AudioDetectionComponent {
 
     try {
       this.updateState('initializing');
-      this.debugLog('Starting initialization...');
+      this.debugLog(`${VERSION_STRING} Starting initialization...`);
 
       // Initialize MicrophoneController
       this.micController = new MicrophoneController({

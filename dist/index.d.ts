@@ -2,10 +2,11 @@
  * PitchPro Audio Processing Library
  * High-precision pitch detection and audio processing for web applications
  *
- * @version 1.2.1 (自動同期)
+ * @version 1.2.2 (自動同期)
  * @author PitchPro Team
  * @license MIT
  */
+export { VERSION, VERSION_STRING, BUILD_TIMESTAMP } from './utils/version';
 export { AudioManager } from './core/AudioManager';
 export { PitchDetector } from './core/PitchDetector';
 export { NoiseFilter } from './core/NoiseFilter';
@@ -26,7 +27,6 @@ export { Logger, LogLevel, defaultLogger, debug, info, warn, error } from './uti
 export type { LogContext, LogEntry } from './utils/Logger';
 export { MicrophoneHealthError } from './utils/errors';
 export type { AudioManagerConfig, PitchDetectorConfig, PitchDetectionResult, NoiseFilterConfig, HarmonicCorrectionResult, NotificationConfig, MusicalNote, MusicalInterval, VoiceAnalysis, DeviceSpecs } from './types';
-export declare const VERSION: string;
 export declare const BUILD_DATE: string;
 export declare const DEFAULT_CONFIG: {
     readonly pitchDetector: {

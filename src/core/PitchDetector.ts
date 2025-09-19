@@ -103,6 +103,7 @@ export interface VolumeHistoryConfig {
 }
 import { AudioManager } from './AudioManager';
 import { AdaptiveFrameRateLimiter } from '../utils/performance-optimized';
+import { VERSION_STRING } from '../utils/version';
 import { 
   PitchProError, 
   AudioContextError, 
@@ -337,6 +338,9 @@ export class PitchDetector {
     
     // Initialize performance optimization
     this.frameRateLimiter = new AdaptiveFrameRateLimiter(45); // 45FPS optimal for music
+
+    // Debug log with version information
+    console.log(`${VERSION_STRING} PitchDetector created with config:`, this.config);
   }
 
   /**

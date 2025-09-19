@@ -1,7 +1,7 @@
-var Be = Object.defineProperty;
-var $e = (h, e, t) => e in h ? Be(h, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : h[e] = t;
-var x = (h, e, t) => $e(h, typeof e != "symbol" ? e + "" : e, t);
-const A = class A {
+var $e = Object.defineProperty;
+var He = (h, e, t) => e in h ? $e(h, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : h[e] = t;
+var x = (h, e, t) => He(h, typeof e != "symbol" ? e + "" : e, t);
+const Ve = "1.2.2", be = `PitchPro v${Ve}`, nt = (/* @__PURE__ */ new Date()).toISOString(), A = class A {
   /**
    * Detect current device and return optimized specifications
    */
@@ -243,12 +243,12 @@ class R extends w {
     super(e, "AUDIO_CONTEXT_ERROR", t), this.name = "AudioContextError";
   }
 }
-class be extends w {
+class Ae extends w {
   constructor(e, t) {
     super(e, "MICROPHONE_ACCESS_DENIED", t), this.name = "MicrophoneAccessError";
   }
 }
-class He extends w {
+class Ge extends w {
   constructor(e, t, i, s) {
     super(
       e,
@@ -270,12 +270,12 @@ class He extends w {
     return (e = this.context) == null ? void 0 : e.recoveryAttempts;
   }
 }
-class Ee extends w {
+class Te extends w {
   constructor(e, t) {
     super(e, "PITCH_DETECTION_ERROR", t), this.name = "PitchDetectionError";
   }
 }
-function Ie(h) {
+function De(h) {
   return [
     "BUFFER_OVERFLOW",
     "PROCESSING_TIMEOUT",
@@ -414,7 +414,7 @@ class F {
         userAgent: typeof navigator < "u" ? navigator.userAgent : "unknown",
         timestamp: Date.now(),
         url: typeof window < "u" ? window.location.href : "unknown",
-        isRecoverable: Ie(e)
+        isRecoverable: De(e)
       }
     };
   }
@@ -460,7 +460,7 @@ class F {
     };
   }
 }
-class De {
+class xe {
   /**
    * Creates a new AudioManager instance with device-optimized configuration
    * 
@@ -953,7 +953,7 @@ class De {
    */
   _createStructuredError(e, t) {
     var i, s;
-    return e.message.includes("Permission denied") || e.message.includes("NotAllowedError") || e.message.includes("permission") ? new be(
+    return e.message.includes("Permission denied") || e.message.includes("NotAllowedError") || e.message.includes("permission") ? new Ae(
       "マイクへのアクセス許可が拒否されました。ブラウザの設定でマイクアクセスを許可してください。",
       {
         operation: t,
@@ -1091,7 +1091,7 @@ class De {
     };
   }
 }
-function Ve(h) {
+function je(h) {
   return h && h.__esModule && Object.prototype.hasOwnProperty.call(h, "default") ? h.default : h;
 }
 function I(h) {
@@ -1115,7 +1115,7 @@ function I(h) {
   }
   this._out = null, this._data = null, this._inv = 0;
 }
-var Ge = I;
+var Qe = I;
 I.prototype.fromComplexArray = function(e, t) {
   for (var i = t || new Array(e.length >>> 1), s = 0; s < e.length; s += 2)
     i[s >>> 1] = e[s];
@@ -1172,7 +1172,7 @@ I.prototype._transform4 = function() {
     var m = o >>> 2;
     for (n = 0; n < t; n += o)
       for (var u = n + m, d = n, f = 0; d < u; d += 2, f += s) {
-        const p = d, y = p + m, v = y + m, S = v + m, b = e[p], g = e[p + 1], C = e[y], D = e[y + 1], P = e[v], q = e[v + 1], z = e[S], O = e[S + 1], L = b, U = g, B = l[f], $ = c * l[f + 1], H = C * B - D * $, V = C * $ + D * B, X = l[2 * f], Y = c * l[2 * f + 1], K = P * X - q * Y, Z = P * Y + q * X, ee = l[3 * f], te = c * l[3 * f + 1], ie = z * ee - O * te, se = z * te + O * ee, oe = L + K, G = U + Z, j = L - K, ne = U - Z, re = H + ie, Q = V + se, W = c * (H - ie), ae = c * (V - se), he = oe + re, fe = G + Q, ge = oe - re, pe = G - Q, ve = j + ae, ye = ne - W, Se = j - ae, Ce = ne + W;
+        const p = d, y = p + m, v = y + m, S = v + m, b = e[p], g = e[p + 1], C = e[y], D = e[y + 1], P = e[v], q = e[v + 1], O = e[S], z = e[S + 1], L = b, U = g, B = l[f], $ = c * l[f + 1], H = C * B - D * $, V = C * $ + D * B, X = l[2 * f], Y = c * l[2 * f + 1], K = P * X - q * Y, Z = P * Y + q * X, ee = l[3 * f], te = c * l[3 * f + 1], ie = O * ee - z * te, se = O * te + z * ee, oe = L + K, G = U + Z, j = L - K, ne = U - Z, re = H + ie, Q = V + se, W = c * (H - ie), ae = c * (V - se), he = oe + re, fe = G + Q, ge = oe - re, pe = G - Q, ve = j + ae, ye = ne - W, Se = j - ae, Ce = ne + W;
         e[p] = he, e[p + 1] = fe, e[y] = ve, e[y + 1] = ye, e[v] = ge, e[v + 1] = pe, e[S] = Se, e[S + 1] = Ce;
       }
   }
@@ -1182,8 +1182,8 @@ I.prototype._singleTransform2 = function(e, t, i) {
   s[e] = l, s[e + 1] = m, s[e + 2] = u, s[e + 3] = d;
 };
 I.prototype._singleTransform4 = function(e, t, i) {
-  const s = this._out, o = this._data, n = this._inv ? -1 : 1, r = i * 2, a = i * 3, c = o[t], l = o[t + 1], m = o[t + i], u = o[t + i + 1], d = o[t + r], f = o[t + r + 1], p = o[t + a], y = o[t + a + 1], v = c + d, S = l + f, b = c - d, g = l - f, C = m + p, D = u + y, P = n * (m - p), q = n * (u - y), z = v + C, O = S + D, L = b + q, U = g - P, B = v - C, $ = S - D, H = b - q, V = g + P;
-  s[e] = z, s[e + 1] = O, s[e + 2] = L, s[e + 3] = U, s[e + 4] = B, s[e + 5] = $, s[e + 6] = H, s[e + 7] = V;
+  const s = this._out, o = this._data, n = this._inv ? -1 : 1, r = i * 2, a = i * 3, c = o[t], l = o[t + 1], m = o[t + i], u = o[t + i + 1], d = o[t + r], f = o[t + r + 1], p = o[t + a], y = o[t + a + 1], v = c + d, S = l + f, b = c - d, g = l - f, C = m + p, D = u + y, P = n * (m - p), q = n * (u - y), O = v + C, z = S + D, L = b + q, U = g - P, B = v - C, $ = S - D, H = b - q, V = g + P;
+  s[e] = O, s[e + 1] = z, s[e + 2] = L, s[e + 3] = U, s[e + 4] = B, s[e + 5] = $, s[e + 6] = H, s[e + 7] = V;
 };
 I.prototype._realTransform4 = function() {
   var e = this._out, t = this._csize, i = this._width, s = 1 << i, o = t / s << 1, n, r, a = this._bitrev;
@@ -1203,15 +1203,15 @@ I.prototype._realTransform4 = function() {
     var m = o >>> 1, u = m >>> 1, d = u >>> 1;
     for (n = 0; n < t; n += o)
       for (var f = 0, p = 0; f <= d; f += 2, p += s) {
-        var y = n + f, v = y + u, S = v + u, b = S + u, g = e[y], C = e[y + 1], D = e[v], P = e[v + 1], q = e[S], z = e[S + 1], O = e[b], L = e[b + 1], U = g, B = C, $ = l[p], H = c * l[p + 1], V = D * $ - P * H, X = D * H + P * $, Y = l[2 * p], K = c * l[2 * p + 1], Z = q * Y - z * K, ee = q * K + z * Y, te = l[3 * p], ie = c * l[3 * p + 1], se = O * te - L * ie, oe = O * ie + L * te, G = U + Z, j = B + ee, ne = U - Z, re = B - ee, Q = V + se, W = X + oe, ae = c * (V - se), he = c * (X - oe), fe = G + Q, ge = j + W, pe = ne + he, ve = re - ae;
+        var y = n + f, v = y + u, S = v + u, b = S + u, g = e[y], C = e[y + 1], D = e[v], P = e[v + 1], q = e[S], O = e[S + 1], z = e[b], L = e[b + 1], U = g, B = C, $ = l[p], H = c * l[p + 1], V = D * $ - P * H, X = D * H + P * $, Y = l[2 * p], K = c * l[2 * p + 1], Z = q * Y - O * K, ee = q * K + O * Y, te = l[3 * p], ie = c * l[3 * p + 1], se = z * te - L * ie, oe = z * ie + L * te, G = U + Z, j = B + ee, ne = U - Z, re = B - ee, Q = V + se, W = X + oe, ae = c * (V - se), he = c * (X - oe), fe = G + Q, ge = j + W, pe = ne + he, ve = re - ae;
         if (e[y] = fe, e[y + 1] = ge, e[v] = pe, e[v + 1] = ve, f === 0) {
           var ye = G - Q, Se = j - W;
           e[S] = ye, e[S + 1] = Se;
           continue;
         }
         if (f !== d) {
-          var Ce = ne, xe = -re, Ne = G, Re = -j, Pe = -c * he, qe = -c * ae, _e = -c * W, ke = -c * Q, ze = Ce + Pe, Oe = xe + qe, Le = Ne + ke, Ue = Re - _e, Ae = n + u - f, we = n + m - f;
-          e[Ae] = ze, e[Ae + 1] = Oe, e[we] = Le, e[we + 1] = Ue;
+          var Ce = ne, Ne = -re, Re = G, Pe = -j, qe = -c * he, _e = -c * ae, ke = -c * W, Oe = -c * Q, ze = Ce + qe, Le = Ne + _e, Ue = Re + Oe, Be = Pe - ke, we = n + u - f, Ee = n + m - f;
+          e[we] = ze, e[we + 1] = Le, e[Ee] = Ue, e[Ee + 1] = Be;
         }
       }
   }
@@ -1224,7 +1224,7 @@ I.prototype._singleRealTransform4 = function(e, t, i) {
   const s = this._out, o = this._data, n = this._inv ? -1 : 1, r = i * 2, a = i * 3, c = o[t], l = o[t + i], m = o[t + r], u = o[t + a], d = c + m, f = c - m, p = l + u, y = n * (l - u), v = d + p, S = f, b = -y, g = d - p, C = f, D = y;
   s[e] = v, s[e + 1] = 0, s[e + 2] = S, s[e + 3] = b, s[e + 4] = g, s[e + 5] = 0, s[e + 6] = C, s[e + 7] = D;
 };
-const je = /* @__PURE__ */ Ve(Ge);
+const We = /* @__PURE__ */ je(Qe);
 class ce {
   /**
    * Constructs a new {@link Autocorrelator} able to handle input arrays of the
@@ -1252,7 +1252,7 @@ class ce {
     x(this, "_inverseBuffer");
     if (e < 1)
       throw new Error("Input length must be at least one");
-    this._inputLength = e, this._fft = new je(Xe(2 * e)), this._bufferSupplier = t, this._paddedInputBuffer = this._bufferSupplier(this._fft.size), this._transformBuffer = this._bufferSupplier(2 * this._fft.size), this._inverseBuffer = this._bufferSupplier(2 * this._fft.size);
+    this._inputLength = e, this._fft = new We(Ke(2 * e)), this._bufferSupplier = t, this._paddedInputBuffer = this._bufferSupplier(this._fft.size), this._transformBuffer = this._bufferSupplier(2 * this._fft.size), this._inverseBuffer = this._bufferSupplier(2 * this._fft.size);
   }
   /**
    * A helper method to create an {@link Autocorrelator} using
@@ -1325,18 +1325,18 @@ class ce {
     return t;
   }
 }
-function Qe(h) {
+function Je(h) {
   const e = [];
   let t = !1, i = -1 / 0, s = -1;
   for (let o = 1; o < h.length - 1; o++)
     h[o - 1] <= 0 && h[o] > 0 ? (t = !0, s = o, i = h[o]) : h[o - 1] > 0 && h[o] <= 0 ? (t = !1, s !== -1 && e.push(s)) : t && h[o] > i && (i = h[o], s = o);
   return e;
 }
-function We(h, e) {
+function Xe(h, e) {
   const [t, i, s] = [h - 1, h, h + 1], [o, n, r] = [e[t], e[i], e[s]], a = o / 2 - n + r / 2, c = -(o / 2) * (i + s) + n * (t + s) - r / 2 * (t + i), l = o * i * s / 2 - n * t * s + r * t * i / 2, m = -c / (2 * a), u = a * m * m + c * m + l;
   return [m, u];
 }
-let Je = class ue {
+let Ye = class ue {
   /**
    * Constructs a new {@link PitchDetector} able to handle input arrays of the
    * given length.
@@ -1471,12 +1471,12 @@ let Je = class ue {
   findPitch(e, t) {
     if (this._belowMinimumVolume(e)) return [0, 0];
     this._nsdf(e);
-    const i = Qe(this._nsdfBuffer);
+    const i = Je(this._nsdfBuffer);
     if (i.length === 0)
       return [0, 0];
     const s = Math.max(...i.map((a) => this._nsdfBuffer[a])), o = i.find(
       (a) => this._nsdfBuffer[a] >= this._clarityThreshold * s
-    ), [n, r] = We(
+    ), [n, r] = Xe(
       // @ts-expect-error resultIndex is guaranteed to be defined
       o,
       this._nsdfBuffer
@@ -1514,10 +1514,10 @@ let Je = class ue {
       this._nsdfBuffer[i] = 0;
   }
 };
-function Xe(h) {
+function Ke(h) {
   return h--, h |= h >> 1, h |= h >> 2, h |= h >> 4, h |= h >> 8, h |= h >> 16, h++, h;
 }
-class Ye {
+class Ze {
   // 推奨45FPS（22ms、音楽演奏に適切）
   constructor(e = 45) {
     this.lastFrameTime = 0, this.nextFrameTime = 0, this.frameDrops = 0, this.MIN_FPS = 30, this.MAX_FPS = 60, this.OPTIMAL_FPS = 45, this.targetFPS = Math.max(this.MIN_FPS, Math.min(e, this.MAX_FPS)), this.frameInterval = 1e3 / this.targetFPS;
@@ -1553,7 +1553,7 @@ class Ye {
     };
   }
 }
-class Ke {
+class et {
   /**
    * Creates a new PitchDetector instance with comprehensive configuration options
    * 
@@ -1659,7 +1659,7 @@ class Ke {
       minVolumeThreshold: 0.01,
       // 消音判定の音量閾値
       ...t.silenceDetection
-    }, this.frameRateLimiter = new Ye(45);
+    }, this.frameRateLimiter = new Ze(45), console.log(`${be} PitchDetector created with config:`, this.config);
   }
   /**
    * Sets callback functions for pitch detection events
@@ -1759,7 +1759,7 @@ class Ke {
         minDecibels: -90,
         maxDecibels: -10,
         useFilters: !1
-      }), this.analyserIds.push(r), this.pitchDetector = Je.forFloat32Array(this.analyser.fftSize), typeof process < "u" && ((e = process.env) == null ? void 0 : e.NODE_ENV) === "development" && console.log(`[Debug] Pitchyインスタンス作成: ${!!this.pitchDetector}, FFTサイズ: ${this.analyser.fftSize}`), this.componentState = "ready", this.isInitialized = !0, (i = (t = this.callbacks).onStateChange) == null || i.call(t, this.componentState);
+      }), this.analyserIds.push(r), this.pitchDetector = Ye.forFloat32Array(this.analyser.fftSize), typeof process < "u" && ((e = process.env) == null ? void 0 : e.NODE_ENV) === "development" && console.log(`[Debug] Pitchyインスタンス作成: ${!!this.pitchDetector}, FFTサイズ: ${this.analyser.fftSize}`), this.componentState = "ready", this.isInitialized = !0, (i = (t = this.callbacks).onStateChange) == null || i.call(t, this.componentState);
     } catch (n) {
       const r = n instanceof w ? n : new R(
         "PitchDetector initialization failed",
@@ -1796,7 +1796,7 @@ class Ke {
       return (t = (e = this.callbacks).onError) == null || t.call(e, r), !1;
     }
     if (!this.analyser || !this.pitchDetector) {
-      const r = new Ee(
+      const r = new Te(
         "ピッチ検出に必要なコンポーネントが初期化されていません。initialize()メソッドを先に呼び出してください。",
         {
           operation: "startDetection",
@@ -1853,7 +1853,7 @@ class Ke {
       const g = this.pitchDetector.findPitch(i, a);
       c = g[0] || 0, l = g[1] || 0;
     } catch (g) {
-      const C = new Ee(
+      const C = new Te(
         "Pitch detection algorithm failed",
         {
           bufferLength: i.length,
@@ -1862,7 +1862,7 @@ class Ke {
           originalError: g instanceof Error ? g.message : String(g)
         }
       );
-      if (console.warn("⚠️ [PitchDetector] Pitch detection error (recoverable):", C.toJSON()), Ie(C))
+      if (console.warn("⚠️ [PitchDetector] Pitch detection error (recoverable):", C.toJSON()), De(C))
         c = 0, l = 0;
       else {
         (S = (v = this.callbacks).onError) == null || S.call(v, C);
@@ -2256,7 +2256,7 @@ class Ke {
     this.harmonicConfig = { ...this.harmonicConfig, ...e }, this.resetHarmonicHistory(), typeof process < "u" && ((t = process.env) == null || t.NODE_ENV);
   }
 }
-class st {
+class rt {
   /**
    * Creates a new NoiseFilter with configurable 3-stage filtering
    * 
@@ -2720,8 +2720,8 @@ class le {
     return e >= this.level;
   }
 }
-const me = new le(1, "PitchPro"), ot = (h, e) => me.debug(h, e), nt = (h, e) => me.info(h, e), rt = (h, e) => me.warn(h, e), at = (h, e, t) => me.error(h, e, t);
-class Ze {
+const me = new le(1, "PitchPro"), at = (h, e) => me.debug(h, e), ct = (h, e) => me.info(h, e), lt = (h, e) => me.warn(h, e), ht = (h, e, t) => me.error(h, e, t);
+class tt {
   constructor(e, t = {}) {
     if (this.refCount = 0, this.isActive = !1, this.lastHealthCheck = null, this.healthCheckInterval = null, this.idleCheckInterval = null, this.visibilityCheckInterval = null, this.lastActivityTime = Date.now(), this.isPageVisible = !0, this.isUserActive = !0, this.autoRecoveryAttempts = 0, this.eventListeners = /* @__PURE__ */ new Map(), this.callbacks = {}, this.audioManager = e, this.config = {
       healthCheckIntervalMs: t.healthCheckIntervalMs ?? 5e3,
@@ -2915,7 +2915,7 @@ class Ze {
             }
           }, this.config.autoRecoveryDelayMs);
         else {
-          const n = new He(
+          const n = new Ge(
             `Microphone health check failed after ${this.autoRecoveryAttempts} recovery attempts. Monitoring stopped to prevent infinite error loop.`,
             o,
             this.autoRecoveryAttempts,
@@ -3017,7 +3017,7 @@ class Ze {
     }), this.stopAllMonitoring(), this.forceRelease(), this.removeAllTrackedEventListeners(), this.isActive = !1, this.refCount = 0, this.autoRecoveryAttempts = 0, this.logger.info("MicrophoneLifecycleManager cleanup complete");
   }
 }
-class et {
+class it {
   constructor() {
     if (this.container = null, this.notifications = /* @__PURE__ */ new Map(), this.notificationCounter = 0, this.defaultDuration = 5e3, this.maxNotifications = 0, this.cssClasses = {
       container: "pitchpro-notifications",
@@ -3382,7 +3382,7 @@ class et {
     e && e.parentNode && e.parentNode.removeChild(e), this.container = null, this.notifications.clear(), console.log("✅ [ErrorNotificationSystem] Cleanup complete");
   }
 }
-class tt {
+class st {
   /**
    * Creates a new MicrophoneController with integrated management systems
    * 
@@ -3435,7 +3435,7 @@ class tt {
       this.config.logging.level,
       this.config.logging.prefix,
       { component: "MicrophoneController" }
-    ), this.logger.debug("Initializing MicrophoneController", { config: this.config }), this.audioManager = new De(this.config.audioManager), this.lifecycleManager = new Ze(this.audioManager, this.config.lifecycle), this.errorSystem = this.config.notifications.enabled ? new et() : null, this.setupEventHandlers(), this.detectDevice();
+    ), this.logger.debug("Initializing MicrophoneController", { config: this.config }), this.audioManager = new xe(this.config.audioManager), this.lifecycleManager = new tt(this.audioManager, this.config.lifecycle), this.errorSystem = this.config.notifications.enabled ? new it() : null, this.setupEventHandlers(), this.detectDevice();
   }
   /**
    * Sets callback functions for microphone controller events
@@ -3998,7 +3998,7 @@ class tt {
    * @returns Structured PitchProError with context
    */
   _createStructuredError(e, t) {
-    return e.message.includes("Permission denied") || e.message.includes("NotAllowedError") || e.message.includes("permission") || e.message.includes("denied") ? new be(
+    return e.message.includes("Permission denied") || e.message.includes("NotAllowedError") || e.message.includes("permission") || e.message.includes("denied") ? new Ae(
       "マイクへのアクセス許可が拒否されました。ブラウザの設定でマイクアクセスを許可してください。",
       {
         operation: t,
@@ -4656,13 +4656,13 @@ const N = class N {
       // コールバック関数はオプショナル
       debug: e.debug ?? !1,
       logPrefix: e.logPrefix ?? "🎵 AudioDetection"
-    }, this.audioManager = new De({
+    }, this.audioManager = new xe({
       sampleRate: 44100,
       channelCount: 1,
       echoCancellation: !1,
       noiseSuppression: !1,
       autoGainControl: !1
-    }), this.config.deviceOptimization && this.detectAndOptimizeDevice(), this.checkAutoUpdateUIWarnings(), this.debugLog("AudioDetectionComponent created with config:", this.config);
+    }), this.config.deviceOptimization && this.detectAndOptimizeDevice(), this.checkAutoUpdateUIWarnings(), this.debugLog(`${be} AudioDetectionComponent created with config:`, this.config);
   }
   /** @private Helper method for creating delays */
   delay(e) {
@@ -4710,7 +4710,7 @@ const N = class N {
       return;
     }
     try {
-      this.updateState("initializing"), this.debugLog("Starting initialization..."), this.micController = new tt({
+      this.updateState("initializing"), this.debugLog(`${be} Starting initialization...`), this.micController = new st({
         audioManager: {
           sampleRate: 44100,
           echoCancellation: !1,
@@ -4748,7 +4748,7 @@ const N = class N {
         smoothing: ((n = this.deviceSpecs) == null ? void 0 : n.smoothingFactor) ?? this.config.smoothing,
         deviceOptimization: this.config.deviceOptimization
       };
-      this.debugLog("PitchDetector config object:", r), this.pitchDetector = new Ke(this.audioManager, r), this.pitchDetector.setCallbacks({
+      this.debugLog("PitchDetector config object:", r), this.pitchDetector = new et(this.audioManager, r), this.pitchDetector.setCallbacks({
         onPitchUpdate: (c) => {
           this.handlePitchUpdate(c);
         },
@@ -5155,7 +5155,7 @@ const N = class N {
    * @private
    */
   createStructuredError(e, t) {
-    return e.message.includes("Permission denied") || e.message.includes("NotAllowedError") || e.message.includes("permission") ? new be(
+    return e.message.includes("Permission denied") || e.message.includes("NotAllowedError") || e.message.includes("permission") ? new Ae(
       "マイクへのアクセス許可が拒否されました。ブラウザの設定でマイクアクセスを許可してください。",
       {
         operation: t,
@@ -5192,8 +5192,8 @@ const N = class N {
   }
 };
 N.NOTE_RESET_DELAY_MS = 300, N.SELECTOR_UPDATE_DELAY_MS = 50, N.UI_RESTART_DELAY_MS = 200;
-let Te = N;
-class ct {
+let Fe = N;
+class ut {
   constructor(e = {}) {
     this.historyBuffer = [], this.config = {
       historyWindowMs: 2e3,
@@ -5364,7 +5364,7 @@ const _ = {
   FAIR: "fair",
   POOR: "poor"
 };
-class lt {
+class dt {
   constructor(e = {}) {
     this.analysisBuffer = [], this.config = {
       analysisWindowMs: 3e3,
@@ -5548,7 +5548,7 @@ class lt {
     };
   }
 }
-class ht {
+class mt {
   constructor() {
     this.calibrationData = null, this.isCalibrated = !1, this.calibrationInProgress = !1, this.deviceSpecs = J.getDeviceSpecs();
   }
@@ -6069,8 +6069,8 @@ E.SCALE_PATTERNS = {
   11: "Major Seventh",
   12: "Perfect Octave"
 };
-let Fe = E;
-const ut = "1.2.2", dt = (/* @__PURE__ */ new Date()).toISOString(), mt = {
+let Ie = E;
+const ft = (/* @__PURE__ */ new Date()).toISOString(), gt = {
   pitchDetector: {
     fftSize: 4096,
     smoothing: 0.1,
@@ -6102,29 +6102,31 @@ const ut = "1.2.2", dt = (/* @__PURE__ */ new Date()).toISOString(), mt = {
   }
 };
 export {
-  Te as AudioDetectionComponent,
-  De as AudioManager,
-  dt as BUILD_DATE,
-  ht as CalibrationSystem,
-  mt as DEFAULT_CONFIG,
+  Fe as AudioDetectionComponent,
+  xe as AudioManager,
+  ft as BUILD_DATE,
+  nt as BUILD_TIMESTAMP,
+  mt as CalibrationSystem,
+  gt as DEFAULT_CONFIG,
   J as DeviceDetection,
-  et as ErrorNotificationSystem,
+  it as ErrorNotificationSystem,
   T as FrequencyUtils,
-  ct as HarmonicCorrection,
+  ut as HarmonicCorrection,
   de as LogLevel,
   le as Logger,
-  tt as MicrophoneController,
-  He as MicrophoneHealthError,
-  Ze as MicrophoneLifecycleManager,
-  Fe as MusicTheory,
-  st as NoiseFilter,
-  Ke as PitchDetector,
-  ut as VERSION,
-  lt as VoiceAnalyzer,
-  ot as debug,
+  st as MicrophoneController,
+  Ge as MicrophoneHealthError,
+  tt as MicrophoneLifecycleManager,
+  Ie as MusicTheory,
+  rt as NoiseFilter,
+  et as PitchDetector,
+  Ve as VERSION,
+  be as VERSION_STRING,
+  dt as VoiceAnalyzer,
+  at as debug,
   me as defaultLogger,
-  at as error,
-  nt as info,
-  rt as warn
+  ht as error,
+  ct as info,
+  lt as warn
 };
 //# sourceMappingURL=index.esm.js.map
