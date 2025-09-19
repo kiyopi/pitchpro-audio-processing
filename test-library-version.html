@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 PitchPro ライブラリバージョン確認</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1e1e1e;
+            color: #ffffff;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #2d2d30;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .test-result {
+            background: #252526;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #007ACC;
+        }
+        .success { border-left-color: #4CAF50; }
+        .error { border-left-color: #F44336; }
+        .warning { border-left-color: #FF9800; }
+        .code-block {
+            background: #1e1e1e;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        button {
+            background: #007ACC;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 PitchPro ライブラリバージョン確認</h1>
+        <p>現在のライブラリの実際の内容と期待されるバージョンを検証します。</p>
+
+        <button onclick="testLibraryVersion()">ライブラリバージョンテスト実行</button>
+        <button onclick="clearResults()">結果クリア</button>
+
+        <div id="results"></div>
+    </div>
+
+    <script src="dist/pitchpro.umd.js"></script>
+    <script>
+        function addResult(type, title, content) {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${type}`;
+            resultDiv.innerHTML = `
+                <h3>${title}</h3>
+                <div>${content}</div>
+            `;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function testLibraryVersion() {
+            clearResults();
+
+            addResult('info', '📦 ライブラリ構造確認', 'ライブラリの読み込み状況を確認中...');
+
+            // 1. ライブラリオブジェクトの確認
+            if (typeof window.PitchPro !== 'undefined') {
+                addResult('success', '✅ PitchPro オブジェクト確認',
+                    `PitchPro オブジェクトが正常に読み込まれています。<br>
+                    利用可能なクラス: ${Object.keys(window.PitchPro).join(', ')}`);
+
+                // 2. DeviceDetection の内容確認
+                if (window.PitchPro.DeviceDetection) {
+                    try {
+                        const deviceSpecs = window.PitchPro.DeviceDetection.getDeviceSpecs();
+                        addResult('success', '🔍 DeviceDetection 内容確認',
+                            `<div class="code-block">
+                                デバイス: ${deviceSpecs.deviceType}<br>
+                                noiseGate: ${deviceSpecs.noiseGate} (${(deviceSpecs.noiseGate * 100).toFixed(1)}%)<br>
+                                volumeMultiplier: ${deviceSpecs.volumeMultiplier}<br>
+                                sensitivity: ${deviceSpecs.sensitivity}<br>
+                                smoothingFactor: ${deviceSpecs.smoothingFactor}
+                            </div>`);
+
+                        // 3. v1.2.2の期待値と比較
+                        const expectedValues = {
+                            PC: { noiseGate: 0.025, volumeMultiplier: 7.5 },
+                            iPhone: { noiseGate: 0.010, volumeMultiplier: 11.5 },
+                            iPad: { noiseGate: 0.012, volumeMultiplier: 13.0 }
+                        };
+
+                        const expected = expectedValues[deviceSpecs.deviceType];
+                        if (expected) {
+                            const noiseGateMatch = Math.abs(deviceSpecs.noiseGate - expected.noiseGate) < 0.001;
+                            const volumeMatch = Math.abs(deviceSpecs.volumeMultiplier - expected.volumeMultiplier) < 0.1;
+
+                            if (noiseGateMatch && volumeMatch) {
+                                addResult('success', '✅ v1.2.2 値確認',
+                                    `デバイス設定が v1.2.2 の期待値と一致しています。<br>
+                                    noiseGate: ${deviceSpecs.noiseGate} (期待値: ${expected.noiseGate})<br>
+                                    volumeMultiplier: ${deviceSpecs.volumeMultiplier} (期待値: ${expected.volumeMultiplier})`);
+                            } else {
+                                addResult('warning', '⚠️ 値の不一致検出',
+                                    `一部の値が期待値と異なっています：<br>
+                                    noiseGate: ${deviceSpecs.noiseGate} (期待値: ${expected.noiseGate}) ${noiseGateMatch ? '✅' : '❌'}<br>
+                                    volumeMultiplier: ${deviceSpecs.volumeMultiplier} (期待値: ${expected.volumeMultiplier}) ${volumeMatch ? '✅' : '❌'}`);
+                            }
+                        } else {
+                            addResult('info', 'ℹ️ 未知のデバイス', `デバイス "${deviceSpecs.deviceType}" の期待値が定義されていません。`);
+                        }
+
+                    } catch (error) {
+                        addResult('error', '❌ DeviceDetection エラー',
+                            `DeviceDetection.getDeviceSpecs() でエラーが発生しました: ${error.message}`);
+                    }
+                } else {
+                    addResult('error', '❌ DeviceDetection 未確認', 'DeviceDetection クラスが見つかりません。');
+                }
+
+                // 4. AudioDetectionComponent の確認
+                if (window.PitchPro.AudioDetectionComponent) {
+                    try {
+                        const component = new window.PitchPro.AudioDetectionComponent({
+                            deviceOptimization: true,
+                            autoUpdateUI: false
+                        });
+
+                        addResult('success', '✅ AudioDetectionComponent 確認',
+                            'AudioDetectionComponent が正常に作成できました。');
+
+                        // 設定値の確認
+                        const status = component.getStatus();
+                        addResult('info', '📊 Component 設定確認',
+                            `<div class="code-block">
+                                状態: ${status.state}<br>
+                                初期化済み: ${status.isInitialized}<br>
+                                デバイス最適化: ${status.config.deviceOptimization}
+                            </div>`);
+
+                    } catch (error) {
+                        addResult('error', '❌ AudioDetectionComponent エラー',
+                            `AudioDetectionComponent の作成でエラーが発生しました: ${error.message}`);
+                    }
+                } else {
+                    addResult('error', '❌ AudioDetectionComponent 未確認', 'AudioDetectionComponent クラスが見つかりません。');
+                }
+
+            } else {
+                addResult('error', '❌ ライブラリ未読み込み',
+                    'PitchPro オブジェクトが見つかりません。ライブラリが正常に読み込まれていない可能性があります。');
+            }
+
+            // 5. ファイル情報の確認
+            const script = document.querySelector('script[src*="pitchpro.umd.js"]');
+            if (script) {
+                addResult('info', '📄 ファイル情報',
+                    `スクリプトソース: ${script.src}<br>
+                    読み込み時刻: ${new Date().toLocaleString()}`);
+            }
+        }
+
+        // ページ読み込み時に自動実行
+        window.addEventListener('load', () => {
+            setTimeout(testLibraryVersion, 500);
+        });
+    </script>
+</body>
+</html>

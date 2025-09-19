@@ -1179,7 +1179,7 @@ export class AudioDetectionComponent {
     }
 
     return processedResult;
-  }    // 元のオブジェクトを変更しないようにコピーを作成\n    const processedResult = { ...rawResult };\n\n    // ⬇️ deviceSettingsではなくdeviceSpecsからvolumeMultiplierを取得\n    const volumeMultiplier = this.deviceSpecs?.volumeMultiplier ?? 1.0;\n    const finalVolume = rawResult.volume * volumeMultiplier;\n    \n    // 🔍 v1.2.1.20: 全デバイスでvolumeMultiplier処理をログ出力\n    if (rawResult.volume > 0.1) {\n      console.log(`📊 [VolumeAdjustment] Device: ${this.deviceSpecs?.deviceType}, Raw: ${rawResult.volume.toFixed(2)}%, Multiplier: ${volumeMultiplier}, Final: ${Math.min(100, Math.max(0, finalVolume)).toFixed(2)}%`);\n      console.log(`🔍 [CRITICAL] _getProcessedResult details:`, {\n        inputVolume: rawResult.volume,\n        deviceType: this.deviceSpecs?.deviceType,\n        volumeMultiplier: volumeMultiplier,\n        calculatedFinal: finalVolume,\n        clampedFinal: Math.min(100, Math.max(0, finalVolume))\n      });\n    }\n    \n    // 最終的な音量を0-100の範囲に丸めて、結果オブジェクトを更新\n    processedResult.volume = Math.min(100, Math.max(0, finalVolume));\n\n    return processedResult;\n  }
+  }
 
   /**
    * Updates component state and notifies callbacks
