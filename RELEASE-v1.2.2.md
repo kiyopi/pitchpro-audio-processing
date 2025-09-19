@@ -96,6 +96,14 @@ if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
 - リアルタイムパフォーマンス調整
 - バージョン情報の統一管理とデバッグ表示
 
+### setCallbacks()メソッドの完全実装 ⭐
+**重要**: コメント内で使用例が示されていたsetCallbacks()メソッドを正式に実装しました。
+- AudioDetectionComponent.setCallbacks()の完全実装
+- PitchDetectorとの型安全なコールバック伝播
+- Error ⟷ PitchProError の自動型変換機能
+- 包括的なテストカバレッジ（4項目）追加
+- TypeScript型定義の自動生成と確認
+
 ## 💡 使用例
 
 ### 基本的な使用方法
@@ -133,6 +141,40 @@ const audioDetector = new AudioDetectionComponent({
 // コンソールに "PitchPro v1.2.2 AudioDetectionComponent created with config: {...}" が表示
 
 await audioDetector.initialize();
+```
+
+### setCallbacks()の活用（v1.2.2新機能）
+```javascript
+import { AudioDetectionComponent } from '@pitchpro/audio-processing';
+
+const audioDetector = new AudioDetectionComponent({
+  volumeBarSelector: '#volume-bar',
+  frequencySelector: '#frequency-display'
+});
+
+await audioDetector.initialize();
+
+// setCallbacks()でイベントハンドラーを設定
+audioDetector.setCallbacks({
+  onPitchUpdate: (result) => {
+    console.log('音程検出:', result);
+    // result.volume は既にデバイス固有補正済み（0-100%）
+    // PC: 7.5x, iPhone: 11.5x, iPad: 13.0x の倍率が自動適用
+  },
+  onError: (error) => {
+    console.error('検出エラー:', error);
+    // PitchProError型で構造化されたエラー情報
+  },
+  onStateChange: (state) => {
+    console.log('状態変化:', state);
+    // 'uninitialized' | 'initializing' | 'ready' | 'detecting' | 'stopped' | 'error'
+  },
+  onVolumeUpdate: (volume) => {
+    console.log('音量更新:', volume + '%');
+  }
+});
+
+await audioDetector.startDetection();
 ```
 
 ## 🔄 v1.2.0からの移行
