@@ -349,4 +349,121 @@ describe('AudioDetectionComponent - autoUpdateUI Feature', () => {
       expect(processedResult.volume).toBe(50);
     });
   });
+
+  describe('setCallbacks Method', () => {
+    it('should set callbacks correctly', () => {
+      const config: AudioDetectionConfig = {
+        autoUpdateUI: true
+      };
+
+      const component = new AudioDetectionComponent(config);
+
+      // Mock console.log to capture debug messages
+      const mockConsoleLog = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+      // Set debug mode to true to test debug logging
+      (component as any).config.debug = true;
+
+      const mockOnPitchUpdate = vi.fn();
+      const mockOnError = vi.fn();
+      const mockOnStateChange = vi.fn();
+
+      const callbacks = {
+        onPitchUpdate: mockOnPitchUpdate,
+        onError: mockOnError,
+        onStateChange: mockOnStateChange
+      };
+
+      // Call setCallbacks
+      component.setCallbacks(callbacks);
+
+      // Verify callbacks were set internally
+      const internalCallbacks = (component as any).callbacks;
+      expect(internalCallbacks.onPitchUpdate).toBe(mockOnPitchUpdate);
+      expect(internalCallbacks.onError).toBe(mockOnError);
+      expect(internalCallbacks.onStateChange).toBe(mockOnStateChange);
+
+      // Verify debug log was called
+      expect(mockConsoleLog).toHaveBeenCalledWith(
+        expect.stringContaining('🎵 AudioDetection Setting callbacks:'),
+        expect.arrayContaining(['onPitchUpdate', 'onError', 'onStateChange'])
+      );
+
+      mockConsoleLog.mockRestore();
+    });
+
+    it('should merge callbacks with existing ones', () => {
+      const component = new AudioDetectionComponent({});
+
+      const firstCallback = vi.fn();
+      const secondCallback = vi.fn();
+      const thirdCallback = vi.fn();
+
+      // Set first set of callbacks
+      component.setCallbacks({
+        onPitchUpdate: firstCallback,
+        onError: secondCallback
+      });
+
+      // Set second set of callbacks (should merge)
+      component.setCallbacks({
+        onStateChange: thirdCallback
+      });
+
+      const internalCallbacks = (component as any).callbacks;
+      expect(internalCallbacks.onPitchUpdate).toBe(firstCallback); // Should remain
+      expect(internalCallbacks.onError).toBe(secondCallback); // Should remain
+      expect(internalCallbacks.onStateChange).toBe(thirdCallback); // Should be added
+    });
+
+    it('should propagate callbacks to PitchDetector when available', () => {
+      const component = new AudioDetectionComponent({});
+
+      // Mock PitchDetector with setCallbacks method
+      const mockPitchDetector = {
+        setCallbacks: vi.fn()
+      };
+      (component as any).pitchDetector = mockPitchDetector;
+
+      const mockOnPitchUpdate = vi.fn();
+      const mockOnError = vi.fn();
+
+      component.setCallbacks({
+        onPitchUpdate: mockOnPitchUpdate,
+        onError: mockOnError,
+        onStateChange: vi.fn() // This should not be propagated to PitchDetector
+      });
+
+      // Verify PitchDetector.setCallbacks was called
+      expect(mockPitchDetector.setCallbacks).toHaveBeenCalledTimes(1);
+      const callArgs = mockPitchDetector.setCallbacks.mock.calls[0][0];
+
+      // Verify onPitchUpdate is passed directly
+      expect(callArgs.onPitchUpdate).toBe(mockOnPitchUpdate);
+
+      // Verify onError is wrapped (function will be different due to error type conversion)
+      expect(typeof callArgs.onError).toBe('function');
+      expect(callArgs.onError).not.toBe(mockOnError); // Should be wrapped
+    });
+
+    it('should handle case when PitchDetector is not available', () => {
+      const component = new AudioDetectionComponent({});
+
+      // Ensure PitchDetector is null
+      (component as any).pitchDetector = null;
+
+      const mockOnPitchUpdate = vi.fn();
+
+      // Should not throw error when PitchDetector is null
+      expect(() => {
+        component.setCallbacks({
+          onPitchUpdate: mockOnPitchUpdate
+        });
+      }).not.toThrow();
+
+      // Verify callbacks were still set internally
+      const internalCallbacks = (component as any).callbacks;
+      expect(internalCallbacks.onPitchUpdate).toBe(mockOnPitchUpdate);
+    });
+  });
 });

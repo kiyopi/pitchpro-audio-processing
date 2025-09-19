@@ -901,6 +901,45 @@ export class AudioDetectionComponent {
   }
 
   /**
+   * コールバック関数を設定
+   * 
+   * @param callbacks - 設定するコールバック関数
+   * 
+   * @example
+   * ```typescript
+   * audioDetector.setCallbacks({
+   *   onPitchUpdate: (result) => {
+   *     console.log('音程検出:', result);
+   *     // result.volume は既にデバイス固有補正済み（0-100%）
+   *     // PC: 生音量 × 3.0, iPhone: 生音量 × 7.5, iPad: 生音量 × 20.0
+   *   },
+   *   onError: (error) => {
+   *     console.error('検出エラー:', error);
+   *   }
+   * });
+   * ```
+   */
+  setCallbacks(callbacks: AudioDetectionCallbacks): void {
+    this.debugLog('Setting callbacks:', Object.keys(callbacks));
+    this.callbacks = { ...this.callbacks, ...callbacks };
+    
+    // コールバックが設定された場合、既存のPitchDetectorにも設定を伝播
+    if (this.pitchDetector) {
+      this.pitchDetector.setCallbacks({
+        onPitchUpdate: callbacks.onPitchUpdate,
+        // PitchDetectorのErrorCallbackは標準Errorを期待するため、PitchProErrorをErrorにラップ
+        onError: callbacks.onError ? (error: Error) => {
+          // PitchProErrorの場合はそのまま、標準Errorの場合は構造化エラーに変換
+          const structuredError = error instanceof Error && 'code' in error
+            ? error as any // Already a PitchProError
+            : this.createStructuredError(error, 'pitch_detector');
+          callbacks.onError?.(structuredError);
+        } : undefined
+      });
+    }
+  }
+
+  /**
    * Destroys the component and cleans up all resources
    * 
    * @example

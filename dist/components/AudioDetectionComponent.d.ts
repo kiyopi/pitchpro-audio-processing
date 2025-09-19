@@ -478,6 +478,26 @@ export declare class AudioDetectionComponent {
      */
     updateSelectors(selectors: Partial<Pick<AudioDetectionConfig, 'volumeBarSelector' | 'volumeTextSelector' | 'frequencySelector' | 'noteSelector'>>): Promise<void>;
     /**
+     * コールバック関数を設定
+     *
+     * @param callbacks - 設定するコールバック関数
+     *
+     * @example
+     * ```typescript
+     * audioDetector.setCallbacks({
+     *   onPitchUpdate: (result) => {
+     *     console.log('音程検出:', result);
+     *     // result.volume は既にデバイス固有補正済み（0-100%）
+     *     // PC: 生音量 × 3.0, iPhone: 生音量 × 7.5, iPad: 生音量 × 20.0
+     *   },
+     *   onError: (error) => {
+     *     console.error('検出エラー:', error);
+     *   }
+     * });
+     * ```
+     */
+    setCallbacks(callbacks: AudioDetectionCallbacks): void;
+    /**
      * Destroys the component and cleans up all resources
      *
      * @example
