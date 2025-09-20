@@ -45,17 +45,17 @@ Web音楽アプリケーション開発のための包括的な音響処理ツ�
 - **完全TypeScript対応**：strictモード対応、厳密な型定義とIntelliSense支援
 - **ES/CommonJS対応**：モダンバンドラーと従来環境の両対応
 
-## 🎯 最新リリース：v1.2.2 全デバイス70Hz検出完全制覇
+## 🎯 最新リリース：v1.3.0 iPhone・iPad音響検出最適化
 
-**全プラットフォーム低周波数検出実現**：iPad/iPhone/PC環境での統一された高精度低周波数検出システムが完成。70Hz以下の音も安定して検出可能に
-- 要素セレクター検証システムによる完全な干渉防止
-- 自動noteSelector管理機能
-- 非アクティブモード時の確実なUI停止
+**デバイス固有音響特性の最適化**：iPhone特有の30Hz低周波数ノイズ問題を完全解決し、全デバイスで統一された音響検出を実現
+- **iPhone**: noiseGate 2.8%、volumeMultiplier 9.0x（30Hz低周波数ノイズ対策）
+- **iPad**: noiseGate 2.3%、volumeMultiplier 13.0x（感度向上）
+- **PC**: noiseGate 2.5%、volumeMultiplier 7.5x（環境ノイズ対策）
 
-**対象ユーザー**：低周波数検出を必要とする全ユーザー（大幅な性能改善のため更新推奨）
+**対象ユーザー**：特にiPhoneでの音響検出品質を重視するユーザー（大幅な改善のため更新推奨）
 ```bash
 # 最新版へのアップデート
-npm install @pitchpro/audio-processing@1.2.2
+npm install @pitchpro/audio-processing@1.3.0
 ```
 
 ## 🔄 v1.1.3 マイクレベル修正（継続中）
@@ -83,10 +83,16 @@ import PitchPro from './dist/index.esm.js';
 
 NPM/CDNを利用している場合は変更不要です。
 
-### 🚀 新機能（v1.2.2）
-- **🎯 全デバイス70Hz検出**：PC/iPhone/iPadで低周波数の安定検出を実現
-- **🔬 デバイス固有最適化**：マイク特性を科学的に分析し個別最適化
-- **📊 段階的調整手法**：体系的な最適化プロセスの確立
+### 🚀 新機能（v1.3.0）
+- **🎯 iPhone音響検出最適化**：30Hz低周波数ノイズ問題の完全解決
+- **📱 デバイス間音量統一**：iPhone/iPad/PC間での一貫した音量表示レベル
+- **🔬 実測データ最適化**：各デバイスのマイク特性に基づく科学的調整
+- **📊 設定値精密化**：noiseGate・volumeMultiplier値の段階的最適化
+
+### 🚀 継続機能（v1.2.2）
+- **🎯 全デバイス70Hz検出**：PC/iPhone/iPadで低周波数の安定検出を維持
+- **🔬 デバイス固有最適化**：マイク特性分析による個別最適化を継承
+- **📊 段階的調整手法**：体系的な最適化プロセスの確立を活用
 - **✨ 統一処理アーキテクチャ**：全デバイスで一貫した処理フロー
 
 ### 🚀 継続機能（v1.2.0）
@@ -160,8 +166,8 @@ npm install @pitchpro/audio-processing
 ```
 
 #### 📥 直接ダウンロード
-- **最新版**: [v1.2.2 リリース](https://github.com/kiyopi/pitchpro-audio-processing/releases/latest)
-- **UMDファイル**: [pitchpro.umd.js](https://github.com/kiyopi/pitchpro-audio-processing/releases/download/v1.2.2/pitchpro.umd.js)
+- **最新版**: [v1.3.0 リリース](https://github.com/kiyopi/pitchpro-audio-processing/releases/latest)
+- **UMDファイル**: [pitchpro.umd.js](https://github.com/kiyopi/pitchpro-audio-processing/releases/download/v1.3.0/pitchpro.umd.js)
 - **デモページ**: [ワンクリックダウンロード＋デモ](https://kiyopi.github.io/pitchpro-audio-processing/quickstart-demo.html)
 
 ### 基本的な使用方法
