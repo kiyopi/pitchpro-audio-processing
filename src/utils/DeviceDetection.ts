@@ -124,7 +124,7 @@ export class DeviceDetection {
       case 'iPhone':
         return {
           sensitivity: 3.5,           // 🎤 マイク感度 (iPhone最適化値)
-          noiseGate: 0.030,           // 🚪 ノイズゲート閾値 (3.0%設定で低周波ノイズ対策強化)
+          noiseGate: 0.028,           // 🚪 ノイズゲート閾値 (2.8%設定でiPadとの中間値)
           volumeMultiplier: 8.0,      // 🔊 表示音量補正 (音量表示レベル適正化)
           smoothingFactor: 0.25       // 📊 平滑化係数
         };
