@@ -57,7 +57,7 @@ const Ve = "1.2.2", be = `PitchPro v${Ve}`, nt = (/* @__PURE__ */ new Date()).to
           sensitivity: 4,
           // 🎤 マイク感度 (PitchDetector用)
           noiseGate: 0.025,
-          // 🚪 ノイズゲート閾値 (0.030→0.025 環境ノイズ2-3%を考慮して2.5%に調整)
+          // 🚪 ノイズゲート閾値 (環境ノイズ2-3%を考慮して2.5%に調整)
           volumeMultiplier: 13,
           // 🔊 表示音量補正 (17.0→13.0 23%削減で最適化)
           smoothingFactor: 0.25
@@ -67,10 +67,10 @@ const Ve = "1.2.2", be = `PitchPro v${Ve}`, nt = (/* @__PURE__ */ new Date()).to
         return {
           sensitivity: 3.5,
           // 🎤 マイク感度 (iPhone最適化値)
-          noiseGate: 0.05,
-          // 🚪 ノイズゲート閾値 (0.020→0.050 環境ノイズ3-5%を考慮して5.0%に調整)
-          volumeMultiplier: 11.5,
-          // 🔊 表示音量補正 (9.5→11.5 音量スケール改善)
+          noiseGate: 0.015,
+          // 🚪 ノイズゲート閾値 (1.5%設定で100Hz以下の低周波数検出改善)
+          volumeMultiplier: 3,
+          // 🔊 表示音量補正 (音量上昇率を適正化)
           smoothingFactor: 0.25
           // 📊 平滑化係数
         };
@@ -80,7 +80,7 @@ const Ve = "1.2.2", be = `PitchPro v${Ve}`, nt = (/* @__PURE__ */ new Date()).to
           sensitivity: 1.7,
           // 🎤 マイク感度 (PC環境安定性重視)
           noiseGate: 0.05,
-          // 🚪 ノイズゲート閾値 (0.025→0.050 環境ノイズ対策強化)
+          // 🚪 ノイズゲート閾値 (環境ノイズ対策強化5%)
           volumeMultiplier: 7.5,
           // 🔊 表示音量補正 (8.0→7.5 再調整)
           smoothingFactor: 0.25
