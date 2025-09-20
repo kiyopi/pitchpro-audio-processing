@@ -125,7 +125,7 @@ export class DeviceDetection {
         return {
           sensitivity: 3.5,           // 🎤 マイク感度 (iPhone最適化値)
           noiseGate: 0.030,           // 🚪 ノイズゲート閾値 (3.0%設定で低周波ノイズ対策強化)
-          volumeMultiplier: 10.0,     // 🔊 表示音量補正 (音量表示レベル大幅向上)
+          volumeMultiplier: 8.0,      // 🔊 表示音量補正 (音量表示レベル適正化)
           smoothingFactor: 0.25       // 📊 平滑化係数
         };
         
