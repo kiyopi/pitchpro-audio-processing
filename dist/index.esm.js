@@ -79,8 +79,8 @@ const Ve = "1.2.2", be = `PitchPro v${Ve}`, nt = (/* @__PURE__ */ new Date()).to
         return {
           sensitivity: 1.7,
           // 🎤 マイク感度 (PC環境安定性重視)
-          noiseGate: 0.025,
-          // 🚪 ノイズゲート閾値 (0.015→0.025 保守的調整)
+          noiseGate: 0.05,
+          // 🚪 ノイズゲート閾値 (0.025→0.050 環境ノイズ対策強化)
           volumeMultiplier: 7.5,
           // 🔊 表示音量補正 (8.0→7.5 再調整)
           smoothingFactor: 0.25
@@ -221,7 +221,7 @@ const Ve = "1.2.2", be = `PitchPro v${Ve}`, nt = (/* @__PURE__ */ new Date()).to
   }
 };
 A.cachedSpecs = null;
-let J = A;
+let G = A;
 var k = /* @__PURE__ */ ((h) => (h.AUDIO_CONTEXT_ERROR = "AUDIO_CONTEXT_ERROR", h.MICROPHONE_ACCESS_DENIED = "MICROPHONE_ACCESS_DENIED", h.PITCH_DETECTION_ERROR = "PITCH_DETECTION_ERROR", h.BUFFER_OVERFLOW = "BUFFER_OVERFLOW", h.INVALID_SAMPLE_RATE = "INVALID_SAMPLE_RATE", h.DEVICE_NOT_SUPPORTED = "DEVICE_NOT_SUPPORTED", h.PROCESSING_TIMEOUT = "PROCESSING_TIMEOUT", h))(k || {});
 class w extends Error {
   constructor(e, t, i) {
@@ -503,7 +503,7 @@ class xe {
    * @returns Device-optimized sensitivity value (PC: 1.0x, iPhone: 3.0x, iPad: 7.0x)
    */
   _getDefaultSensitivity() {
-    const e = J.getDeviceSpecs();
+    const e = G.getDeviceSpecs();
     return console.log(`🔧 [AudioManager] ${e.deviceType} detected - setting default sensitivity ${e.sensitivity}x`), e.sensitivity;
   }
   /**
@@ -879,7 +879,7 @@ class xe {
    * Complies with MICROPHONE_PLATFORM_SPECIFICATIONS.md
    */
   getPlatformSpecs() {
-    const e = J.getDeviceSpecs();
+    const e = G.getDeviceSpecs();
     return {
       ...e,
       sensitivity: this.currentSensitivity || e.sensitivity
@@ -1172,7 +1172,7 @@ D.prototype._transform4 = function() {
     var m = o >>> 2;
     for (n = 0; n < t; n += o)
       for (var u = n + m, d = n, f = 0; d < u; d += 2, f += s) {
-        const p = d, y = p + m, v = y + m, S = v + m, b = e[p], g = e[p + 1], C = e[y], I = e[y + 1], P = e[v], _ = e[v + 1], O = e[S], z = e[S + 1], L = b, U = g, B = l[f], $ = c * l[f + 1], H = C * B - I * $, V = C * $ + I * B, X = l[2 * f], Y = c * l[2 * f + 1], K = P * X - _ * Y, Z = P * Y + _ * X, ee = l[3 * f], te = c * l[3 * f + 1], ie = O * ee - z * te, se = O * te + z * ee, oe = L + K, G = U + Z, j = L - K, ne = U - Z, re = H + ie, Q = V + se, W = c * (H - ie), ae = c * (V - se), he = oe + re, fe = G + Q, ge = oe - re, pe = G - Q, ve = j + ae, ye = ne - W, Se = j - ae, Ce = ne + W;
+        const p = d, y = p + m, v = y + m, S = v + m, b = e[p], g = e[p + 1], C = e[y], I = e[y + 1], P = e[v], _ = e[v + 1], O = e[S], z = e[S + 1], L = b, U = g, B = l[f], $ = c * l[f + 1], H = C * B - I * $, V = C * $ + I * B, X = l[2 * f], Y = c * l[2 * f + 1], K = P * X - _ * Y, Z = P * Y + _ * X, ee = l[3 * f], te = c * l[3 * f + 1], ie = O * ee - z * te, se = O * te + z * ee, oe = L + K, j = U + Z, Q = L - K, ne = U - Z, re = H + ie, W = V + se, J = c * (H - ie), ae = c * (V - se), he = oe + re, fe = j + W, ge = oe - re, pe = j - W, ve = Q + ae, ye = ne - J, Se = Q - ae, Ce = ne + J;
         e[p] = he, e[p + 1] = fe, e[y] = ve, e[y + 1] = ye, e[v] = ge, e[v + 1] = pe, e[S] = Se, e[S + 1] = Ce;
       }
   }
@@ -1203,14 +1203,14 @@ D.prototype._realTransform4 = function() {
     var m = o >>> 1, u = m >>> 1, d = u >>> 1;
     for (n = 0; n < t; n += o)
       for (var f = 0, p = 0; f <= d; f += 2, p += s) {
-        var y = n + f, v = y + u, S = v + u, b = S + u, g = e[y], C = e[y + 1], I = e[v], P = e[v + 1], _ = e[S], O = e[S + 1], z = e[b], L = e[b + 1], U = g, B = C, $ = l[p], H = c * l[p + 1], V = I * $ - P * H, X = I * H + P * $, Y = l[2 * p], K = c * l[2 * p + 1], Z = _ * Y - O * K, ee = _ * K + O * Y, te = l[3 * p], ie = c * l[3 * p + 1], se = z * te - L * ie, oe = z * ie + L * te, G = U + Z, j = B + ee, ne = U - Z, re = B - ee, Q = V + se, W = X + oe, ae = c * (V - se), he = c * (X - oe), fe = G + Q, ge = j + W, pe = ne + he, ve = re - ae;
+        var y = n + f, v = y + u, S = v + u, b = S + u, g = e[y], C = e[y + 1], I = e[v], P = e[v + 1], _ = e[S], O = e[S + 1], z = e[b], L = e[b + 1], U = g, B = C, $ = l[p], H = c * l[p + 1], V = I * $ - P * H, X = I * H + P * $, Y = l[2 * p], K = c * l[2 * p + 1], Z = _ * Y - O * K, ee = _ * K + O * Y, te = l[3 * p], ie = c * l[3 * p + 1], se = z * te - L * ie, oe = z * ie + L * te, j = U + Z, Q = B + ee, ne = U - Z, re = B - ee, W = V + se, J = X + oe, ae = c * (V - se), he = c * (X - oe), fe = j + W, ge = Q + J, pe = ne + he, ve = re - ae;
         if (e[y] = fe, e[y + 1] = ge, e[v] = pe, e[v + 1] = ve, f === 0) {
-          var ye = G - Q, Se = j - W;
+          var ye = j - W, Se = Q - J;
           e[S] = ye, e[S + 1] = Se;
           continue;
         }
         if (f !== d) {
-          var Ce = ne, Ne = -re, Re = G, Pe = -j, _e = -c * he, qe = -c * ae, ke = -c * W, Oe = -c * Q, ze = Ce + _e, Le = Ne + qe, Ue = Re + Oe, Be = Pe - ke, we = n + u - f, Ee = n + m - f;
+          var Ce = ne, Ne = -re, Re = j, Pe = -Q, _e = -c * he, qe = -c * ae, ke = -c * J, Oe = -c * W, ze = Ce + _e, Le = Ne + qe, Ue = Re + Oe, Be = Pe - ke, we = n + u - f, Ee = n + m - f;
           e[we] = ze, e[we + 1] = Le, e[Ee] = Ue, e[Ee + 1] = Be;
         }
       }
@@ -1632,8 +1632,7 @@ class et {
       // ⬇️ 固定のデフォルト値を削除し、configから渡される値を優先する
       minVolumeAbsolute: t.minVolumeAbsolute ?? 0.015,
       // 安全なフォールバック値
-      noiseGate: 0.02,
-      // v1.1.8: デフォルトnoiseGate値
+      // 🔧 noiseGate削除: minVolumeAbsoluteと重複のため不要
       deviceOptimization: !0,
       // v1.1.8: デバイス最適化デフォルト有効
       ...t
@@ -4721,8 +4720,8 @@ const N = class N {
       frequencySelector: e.frequencySelector,
       noteSelector: e.noteSelector,
       clarityThreshold: e.clarityThreshold ?? 0.4,
-      minVolumeAbsolute: e.minVolumeAbsolute ?? 0.02,
-      // 🔧 環境適応ノイズゲート: 10%閾値でマイクノイズを確実にブロック
+      minVolumeAbsolute: e.minVolumeAbsolute,
+      // 🔧 DeviceDetectionの値を優先（デフォルト値削除）
       fftSize: e.fftSize ?? 4096,
       smoothing: e.smoothing ?? 0.1,
       deviceOptimization: e.deviceOptimization ?? !0,
@@ -4801,15 +4800,15 @@ const N = class N {
           enabled: this.config.debug
         }
       }), this.micController.setCallbacks({
-        onStateChange: (c) => {
-          this.debugLog("MicrophoneController state:", c);
+        onStateChange: (l) => {
+          this.debugLog("MicrophoneController state:", l);
         },
-        onError: (c) => {
-          this.handleError(c, "microphone_controller");
+        onError: (l) => {
+          this.handleError(l, "microphone_controller");
         },
-        onDeviceChange: (c) => {
-          var l, m;
-          this.deviceSpecs = c, (m = (l = this.callbacks).onDeviceDetected) == null || m.call(l, c);
+        onDeviceChange: (l) => {
+          var m, u;
+          this.deviceSpecs = l, (u = (m = this.callbacks).onDeviceDetected) == null || u.call(m, l);
         }
       }), await this.micController.initialize(), this.debugLog("DeviceDetection values:", {
         device: (e = this.deviceSpecs) == null ? void 0 : e.deviceType,
@@ -4817,30 +4816,30 @@ const N = class N {
         volumeMultiplier: (i = this.deviceSpecs) == null ? void 0 : i.volumeMultiplier,
         smoothingFactor: (s = this.deviceSpecs) == null ? void 0 : s.smoothingFactor
       });
-      const r = {
+      const r = G.getDeviceSpecs(), a = {
         clarityThreshold: this.config.clarityThreshold,
-        // ⬇️ DeviceDetectionから取得したnoiseGate値をそのまま渡す
-        minVolumeAbsolute: ((o = this.deviceSpecs) == null ? void 0 : o.noiseGate) ?? this.config.minVolumeAbsolute,
+        // 🔧 DeviceDetectionを完全信頼：deviceSpecsがnullでも安全なPC設定を保証
+        minVolumeAbsolute: ((o = this.deviceSpecs) == null ? void 0 : o.noiseGate) ?? r.noiseGate,
         fftSize: this.config.fftSize,
-        smoothing: ((n = this.deviceSpecs) == null ? void 0 : n.smoothingFactor) ?? this.config.smoothing,
+        smoothing: ((n = this.deviceSpecs) == null ? void 0 : n.smoothingFactor) ?? r.smoothingFactor,
         deviceOptimization: this.config.deviceOptimization
       };
-      this.debugLog("PitchDetector config object:", r), this.pitchDetector = new et(this.audioManager, r), this.pitchDetector.setCallbacks({
-        onPitchUpdate: (c) => {
-          this.handlePitchUpdate(c);
+      this.debugLog("PitchDetector config object:", a), this.pitchDetector = new et(this.audioManager, a), this.pitchDetector.setCallbacks({
+        onPitchUpdate: (l) => {
+          this.handlePitchUpdate(l);
         },
-        onError: (c) => {
-          this.handleError(c, "pitch_detector");
+        onError: (l) => {
+          this.handleError(l, "pitch_detector");
         },
-        onStateChange: (c) => {
-          this.debugLog("PitchDetector state:", c), c === "detecting" && this.config.autoUpdateUI ? (this.debugLog("🔄 Starting UI updates (state: detecting)"), this.startUIUpdates()) : c !== "detecting" && this.uiUpdateTimer && (this.debugLog("⏹️ Stopping UI updates (state: " + c + ")"), clearInterval(this.uiUpdateTimer), this.uiUpdateTimer = null);
+        onStateChange: (l) => {
+          this.debugLog("PitchDetector state:", l), l === "detecting" && this.config.autoUpdateUI ? (this.debugLog("🔄 Starting UI updates (state: detecting)"), this.startUIUpdates()) : l !== "detecting" && this.uiUpdateTimer && (this.debugLog("⏹️ Stopping UI updates (state: " + l + ")"), clearInterval(this.uiUpdateTimer), this.uiUpdateTimer = null);
         }
       }), await this.pitchDetector.initialize();
-      const a = this.pitchDetector.getStatus();
+      const c = this.pitchDetector.getStatus();
       this.debugLog("After PitchDetector initialization:", {
-        status: a,
-        componentState: a.componentState,
-        isInitialized: a.isInitialized
+        status: c,
+        componentState: c.componentState,
+        isInitialized: c.isInitialized
       }), this.micController && this.pitchDetector && (this.micController.registerDetector(this.pitchDetector), this.micController.registerAudioDetectionComponent(this), this.debugLog("✅ PitchDetector and AudioDetectionComponent registered with MicrophoneController for unified management")), this.cacheUIElements(), this.deviceSpecs && this.micController && (this.micController.setSensitivity(this.deviceSpecs.sensitivity), this.debugLog("Applied DeviceDetection sensitivity:", this.deviceSpecs.sensitivity)), this.isInitialized = !0, this.updateState("ready"), this.debugLog("Initialization complete");
     } catch (r) {
       const a = this.createStructuredError(r, "initialization");
@@ -5040,7 +5039,7 @@ const N = class N {
    * @private
    */
   detectAndOptimizeDevice() {
-    this.deviceSpecs = J.getDeviceSpecs(), this.debugLog("Using DeviceDetection values directly:", {
+    this.deviceSpecs = G.getDeviceSpecs(), this.debugLog("Using DeviceDetection values directly:", {
       device: this.deviceSpecs.deviceType,
       noiseGate: `${this.deviceSpecs.noiseGate} (${(this.deviceSpecs.noiseGate * 100).toFixed(2)}% threshold)`,
       volumeMultiplier: this.deviceSpecs.volumeMultiplier,
@@ -5738,7 +5737,7 @@ class dt {
 }
 class mt {
   constructor() {
-    this.calibrationData = null, this.isCalibrated = !1, this.calibrationInProgress = !1, this.deviceSpecs = J.getDeviceSpecs();
+    this.calibrationData = null, this.isCalibrated = !1, this.calibrationInProgress = !1, this.deviceSpecs = G.getDeviceSpecs();
   }
   /**
    * Perform automatic calibration
@@ -6296,7 +6295,7 @@ export {
   nt as BUILD_TIMESTAMP,
   mt as CalibrationSystem,
   gt as DEFAULT_CONFIG,
-  J as DeviceDetection,
+  G as DeviceDetection,
   it as ErrorNotificationSystem,
   T as FrequencyUtils,
   ut as HarmonicCorrection,

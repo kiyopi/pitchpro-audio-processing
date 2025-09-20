@@ -522,11 +522,12 @@ export declare class AudioDetectionComponent {
         isInitialized: boolean;
         deviceSpecs: DeviceSpecs | null;
         deviceSettings: DeviceSettings | null;
-        config: Required<Omit<AudioDetectionConfig, "volumeBarSelector" | "volumeTextSelector" | "frequencySelector" | "noteSelector" | "onPitchUpdate">> & {
+        config: Required<Omit<AudioDetectionConfig, "minVolumeAbsolute" | "volumeBarSelector" | "volumeTextSelector" | "frequencySelector" | "noteSelector" | "onPitchUpdate">> & {
             volumeBarSelector?: string | undefined;
             volumeTextSelector?: string | undefined;
             frequencySelector?: string | undefined;
             noteSelector?: string | undefined;
+            minVolumeAbsolute?: number | undefined;
             onPitchUpdate?: ((result: PitchDetectionResult) => void) | undefined;
         };
         lastError: PitchProError | null;

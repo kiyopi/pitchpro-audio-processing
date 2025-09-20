@@ -14,7 +14,6 @@ export interface PitchDetectorConfig {
     smoothing?: number;
     clarityThreshold?: number;
     minVolumeAbsolute?: number;
-    noiseGate?: number;
     deviceOptimization?: boolean;
     silenceDetection?: SilenceDetectionConfig;
 }
