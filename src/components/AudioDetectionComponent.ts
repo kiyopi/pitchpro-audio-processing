@@ -390,11 +390,12 @@ export class AudioDetectionComponent {
   private static readonly UI_RESTART_DELAY_MS = 200;
 
   /** @private Configuration with applied defaults */
-  private config: Required<Omit<AudioDetectionConfig, 'volumeBarSelector' | 'volumeTextSelector' | 'frequencySelector' | 'noteSelector' | 'onPitchUpdate'>> & {
+  private config: Required<Omit<AudioDetectionConfig, 'volumeBarSelector' | 'volumeTextSelector' | 'frequencySelector' | 'noteSelector' | 'onPitchUpdate' | 'minVolumeAbsolute'>> & {
     volumeBarSelector?: string;
     volumeTextSelector?: string;
     frequencySelector?: string;
     noteSelector?: string;
+    minVolumeAbsolute?: number;
     onPitchUpdate?: (result: PitchDetectionResult) => void;
   };
   
@@ -496,7 +497,7 @@ export class AudioDetectionComponent {
       noteSelector: config.noteSelector,
       
       clarityThreshold: config.clarityThreshold ?? 0.4,
-      minVolumeAbsolute: config.minVolumeAbsolute ?? 0.020, // 🔧 環境適応ノイズゲート: 10%閾値でマイクノイズを確実にブロック
+      minVolumeAbsolute: config.minVolumeAbsolute, // 🔧 DeviceDetectionの値を優先（デフォルト値削除）
       fftSize: config.fftSize ?? 4096,
       smoothing: config.smoothing ?? 0.1,
       
@@ -634,13 +635,16 @@ export class AudioDetectionComponent {
         smoothingFactor: this.deviceSpecs?.smoothingFactor
       });
 
-      // Initialize PitchDetector with DeviceDetection settings (NO custom calculations)
+      // Initialize PitchDetector with DeviceDetection settings as Single Source of Truth
+      // DeviceDetectionからPC向けのデフォルト値を取得（getDeviceSpecsはPC用のフォールバック値を含む）
+      const fallbackSpecs = DeviceDetection.getDeviceSpecs(); // PC設定がフォールバック
+
       const pitchDetectorConfig = {
         clarityThreshold: this.config.clarityThreshold,
-        // ⬇️ DeviceDetectionから取得したnoiseGate値をそのまま渡す
-        minVolumeAbsolute: this.deviceSpecs?.noiseGate ?? this.config.minVolumeAbsolute,
+        // 🔧 DeviceDetectionを完全信頼：deviceSpecsがnullでも安全なPC設定を保証
+        minVolumeAbsolute: this.deviceSpecs?.noiseGate ?? fallbackSpecs.noiseGate,
         fftSize: this.config.fftSize,
-        smoothing: this.deviceSpecs?.smoothingFactor ?? this.config.smoothing,
+        smoothing: this.deviceSpecs?.smoothingFactor ?? fallbackSpecs.smoothingFactor,
         deviceOptimization: this.config.deviceOptimization
       };
 
@@ -1471,13 +1475,8 @@ export class AudioDetectionComponent {
     }
     
     // Step 4: ノイズゲートを通過した場合、デバイス固有のvolumeMultiplierで最終的な表示音量を計算
-    // iPad最終調整: 音量上昇率を抑制 (15.0 → 13.5)
-    let volumeMultiplier = this.deviceSpecs?.volumeMultiplier ?? 1.0;
-    
-    // iPad特別調整: 低音検出向上 + 音量上昇率抑制
-    if (this.deviceSpecs?.deviceType === 'iPad') {
-      volumeMultiplier = 13.5; // 15.0 → 13.5 (10%削減で上昇率を抑制)
-    }
+    // 🔧 修正: DeviceDetection.tsの値を完全に信頼し、ハードコード値を削除
+    const volumeMultiplier = this.deviceSpecs?.volumeMultiplier ?? 1.0;
     
     const finalVolume = initialVolume * volumeMultiplier;
     

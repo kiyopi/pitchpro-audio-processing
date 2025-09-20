@@ -515,8 +515,10 @@
                 // 🎯 簡素化されたコールバック設定（基本UIは自動、追加データのみ手動）
                 addLog('info', '🔗 コールバック関数を設定中...');
 
-                // ✅ AudioDetectionComponentでは config.onPitchUpdate を直接設定
-                audioDetection.config.onPitchUpdate = updateAdditionalData;
+                // ✅ 推奨されるsetCallbacks()メソッドを使用
+                audioDetection.setCallbacks({
+                    onPitchUpdate: updateAdditionalData
+                });
 
                 addLog('success', '✅ コールバック設定完了（自動UI + 追加データ手動処理）');
 

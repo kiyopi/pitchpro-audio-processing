@@ -299,7 +299,7 @@ export class PitchDetector {
       clarityThreshold: 0.4,    // 0.8から0.4に現実的な値に変更
       // ⬇️ 固定のデフォルト値を削除し、configから渡される値を優先する
       minVolumeAbsolute: config.minVolumeAbsolute ?? 0.015, // 安全なフォールバック値
-      noiseGate: 0.02,          // v1.1.8: デフォルトnoiseGate値
+      // 🔧 noiseGate削除: minVolumeAbsoluteと重複のため不要
       deviceOptimization: true, // v1.1.8: デバイス最適化デフォルト有効
       ...config  // 🎯 外部設定で上書き
     };

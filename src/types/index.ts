@@ -18,7 +18,7 @@ export interface PitchDetectorConfig {
   smoothing?: number;
   clarityThreshold?: number;
   minVolumeAbsolute?: number;
-  noiseGate?: number;        // v1.1.8: DeviceDetection最適化対応
+  // 🔧 noiseGate削除: minVolumeAbsoluteと重複のため不要
   deviceOptimization?: boolean;
   silenceDetection?: SilenceDetectionConfig;
 }

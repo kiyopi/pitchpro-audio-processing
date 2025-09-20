@@ -56,8 +56,8 @@ const Ve = "1.2.2", be = `PitchPro v${Ve}`, nt = (/* @__PURE__ */ new Date()).to
         return {
           sensitivity: 4,
           // 🎤 マイク感度 (PitchDetector用)
-          noiseGate: 0.012,
-          // 🚪 ノイズゲート閾値 (1.5%→1.2% 微調整)
+          noiseGate: 0.03,
+          // 🚪 ノイズゲート閾値 (0.025→0.030 実測ノイズ2-2.4%対策強化)
           volumeMultiplier: 13,
           // 🔊 表示音量補正 (17.0→13.0 23%削減で最適化)
           smoothingFactor: 0.25
@@ -67,8 +67,8 @@ const Ve = "1.2.2", be = `PitchPro v${Ve}`, nt = (/* @__PURE__ */ new Date()).to
         return {
           sensitivity: 3.5,
           // 🎤 マイク感度 (iPhone最適化値)
-          noiseGate: 0.01,
-          // 🚪 ノイズゲート閾値 (0.015→0.010 70Hz検出強化)
+          noiseGate: 0.02,
+          // 🚪 ノイズゲート閾値 (0.010→0.020 環境ノイズ対策+NC効果考慮)
           volumeMultiplier: 11.5,
           // 🔊 表示音量補正 (9.5→11.5 音量スケール改善)
           smoothingFactor: 0.25
@@ -5299,22 +5299,20 @@ const N = class N {
    * @see {@link detectAndOptimizeDevice} デバイス設定の決定方法
    */
   _getProcessedResult(e) {
-    var a, c, l, m, u;
+    var a, c, l, m;
     if (!e) return null;
     const t = { ...e }, s = e.volume * 50, o = (((a = this.deviceSpecs) == null ? void 0 : a.noiseGate) ?? 0.06) * 100;
     if (s < o)
       return t.volume = 0, t.frequency = 0, t.note = "--", t.rawVolume = e.volume, t;
-    let n = ((c = this.deviceSpecs) == null ? void 0 : c.volumeMultiplier) ?? 1;
-    ((l = this.deviceSpecs) == null ? void 0 : l.deviceType) === "iPad" && (n = 13.5);
-    const r = s * n;
+    const n = ((c = this.deviceSpecs) == null ? void 0 : c.volumeMultiplier) ?? 1, r = s * n;
     return t.volume = Math.min(100, Math.max(0, r)), t.rawVolume = e.volume, this.config.debug && e.volume > 1e-3 && this.debugLog("UnifiedVolumeProcessing:", {
-      device: (m = this.deviceSpecs) == null ? void 0 : m.deviceType,
+      device: (l = this.deviceSpecs) == null ? void 0 : l.deviceType,
       step1_rawRMS: e.volume.toFixed(6),
       step2_initial: s.toFixed(2),
       step3_noiseGate: `${o.toFixed(2)}% (${s >= o ? "PASS" : "BLOCK"})`,
       step4_multiplier: n,
       step5_final: `${t.volume.toFixed(2)}%`,
-      frequency: `${(u = e.frequency) == null ? void 0 : u.toFixed(2)}Hz`
+      frequency: `${(m = e.frequency) == null ? void 0 : m.toFixed(2)}Hz`
     }), t;
   }
   /**

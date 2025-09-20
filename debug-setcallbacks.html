@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>setCallbacks() デバッグテスト</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            border: 1px solid #ccc;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .log { margin: 5px 0; padding: 5px; background: #f8f9fa; border-left: 3px solid #007bff; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔍 setCallbacks() デバッグテスト</h1>
+
+    <div class="test-section info">
+        <h2>📋 テスト目的</h2>
+        <p>開発中アプリで報告された「setCallbacks: undefined」問題の原因調査</p>
+        <ul>
+            <li>✅ UMDビルドでの正確なAudioDetectionComponent構造確認</li>
+            <li>🔍 メソッド一覧とプロトタイプチェーン解析</li>
+            <li>📊 異なるインポート方法での動作比較</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>🚀 テスト実行</h2>
+        <button onclick="testUMDImport()">UMDインポートテスト</button>
+        <button onclick="testMethodAnalysis()">メソッド解析テスト</button>
+        <button onclick="testInstanceCreation()">インスタンス作成テスト</button>
+        <button onclick="generateDebugReport()">詳細デバッグレポート生成</button>
+    </div>
+
+    <div id="results">
+        <h2>📊 テスト結果</h2>
+        <div id="log-container"></div>
+    </div>
+
+    <!-- PitchPro UMDビルドの読み込み -->
+    <script src="./dist/pitchpro.umd.js"></script>
+
+    <script>
+        function log(message, type = 'info') {
+            const logContainer = document.getElementById('log-container');
+            const logElement = document.createElement('div');
+            logElement.className = `log ${type}`;
+            logElement.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            logContainer.appendChild(logElement);
+            console.log(message);
+        }
+
+        function clearLog() {
+            document.getElementById('log-container').innerHTML = '';
+        }
+
+        function testUMDImport() {
+            clearLog();
+            log('🔍 UMDインポートテスト開始');
+
+            // グローバルオブジェクトの確認
+            log(`🌐 window.PitchPro: ${typeof window.PitchPro}`);
+
+            if (window.PitchPro) {
+                log('✅ PitchPro グローバルオブジェクト確認');
+                log(`📋 PitchPro keys: ${Object.keys(window.PitchPro).join(', ')}`);
+
+                // AudioDetectionComponentの確認
+                if (window.PitchPro.AudioDetectionComponent) {
+                    log('✅ AudioDetectionComponent 存在確認');
+                    log(`📋 Constructor type: ${typeof window.PitchPro.AudioDetectionComponent}`);
+
+                    // プロトタイプメソッド確認
+                    const proto = window.PitchPro.AudioDetectionComponent.prototype;
+                    const methods = Object.getOwnPropertyNames(proto).filter(name =>
+                        typeof proto[name] === 'function' && name !== 'constructor'
+                    );
+                    log(`🔧 プロトタイプメソッド数: ${methods.length}`);
+                    log(`📝 利用可能メソッド: ${methods.join(', ')}`);
+
+                    // setCallbacks特定確認
+                    if (methods.includes('setCallbacks')) {
+                        log('✅ setCallbacks メソッド確認済み', 'success');
+                        log(`🔍 setCallbacks type: ${typeof proto.setCallbacks}`);
+                    } else {
+                        log('❌ setCallbacks メソッドが見つかりません', 'error');
+                    }
+                } else {
+                    log('❌ AudioDetectionComponent が見つかりません', 'error');
+                }
+            } else {
+                log('❌ PitchPro グローバルオブジェクトが見つかりません', 'error');
+            }
+        }
+
+        function testMethodAnalysis() {
+            clearLog();
+            log('🔍 メソッド解析テスト開始');
+
+            try {
+                // インスタンス作成
+                const detector = new window.PitchPro.AudioDetectionComponent({
+                    volumeBarSelector: '#test-volume'
+                });
+
+                log('✅ AudioDetectionComponent インスタンス作成成功');
+
+                // インスタンスメソッド確認
+                const instanceMethods = [];
+                const prototypeChain = [];
+
+                let current = detector;
+                let level = 0;
+                while (current && level < 5) {
+                    const methods = Object.getOwnPropertyNames(current)
+                        .filter(name => typeof current[name] === 'function');
+
+                    if (methods.length > 0) {
+                        prototypeChain.push({
+                            level: level,
+                            constructor: current.constructor.name,
+                            methods: methods
+                        });
+                    }
+
+                    instanceMethods.push(...methods);
+                    current = Object.getPrototypeOf(current);
+                    level++;
+                }
+
+                log(`🔧 インスタンスメソッド総数: ${new Set(instanceMethods).size}`);
+
+                // プロトタイプチェーン情報
+                prototypeChain.forEach(chain => {
+                    log(`📊 Level ${chain.level} (${chain.constructor}): ${chain.methods.join(', ')}`);
+                });
+
+                // setCallbacks直接確認
+                log(`🔍 detector.setCallbacks: ${typeof detector.setCallbacks}`);
+
+                if (typeof detector.setCallbacks === 'function') {
+                    log('✅ setCallbacks インスタンスメソッドとして確認', 'success');
+
+                    // 実際にsetCallbacks呼び出し
+                    try {
+                        detector.setCallbacks({
+                            onPitchUpdate: (result) => {
+                                log('📢 Test callback triggered', 'success');
+                            }
+                        });
+                        log('✅ setCallbacks 呼び出し成功', 'success');
+                    } catch (error) {
+                        log(`❌ setCallbacks 呼び出しエラー: ${error.message}`, 'error');
+                    }
+                } else {
+                    log('❌ setCallbacks がインスタンスで利用できません', 'error');
+
+                    // より詳細な調査
+                    log('🔍 詳細調査開始...');
+                    const allProps = [];
+                    let obj = detector;
+                    while (obj) {
+                        allProps.push(...Object.getOwnPropertyNames(obj));
+                        obj = Object.getPrototypeOf(obj);
+                    }
+
+                    const callbacksRelated = allProps.filter(prop =>
+                        prop.toLowerCase().includes('callback')
+                    );
+
+                    log(`🔍 コールバック関連プロパティ: ${callbacksRelated.join(', ')}`);
+                }
+
+            } catch (error) {
+                log(`❌ メソッド解析エラー: ${error.message}`, 'error');
+            }
+        }
+
+        function testInstanceCreation() {
+            clearLog();
+            log('🔍 インスタンス作成テスト開始');
+
+            try {
+                // 様々な設定でインスタンス作成
+                const configs = [
+                    {},
+                    { volumeBarSelector: '#test' },
+                    { autoUpdateUI: false },
+                    { deviceOptimization: true }
+                ];
+
+                configs.forEach((config, index) => {
+                    try {
+                        const detector = new window.PitchPro.AudioDetectionComponent(config);
+                        log(`✅ 設定${index + 1} インスタンス作成成功`);
+                        log(`🔍 設定${index + 1} setCallbacks: ${typeof detector.setCallbacks}`);
+
+                        // 利用可能メソッドの一部表示
+                        const methods = Object.getOwnPropertyNames(Object.getPrototypeOf(detector))
+                            .filter(name => typeof detector[name] === 'function' && name !== 'constructor')
+                            .slice(0, 10);
+                        log(`📝 設定${index + 1} メソッド例: ${methods.join(', ')}`);
+
+                    } catch (error) {
+                        log(`❌ 設定${index + 1} インスタンス作成失敗: ${error.message}`, 'error');
+                    }
+                });
+
+            } catch (error) {
+                log(`❌ インスタンス作成テストエラー: ${error.message}`, 'error');
+            }
+        }
+
+        function generateDebugReport() {
+            clearLog();
+            log('🔍 詳細デバッグレポート生成開始');
+
+            const report = {
+                timestamp: new Date().toISOString(),
+                environment: {
+                    userAgent: navigator.userAgent,
+                    url: window.location.href,
+                    pitchProAvailable: typeof window.PitchPro !== 'undefined'
+                },
+                pitchPro: null,
+                audioDetectionComponent: null,
+                instanceTest: null
+            };
+
+            // PitchPro解析
+            if (window.PitchPro) {
+                report.pitchPro = {
+                    type: typeof window.PitchPro,
+                    keys: Object.keys(window.PitchPro),
+                    exports: {}
+                };
+
+                Object.keys(window.PitchPro).forEach(key => {
+                    report.pitchPro.exports[key] = typeof window.PitchPro[key];
+                });
+            }
+
+            // AudioDetectionComponent解析
+            if (window.PitchPro && window.PitchPro.AudioDetectionComponent) {
+                const Component = window.PitchPro.AudioDetectionComponent;
+                const proto = Component.prototype;
+
+                report.audioDetectionComponent = {
+                    type: typeof Component,
+                    hasPrototype: !!proto,
+                    prototypeMethods: Object.getOwnPropertyNames(proto)
+                        .filter(name => typeof proto[name] === 'function'),
+                    setCallbacksInPrototype: 'setCallbacks' in proto,
+                    setCallbacksType: typeof proto.setCallbacks
+                };
+            }
+
+            // インスタンステスト
+            try {
+                const instance = new window.PitchPro.AudioDetectionComponent({});
+                report.instanceTest = {
+                    success: true,
+                    setCallbacksAvailable: typeof instance.setCallbacks === 'function',
+                    availableMethods: Object.getOwnPropertyNames(Object.getPrototypeOf(instance))
+                        .filter(name => typeof instance[name] === 'function'),
+                    hasSetCallbacks: 'setCallbacks' in instance
+                };
+            } catch (error) {
+                report.instanceTest = {
+                    success: false,
+                    error: error.message
+                };
+            }
+
+            // レポート表示
+            log('📊 デバッグレポート生成完了');
+            const reportElement = document.createElement('pre');
+            reportElement.textContent = JSON.stringify(report, null, 2);
+            document.getElementById('log-container').appendChild(reportElement);
+
+            console.log('🔍 Complete Debug Report:', report);
+        }
+
+        // ページ読み込み時の初期確認
+        window.addEventListener('load', () => {
+            log('🚀 setCallbacks() デバッグテスト準備完了');
+
+            // 基本確認
+            if (window.PitchPro) {
+                log('✅ PitchPro UMDビルド正常読み込み');
+                if (window.PitchPro.AudioDetectionComponent) {
+                    log('✅ AudioDetectionComponent 利用可能');
+
+                    const proto = window.PitchPro.AudioDetectionComponent.prototype;
+                    if (proto && typeof proto.setCallbacks === 'function') {
+                        log('✅ setCallbacks メソッド プロトタイプで確認', 'success');
+                    } else {
+                        log('⚠️ setCallbacks メソッド プロトタイプで未確認', 'error');
+                    }
+                } else {
+                    log('❌ AudioDetectionComponent 利用不可', 'error');
+                }
+            } else {
+                log('❌ PitchPro UMDビルド読み込み失敗', 'error');
+            }
+        });
+    </script>
+</body>
+</html>
