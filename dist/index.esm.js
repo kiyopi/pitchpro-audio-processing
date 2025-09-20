@@ -67,10 +67,10 @@ const Ve = "1.2.2", be = `PitchPro v${Ve}`, nt = (/* @__PURE__ */ new Date()).to
         return {
           sensitivity: 3.5,
           // 🎤 マイク感度 (iPhone最適化値)
-          noiseGate: 0.02,
-          // 🚪 ノイズゲート閾値 (2.0%設定でバランス調整)
-          volumeMultiplier: 6,
-          // 🔊 表示音量補正 (音量上昇率を適正化)
+          noiseGate: 0.03,
+          // 🚪 ノイズゲート閾値 (3.0%設定で低周波ノイズ対策強化)
+          volumeMultiplier: 10,
+          // 🔊 表示音量補正 (音量表示レベル大幅向上)
           smoothingFactor: 0.25
           // 📊 平滑化係数
         };
