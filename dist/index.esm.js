@@ -69,8 +69,8 @@ const Ve = "1.2.2", be = `PitchPro v${Ve}`, nt = (/* @__PURE__ */ new Date()).to
           // 🎤 マイク感度 (iPhone最適化値)
           noiseGate: 0.028,
           // 🚪 ノイズゲート閾値 (2.8%設定でiPadとの中間値)
-          volumeMultiplier: 8,
-          // 🔊 表示音量補正 (音量表示レベル適正化)
+          volumeMultiplier: 9,
+          // 🔊 表示音量補正 (音量表示レベル向上)
           smoothingFactor: 0.25
           // 📊 平滑化係数
         };
