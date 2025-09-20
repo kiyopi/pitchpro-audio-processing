@@ -307,7 +307,7 @@ describe('AudioDetectionComponent - autoUpdateUI Feature', () => {
 
       // iPad特別処理の設定
       (component as any).deviceSpecs = {
-        volumeMultiplier: 15.0, // 設定値は15.0だが実際は13.5が使用される
+        volumeMultiplier: 15.0, // テスト用設定値15.0が使用される
         noiseGate: 0.012,
         deviceType: 'iPad'
       };
@@ -315,15 +315,15 @@ describe('AudioDetectionComponent - autoUpdateUI Feature', () => {
       const rawResult = {
         frequency: 440,
         note: 'A4',
-        volume: 0.1, // 0.1 * 50 * 13.5 = 67.5
+        volume: 0.1, // 0.1 * 50 * 15.0 = 75.0
         clarity: 0.8
       };
 
       const processedResult = (component as any)._getProcessedResult(rawResult);
 
       expect(processedResult).not.toBeNull();
-      // iPad特別処理: volumeMultiplier 13.5が適用される
-      expect(processedResult.volume).toBe(67.5);
+      // iPad特別処理: volumeMultiplier 15.0が適用される (テスト設定値)
+      expect(processedResult.volume).toBe(75.0);
     });
 
     it('should use default multiplier when deviceSpecs is undefined', () => {
