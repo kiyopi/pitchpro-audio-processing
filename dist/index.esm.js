@@ -1,7 +1,7 @@
 var $e = Object.defineProperty;
 var He = (h, e, t) => e in h ? $e(h, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : h[e] = t;
 var x = (h, e, t) => He(h, typeof e != "symbol" ? e + "" : e, t);
-const Ve = "1.2.2", be = `PitchPro v${Ve}`, nt = (/* @__PURE__ */ new Date()).toISOString(), A = class A {
+const Ve = "1.3.0", be = `PitchPro v${Ve}`, nt = (/* @__PURE__ */ new Date()).toISOString(), A = class A {
   /**
    * Detect current device and return optimized specifications
    */
@@ -4604,7 +4604,7 @@ let T = M;
  * 
  * Supports unified management through MicrophoneController for centralized system control.
  * 
- * @version 1.2.2 (自動同期)
+ * @version 1.3.0 (自動同期)
  * @author PitchPro Team
  * @license MIT
  * 
@@ -4619,7 +4619,7 @@ let T = M;
  * // Initialize the component
  * await audioDetector.initialize();
  * 
- * // Start pitch detection (v1.2.2 API)
+ * // Start pitch detection (v1.3.0 API)
  * const success = await audioDetector.startDetection();
  * if (success) {
  *   console.log('Detection started successfully');
@@ -5271,9 +5271,9 @@ const N = class N {
    * このメソッドがPitchProの音量調整の核心部分です。以下の処理を行います：
    *
    * 1. **デバイス固有の音量補正**: volumeMultiplierによる音量調整
-   *    - PC: 7.5x（v1.2.2確定）
-   *    - iPhone: 11.5x（v1.2.2確定）
-   *    - iPad: 13.0x（v1.2.2確定）
+   *    - PC: 7.5x（v1.3.0確定）
+   *    - iPhone: 9.0x（v1.3.0確定）
+   *    - iPad: 13.0x（v1.3.0確定）
    *
    * 2. **範囲制限**: 最終音量を0-100%の範囲に制限
    *

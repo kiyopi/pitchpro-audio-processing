@@ -32,7 +32,7 @@
  * ```
  *
  * @remarks
- * **音量調整について（v1.2.2）**:
+ * **音量調整について（v1.3.0）**:
  * - デフォルトでは音量値は自動的にデバイス最適化が適用されます
  * - PC/iPhone/iPad の違いを意識する必要はありません
  * - 最終的な音量値は常に 0-100% の範囲で統一されています
@@ -229,7 +229,7 @@ interface DeviceSettings {
  * 
  * Supports unified management through MicrophoneController for centralized system control.
  * 
- * @version 1.2.2 (自動同期)
+ * @version 1.3.0 (自動同期)
  * @author PitchPro Team
  * @license MIT
  * 
@@ -244,7 +244,7 @@ interface DeviceSettings {
  * // Initialize the component
  * await audioDetector.initialize();
  * 
- * // Start pitch detection (v1.2.2 API)
+ * // Start pitch detection (v1.3.0 API)
  * const success = await audioDetector.startDetection();
  * if (success) {
  *   console.log('Detection started successfully');
@@ -333,9 +333,9 @@ export interface AudioDetectionConfig {
    * Enable device-specific volume optimization
    * 
    * @description When enabled, applies device-specific volume multipliers:
-   * - PC: 7.5x (v1.2.2確定) 
-   * - iPhone: 11.5x (v1.2.2確定)
-   * - iPad: 13.0x (v1.2.2確定)
+   * - PC: 7.5x (v1.3.0確定)
+   * - iPhone: 9.0x (v1.3.0確定)
+   * - iPad: 13.0x (v1.3.0確定)
    * 
    * When disabled, returns raw volume values for custom processing.
    * @default true
@@ -1421,9 +1421,9 @@ export class AudioDetectionComponent {
    * このメソッドがPitchProの音量調整の核心部分です。以下の処理を行います：
    *
    * 1. **デバイス固有の音量補正**: volumeMultiplierによる音量調整
-   *    - PC: 7.5x（v1.2.2確定）
-   *    - iPhone: 11.5x（v1.2.2確定）
-   *    - iPad: 13.0x（v1.2.2確定）
+   *    - PC: 7.5x（v1.3.0確定）
+   *    - iPhone: 9.0x（v1.3.0確定）
+   *    - iPad: 13.0x（v1.3.0確定）
    *
    * 2. **範囲制限**: 最終音量を0-100%の範囲に制限
    *
