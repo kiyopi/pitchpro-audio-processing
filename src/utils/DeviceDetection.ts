@@ -116,7 +116,7 @@ export class DeviceDetection {
       case 'iPad':
         return {
           sensitivity: 4.0,           // 🎤 マイク感度 (PitchDetector用)
-          noiseGate: 0.025,           // 🚪 ノイズゲート閾値 (0.030→0.025 環境ノイズ2-3%を考慮して2.5%に調整)
+          noiseGate: 0.025,           // 🚪 ノイズゲート閾値 (環境ノイズ2-3%を考慮して2.5%に調整)
           volumeMultiplier: 13.0,     // 🔊 表示音量補正 (17.0→13.0 23%削減で最適化)
           smoothingFactor: 0.25       // 📊 平滑化係数
         };
@@ -124,8 +124,8 @@ export class DeviceDetection {
       case 'iPhone':
         return {
           sensitivity: 3.5,           // 🎤 マイク感度 (iPhone最適化値)
-          noiseGate: 0.050,           // 🚪 ノイズゲート閾値 (0.020→0.050 環境ノイズ3-5%を考慮して5.0%に調整)
-          volumeMultiplier: 11.5,     // 🔊 表示音量補正 (9.5→11.5 音量スケール改善)
+          noiseGate: 0.050,           // 🚪 ノイズゲート閾値 (理想値5%設定でノイズ除去と音声検出のバランス)
+          volumeMultiplier: 3.0,      // 🔊 表示音量補正 (音量上昇率を適正化)
           smoothingFactor: 0.25       // 📊 平滑化係数
         };
         
@@ -133,7 +133,7 @@ export class DeviceDetection {
       default:
         return {
           sensitivity: 1.7,           // 🎤 マイク感度 (PC環境安定性重視)
-          noiseGate: 0.050,           // 🚪 ノイズゲート閾値 (0.025→0.050 環境ノイズ対策強化)
+          noiseGate: 0.050,           // 🚪 ノイズゲート閾値 (環境ノイズ対策強化5%)
           volumeMultiplier: 7.5,      // 🔊 表示音量補正 (8.0→7.5 再調整)
           smoothingFactor: 0.25       // 📊 平滑化係数
         };
