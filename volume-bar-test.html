@@ -278,6 +278,15 @@
                 </div>
             </div>
 
+            <!-- 🎯 第3音量バー（モード切り替えテスト用） -->
+            <div class="volume-container">
+                <div class="volume-label">モード2音量（切り替えテスト）</div>
+                <div class="volume-bar-wrapper">
+                    <div id="mode2VolumeBar" class="volume-bar"></div>
+                    <div id="mode2VolumeText" class="volume-text">0.0%</div>
+                </div>
+            </div>
+
             <div class="detection-display">
                 <!-- ✅ 自動更新 -->
                 <div class="detection-item">
@@ -300,6 +309,13 @@
             <button id="startBtn" onclick="startDetection()">🎤 検出開始</button>
             <button id="stopBtn" onclick="stopDetection()" disabled>⏹️ 停止</button>
             <button onclick="clearLog()">📄 ログクリア</button>
+        </div>
+
+        <!-- 🎯 モード切り替えテスト用ボタン -->
+        <div class="controls">
+            <button id="mode1Btn" onclick="switchToMode1()" style="background:#2196F3;">📊 モード1 (volumeBar)</button>
+            <button id="mode2Btn" onclick="switchToMode2()">📊 モード2 (mode2VolumeBar)</button>
+            <button onclick="testResetDisplayElements()">🔄 手動UIリセット</button>
         </div>
 
         <div class="log-section" id="logSection">
@@ -700,8 +716,85 @@
             addLog('info', '⏹️ ピッチ検出停止');
         }
 
+        // 🎯 モード切り替え機能の実装
+        let currentMode = 1;  // デフォルトはモード1
+
+        function switchToMode1() {
+            addLog('info', '📊 モード1に切り替え中...');
+
+            if (audioDetection) {
+                // AudioDetectionComponentのセレクターをモード1に変更
+                audioDetection.updateSelectors({
+                    volumeBarSelector: '#volumeBar',
+                    volumeTextSelector: '#volumeText',
+                    frequencySelector: '#frequencyValue',
+                    noteSelector: '#noteValue'
+                });
+
+                // 前のモードのUI要素をクリア
+                if (currentMode === 2) {
+                    document.getElementById('mode2VolumeBar').style.width = '0%';
+                    document.getElementById('mode2VolumeText').textContent = '0.0%';
+                }
+            }
+
+            currentMode = 1;
+            updateModeButtons();
+            addLog('success', '✅ モード1に切り替え完了');
+        }
+
+        function switchToMode2() {
+            addLog('info', '📊 モード2に切り替え中...');
+
+            if (audioDetection) {
+                // AudioDetectionComponentのセレクターをモード2に変更
+                audioDetection.updateSelectors({
+                    volumeBarSelector: '#mode2VolumeBar',
+                    volumeTextSelector: '#mode2VolumeText',
+                    frequencySelector: '#frequencyValue',
+                    noteSelector: '#noteValue'
+                });
+
+                // 前のモードのUI要素をクリア
+                if (currentMode === 1) {
+                    document.getElementById('volumeBar').style.width = '0%';
+                    document.getElementById('volumeText').textContent = '0.0%';
+                }
+            }
+
+            currentMode = 2;
+            updateModeButtons();
+            addLog('success', '✅ モード2に切り替え完了');
+        }
+
+        function updateModeButtons() {
+            const mode1Btn = document.getElementById('mode1Btn');
+            const mode2Btn = document.getElementById('mode2Btn');
+
+            if (currentMode === 1) {
+                mode1Btn.style.background = '#2196F3';
+                mode2Btn.style.background = '#4CAF50';
+            } else {
+                mode1Btn.style.background = '#4CAF50';
+                mode2Btn.style.background = '#2196F3';
+            }
+        }
+
+        function testResetDisplayElements() {
+            addLog('info', '🔄 手動UIリセットテスト実行中...');
+
+            if (audioDetection) {
+                audioDetection.resetDisplayElements();
+                addLog('success', '✅ resetDisplayElements()実行完了');
+                addLog('info', `📊 現在のモード: ${currentMode} (${currentMode === 1 ? 'volumeBar' : 'mode2VolumeBar'})`);
+            } else {
+                addLog('error', '❌ AudioDetectionComponentが初期化されていません');
+            }
+        }
+
         // 初期ログ
         addLog('info', '🚀 音量バーテスト起動中...');
+        addLog('info', '🎯 モード切り替えテスト機能を追加しました');
     </script>
 </body>
 </html>

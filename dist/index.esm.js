@@ -79,8 +79,8 @@ const Ve = "1.3.0", be = `PitchPro v${Ve}`, nt = (/* @__PURE__ */ new Date()).to
         return {
           sensitivity: 1.7,
           // 🎤 マイク感度 (PC環境安定性重視)
-          noiseGate: 0.05,
-          // 🚪 ノイズゲート閾値 (環境ノイズ対策強化5%)
+          noiseGate: 0.023,
+          // 🚪 ノイズゲート閾値 (2.3%設定で低周波数検出最適化)
           volumeMultiplier: 7.5,
           // 🔊 表示音量補正 (8.0→7.5 再調整)
           smoothingFactor: 0.25
@@ -223,9 +223,9 @@ const Ve = "1.3.0", be = `PitchPro v${Ve}`, nt = (/* @__PURE__ */ new Date()).to
 A.cachedSpecs = null;
 let G = A;
 var k = /* @__PURE__ */ ((h) => (h.AUDIO_CONTEXT_ERROR = "AUDIO_CONTEXT_ERROR", h.MICROPHONE_ACCESS_DENIED = "MICROPHONE_ACCESS_DENIED", h.PITCH_DETECTION_ERROR = "PITCH_DETECTION_ERROR", h.BUFFER_OVERFLOW = "BUFFER_OVERFLOW", h.INVALID_SAMPLE_RATE = "INVALID_SAMPLE_RATE", h.DEVICE_NOT_SUPPORTED = "DEVICE_NOT_SUPPORTED", h.PROCESSING_TIMEOUT = "PROCESSING_TIMEOUT", h))(k || {});
-class w extends Error {
+class E extends Error {
   constructor(e, t, i) {
-    super(e), this.name = "PitchProError", this.code = t, this.timestamp = /* @__PURE__ */ new Date(), this.context = i, Error.captureStackTrace && Error.captureStackTrace(this, w);
+    super(e), this.name = "PitchProError", this.code = t, this.timestamp = /* @__PURE__ */ new Date(), this.context = i, Error.captureStackTrace && Error.captureStackTrace(this, E);
   }
   toJSON() {
     return {
@@ -238,17 +238,17 @@ class w extends Error {
     };
   }
 }
-class R extends w {
+class R extends E {
   constructor(e, t) {
     super(e, "AUDIO_CONTEXT_ERROR", t), this.name = "AudioContextError";
   }
 }
-class Ae extends w {
+class Ae extends E {
   constructor(e, t) {
     super(e, "MICROPHONE_ACCESS_DENIED", t), this.name = "MicrophoneAccessError";
   }
 }
-class Ge extends w {
+class Ge extends E {
   constructor(e, t, i, s) {
     super(
       e,
@@ -270,7 +270,7 @@ class Ge extends w {
     return (e = this.context) == null ? void 0 : e.recoveryAttempts;
   }
 }
-class Te extends w {
+class Te extends E {
   constructor(e, t) {
     super(e, "PITCH_DETECTION_ERROR", t), this.name = "PitchDetectionError";
   }
@@ -911,7 +911,7 @@ class xe {
         try {
           i.readyState !== "ended" ? (i.stop(), console.log(`🛑 [AudioManager] Track ${s} stop complete`)) : console.log(`⚠️ [AudioManager] Track ${s} already ended`);
         } catch (o) {
-          const n = new w(
+          const n = new E(
             `メディアトラック ${s} の停止中にエラーが発生しました: ${o.message}`,
             k.AUDIO_CONTEXT_ERROR,
             {
@@ -970,7 +970,7 @@ class xe {
         sampleRate: ((s = this.audioContext) == null ? void 0 : s.sampleRate) || "unknown",
         deviceSpecs: this.getPlatformSpecs()
       }
-    ) : new w(
+    ) : new E(
       `${t}中に予期しないエラーが発生しました: ${e.message}`,
       k.AUDIO_CONTEXT_ERROR,
       {
@@ -1172,7 +1172,7 @@ D.prototype._transform4 = function() {
     var m = o >>> 2;
     for (n = 0; n < t; n += o)
       for (var u = n + m, d = n, f = 0; d < u; d += 2, f += s) {
-        const p = d, y = p + m, v = y + m, S = v + m, b = e[p], g = e[p + 1], C = e[y], I = e[y + 1], P = e[v], _ = e[v + 1], O = e[S], z = e[S + 1], L = b, U = g, B = l[f], $ = c * l[f + 1], H = C * B - I * $, V = C * $ + I * B, X = l[2 * f], Y = c * l[2 * f + 1], K = P * X - _ * Y, Z = P * Y + _ * X, ee = l[3 * f], te = c * l[3 * f + 1], ie = O * ee - z * te, se = O * te + z * ee, oe = L + K, j = U + Z, Q = L - K, ne = U - Z, re = H + ie, W = V + se, J = c * (H - ie), ae = c * (V - se), he = oe + re, fe = j + W, ge = oe - re, pe = j - W, ve = Q + ae, ye = ne - J, Se = Q - ae, Ce = ne + J;
+        const p = d, y = p + m, v = y + m, S = v + m, b = e[p], g = e[p + 1], C = e[y], I = e[y + 1], P = e[v], q = e[v + 1], z = e[S], L = e[S + 1], O = b, U = g, B = l[f], $ = c * l[f + 1], H = C * B - I * $, V = C * $ + I * B, X = l[2 * f], Y = c * l[2 * f + 1], K = P * X - q * Y, Z = P * Y + q * X, ee = l[3 * f], te = c * l[3 * f + 1], ie = z * ee - L * te, se = z * te + L * ee, oe = O + K, j = U + Z, Q = O - K, ne = U - Z, re = H + ie, W = V + se, J = c * (H - ie), ae = c * (V - se), he = oe + re, fe = j + W, ge = oe - re, pe = j - W, ve = Q + ae, ye = ne - J, Se = Q - ae, Ce = ne + J;
         e[p] = he, e[p + 1] = fe, e[y] = ve, e[y + 1] = ye, e[v] = ge, e[v + 1] = pe, e[S] = Se, e[S + 1] = Ce;
       }
   }
@@ -1182,8 +1182,8 @@ D.prototype._singleTransform2 = function(e, t, i) {
   s[e] = l, s[e + 1] = m, s[e + 2] = u, s[e + 3] = d;
 };
 D.prototype._singleTransform4 = function(e, t, i) {
-  const s = this._out, o = this._data, n = this._inv ? -1 : 1, r = i * 2, a = i * 3, c = o[t], l = o[t + 1], m = o[t + i], u = o[t + i + 1], d = o[t + r], f = o[t + r + 1], p = o[t + a], y = o[t + a + 1], v = c + d, S = l + f, b = c - d, g = l - f, C = m + p, I = u + y, P = n * (m - p), _ = n * (u - y), O = v + C, z = S + I, L = b + _, U = g - P, B = v - C, $ = S - I, H = b - _, V = g + P;
-  s[e] = O, s[e + 1] = z, s[e + 2] = L, s[e + 3] = U, s[e + 4] = B, s[e + 5] = $, s[e + 6] = H, s[e + 7] = V;
+  const s = this._out, o = this._data, n = this._inv ? -1 : 1, r = i * 2, a = i * 3, c = o[t], l = o[t + 1], m = o[t + i], u = o[t + i + 1], d = o[t + r], f = o[t + r + 1], p = o[t + a], y = o[t + a + 1], v = c + d, S = l + f, b = c - d, g = l - f, C = m + p, I = u + y, P = n * (m - p), q = n * (u - y), z = v + C, L = S + I, O = b + q, U = g - P, B = v - C, $ = S - I, H = b - q, V = g + P;
+  s[e] = z, s[e + 1] = L, s[e + 2] = O, s[e + 3] = U, s[e + 4] = B, s[e + 5] = $, s[e + 6] = H, s[e + 7] = V;
 };
 D.prototype._realTransform4 = function() {
   var e = this._out, t = this._csize, i = this._width, s = 1 << i, o = t / s << 1, n, r, a = this._bitrev;
@@ -1203,15 +1203,15 @@ D.prototype._realTransform4 = function() {
     var m = o >>> 1, u = m >>> 1, d = u >>> 1;
     for (n = 0; n < t; n += o)
       for (var f = 0, p = 0; f <= d; f += 2, p += s) {
-        var y = n + f, v = y + u, S = v + u, b = S + u, g = e[y], C = e[y + 1], I = e[v], P = e[v + 1], _ = e[S], O = e[S + 1], z = e[b], L = e[b + 1], U = g, B = C, $ = l[p], H = c * l[p + 1], V = I * $ - P * H, X = I * H + P * $, Y = l[2 * p], K = c * l[2 * p + 1], Z = _ * Y - O * K, ee = _ * K + O * Y, te = l[3 * p], ie = c * l[3 * p + 1], se = z * te - L * ie, oe = z * ie + L * te, j = U + Z, Q = B + ee, ne = U - Z, re = B - ee, W = V + se, J = X + oe, ae = c * (V - se), he = c * (X - oe), fe = j + W, ge = Q + J, pe = ne + he, ve = re - ae;
+        var y = n + f, v = y + u, S = v + u, b = S + u, g = e[y], C = e[y + 1], I = e[v], P = e[v + 1], q = e[S], z = e[S + 1], L = e[b], O = e[b + 1], U = g, B = C, $ = l[p], H = c * l[p + 1], V = I * $ - P * H, X = I * H + P * $, Y = l[2 * p], K = c * l[2 * p + 1], Z = q * Y - z * K, ee = q * K + z * Y, te = l[3 * p], ie = c * l[3 * p + 1], se = L * te - O * ie, oe = L * ie + O * te, j = U + Z, Q = B + ee, ne = U - Z, re = B - ee, W = V + se, J = X + oe, ae = c * (V - se), he = c * (X - oe), fe = j + W, ge = Q + J, pe = ne + he, ve = re - ae;
         if (e[y] = fe, e[y + 1] = ge, e[v] = pe, e[v + 1] = ve, f === 0) {
           var ye = j - W, Se = Q - J;
           e[S] = ye, e[S + 1] = Se;
           continue;
         }
         if (f !== d) {
-          var Ce = ne, Ne = -re, Re = j, Pe = -Q, _e = -c * he, qe = -c * ae, ke = -c * J, Oe = -c * W, ze = Ce + _e, Le = Ne + qe, Ue = Re + Oe, Be = Pe - ke, we = n + u - f, Ee = n + m - f;
-          e[we] = ze, e[we + 1] = Le, e[Ee] = Ue, e[Ee + 1] = Be;
+          var Ce = ne, Ne = -re, Re = j, Pe = -Q, qe = -c * he, _e = -c * ae, ke = -c * J, ze = -c * W, Le = Ce + qe, Oe = Ne + _e, Ue = Re + ze, Be = Pe - ke, Ee = n + u - f, we = n + m - f;
+          e[Ee] = Le, e[Ee + 1] = Oe, e[we] = Ue, e[we + 1] = Be;
         }
       }
   }
@@ -1760,7 +1760,7 @@ class et {
         useFilters: !1
       }), this.analyserIds.push(r), this.pitchDetector = Ye.forFloat32Array(this.analyser.fftSize), typeof process < "u" && ((e = process.env) == null ? void 0 : e.NODE_ENV) === "development" && console.log(`[Debug] Pitchyインスタンス作成: ${!!this.pitchDetector}, FFTサイズ: ${this.analyser.fftSize}`), this.componentState = "ready", this.isInitialized = !0, (i = (t = this.callbacks).onStateChange) == null || i.call(t, this.componentState);
     } catch (n) {
-      const r = n instanceof w ? n : new R(
+      const r = n instanceof E ? n : new R(
         "PitchDetector initialization failed",
         {
           originalError: n instanceof Error ? n.message : String(n),
@@ -2356,7 +2356,7 @@ class rt {
     if (!this.config.useFilters)
       return t && e.connect(t), e;
     if (!this.highpassFilter || !this.lowpassFilter || !this.notchFilter) {
-      const i = new w(
+      const i = new E(
         "ノイズフィルターが正しく初期化されていません。コンストラクタでuseFilters: trueで初期化してください。",
         k.AUDIO_CONTEXT_ERROR,
         {
@@ -2437,7 +2437,7 @@ class rt {
     try {
       e.highpassFreq !== void 0 && this.highpassFilter && (this.highpassFilter.frequency.setValueAtTime(e.highpassFreq, t), this.config.highpassFreq = e.highpassFreq), e.lowpassFreq !== void 0 && this.lowpassFilter && (this.lowpassFilter.frequency.setValueAtTime(e.lowpassFreq, t), this.config.lowpassFreq = e.lowpassFreq), e.notchFreq !== void 0 && this.notchFilter && (this.notchFilter.frequency.setValueAtTime(e.notchFreq, t), this.config.notchFreq = e.notchFreq), e.highpassQ !== void 0 && this.highpassFilter && (this.highpassFilter.Q.setValueAtTime(e.highpassQ, t), this.config.highpassQ = e.highpassQ), e.lowpassQ !== void 0 && this.lowpassFilter && (this.lowpassFilter.Q.setValueAtTime(e.lowpassQ, t), this.config.lowpassQ = e.lowpassQ), e.notchQ !== void 0 && this.notchFilter && (this.notchFilter.Q.setValueAtTime(e.notchQ, t), this.config.notchQ = e.notchQ), console.log("🔧 [NoiseFilter] Filter parameters updated:", e);
     } catch (i) {
-      const s = new w(
+      const s = new E(
         "フィルターパラメータの更新に失敗しました。指定した値が範囲外であるか、フィルターが無効になっている可能性があります。",
         k.INVALID_SAMPLE_RATE,
         {
@@ -2482,7 +2482,7 @@ class rt {
         phase: s[0]
       };
     } catch (t) {
-      const i = new w(
+      const i = new E(
         "フィルター応答の計算に失敗しました。デフォルト値を返します。",
         k.PROCESSING_TIMEOUT,
         {
@@ -3954,7 +3954,7 @@ class st {
    */
   handleError(e, t) {
     var s, o;
-    const i = e instanceof w ? e : this._createStructuredError(e, t);
+    const i = e instanceof E ? e : this._createStructuredError(e, t);
     F.logError(i, `MicrophoneController ${t}`), console.error(`❌ [MicrophoneController] Error in ${t}:`, i.toJSON()), this.lastError = e, this.updateState("error"), this.errorSystem && (t === "initialization" || t === "lifecycle" ? this.errorSystem.showMicrophoneError(e, t) : this.errorSystem.showError(
       "マイクエラー",
       `${t}でエラーが発生しました: ${e.message}`,
@@ -4016,7 +4016,7 @@ class st {
         audioManagerStatus: this.audioManager.getStatus(),
         deviceSpecs: this.deviceSpecs
       }
-    ) : new w(
+    ) : new E(
       `${t}中に予期しないエラーが発生しました: ${e.message}`,
       k.MICROPHONE_ACCESS_DENIED,
       {
@@ -5158,6 +5158,22 @@ const N = class N {
    */
   resetAllUIElements() {
     try {
+      if (this.uiElements.volumeBar && this.config.volumeBarSelector) {
+        const i = document.querySelector(this.config.volumeBarSelector);
+        i && i === this.uiElements.volumeBar && (this.uiElements.volumeBar instanceof HTMLProgressElement ? this.uiElements.volumeBar.value = 0 : this.uiElements.volumeBar.style.width = "0%", this.debugLog(`Reset cached volume bar: ${this.config.volumeBarSelector}`));
+      }
+      if (this.uiElements.volumeText && this.config.volumeTextSelector) {
+        const i = document.querySelector(this.config.volumeTextSelector);
+        i && i === this.uiElements.volumeText && (this.uiElements.volumeText.textContent = "0.0%", this.debugLog(`Reset cached volume text: ${this.config.volumeTextSelector}`));
+      }
+      if (this.uiElements.frequency && this.config.frequencySelector) {
+        const i = document.querySelector(this.config.frequencySelector);
+        i && i === this.uiElements.frequency && (this.uiElements.frequency.textContent = "0.0 Hz", this.debugLog(`Reset cached frequency: ${this.config.frequencySelector}`));
+      }
+      if (this.uiElements.note && this.config.noteSelector) {
+        const i = document.querySelector(this.config.noteSelector);
+        i && i === this.uiElements.note && (this.uiElements.note.textContent = "-", this.debugLog(`Reset cached note: ${this.config.noteSelector}`));
+      }
       const e = [
         // Mic mode selectors (all possible variations)
         "#mic-volume-bar",
@@ -5186,21 +5202,16 @@ const N = class N {
         "#frequency-3",
         "#pitch-1",
         "#pitch-2",
-        "#pitch-3",
-        // Also reset current configuration selectors
-        this.config.volumeBarSelector,
-        this.config.volumeTextSelector,
-        this.config.frequencySelector,
-        this.config.noteSelector
+        "#pitch-3"
       ];
       document.querySelectorAll('[id*="freq"]:not(.frequency-group):not(.frequency-box), [id*="frequency"]:not(.frequency-group):not(.frequency-box), [id*="pitch"]:not(.frequency-group):not(.frequency-box)').forEach((i) => {
         const s = i.textContent || "";
         (s.includes("Hz") || s.match(/^\d+\.?\d*$/)) && (i.classList.contains("frequency-display") || i.id.includes("freq-")) && (i.textContent = "0.0 Hz");
       }), e.forEach((i) => {
-        if (i) {
+        if (i && i !== this.config.volumeBarSelector && i !== this.config.volumeTextSelector && i !== this.config.frequencySelector && i !== this.config.noteSelector) {
           const s = document.querySelector(i);
           if (s) {
-            if (this.debugLog(`Processing selector: ${i}, element found: ${!!s}`), i.includes("volume-bar"))
+            if (this.debugLog(`Processing additional selector: ${i}`), i.includes("volume-bar"))
               s instanceof HTMLProgressElement ? s.value = 0 : s.style.width = "0%";
             else if (i.includes("volume-text"))
               s.textContent = "0.0%";
@@ -5212,7 +5223,7 @@ const N = class N {
             }
           }
         }
-      }), this.debugLog("All UI elements reset to initial state");
+      }), this.debugLog("All UI elements reset to initial state (cached elements processed first)");
     } catch (e) {
       this.debugLog("Error resetting UI elements:", e);
     }
@@ -5332,7 +5343,7 @@ const N = class N {
    */
   handleError(e, t) {
     var s, o;
-    const i = e instanceof w ? e : this.createStructuredError(e, t);
+    const i = e instanceof E ? e : this.createStructuredError(e, t);
     this.lastError = i, this.updateState("error"), (o = (s = this.callbacks).onError) == null || o.call(s, i), this.debugLog("Error handled:", i.toJSON());
   }
   /**
@@ -5356,7 +5367,7 @@ const N = class N {
         componentState: this.currentState,
         deviceSpecs: this.deviceSpecs
       }
-    ) : new w(
+    ) : new E(
       `${t}中に予期しないエラーが発生しました: ${e.message}`,
       k.PITCH_DETECTION_ERROR,
       {
@@ -5543,7 +5554,7 @@ class ut {
     this.config = { ...this.config, ...e };
   }
 }
-const q = {
+const _ = {
   EXCELLENT: "excellent",
   GOOD: "good",
   FAIR: "fair",
@@ -5665,14 +5676,14 @@ class dt {
       vibrato: 0.1
     };
     let n = e * o.stability + s * o.consistency;
-    return i !== null ? n += (1 - Math.min(i, 1)) * o.breathiness : n += 0.7 * o.breathiness, t.detected && t.regularity > 0.7 ? n += 0.9 * o.vibrato : t.detected ? n += 0.6 * o.vibrato : n += 0.5 * o.vibrato, n >= 0.85 ? q.EXCELLENT : n >= 0.7 ? q.GOOD : n >= 0.5 ? q.FAIR : q.POOR;
+    return i !== null ? n += (1 - Math.min(i, 1)) * o.breathiness : n += 0.7 * o.breathiness, t.detected && t.regularity > 0.7 ? n += 0.9 * o.vibrato : t.detected ? n += 0.6 * o.vibrato : n += 0.5 * o.vibrato, n >= 0.85 ? _.EXCELLENT : n >= 0.7 ? _.GOOD : n >= 0.5 ? _.FAIR : _.POOR;
   }
   /**
    * Generate recommendations based on analysis
    */
   generateRecommendations(e, t, i, s, o) {
     const n = [];
-    return t < 0.5 ? (n.push("音程の安定性を向上させるため、ゆっくりとした発声練習を行ってください"), n.push("腹式呼吸を意識して、息の流れを一定に保つ練習をしてください")) : t < 0.7 && n.push("音程の微調整練習で、より正確なピッチコントロールを目指しましょう"), o < 0.5 && (n.push("音量と音質の一貫性を保つため、定期的な発声練習を継続してください"), n.push("録音を聞き返して、自分の声の特徴を把握しましょう")), s !== null && s > 0.6 && (n.push("声の息漏れが気になります。発声時の喉の締まりを意識してください"), n.push("ハミング練習で、クリアな声質を目指しましょう")), i.detected ? i.regularity < 0.5 ? n.push("ビブラートの規則性を改善するため、メトロノームに合わせた練習をしてください") : i.rate > 7.5 && n.push("ビブラートの速度が速すぎます。よりゆったりとしたビブラートを練習してください") : (e === q.GOOD || e === q.EXCELLENT) && n.push("美しいビブラートの習得に挑戦してみましょう"), e === q.POOR ? (n.push("基礎的な発声練習から始めることをお勧めします"), n.push("専門的な指導を受けることを検討してください")) : e === q.EXCELLENT && n.push("素晴らしい声質です。この状態を維持する練習を続けてください"), n;
+    return t < 0.5 ? (n.push("音程の安定性を向上させるため、ゆっくりとした発声練習を行ってください"), n.push("腹式呼吸を意識して、息の流れを一定に保つ練習をしてください")) : t < 0.7 && n.push("音程の微調整練習で、より正確なピッチコントロールを目指しましょう"), o < 0.5 && (n.push("音量と音質の一貫性を保つため、定期的な発声練習を継続してください"), n.push("録音を聞き返して、自分の声の特徴を把握しましょう")), s !== null && s > 0.6 && (n.push("声の息漏れが気になります。発声時の喉の締まりを意識してください"), n.push("ハミング練習で、クリアな声質を目指しましょう")), i.detected ? i.regularity < 0.5 ? n.push("ビブラートの規則性を改善するため、メトロノームに合わせた練習をしてください") : i.rate > 7.5 && n.push("ビブラートの速度が速すぎます。よりゆったりとしたビブラートを練習してください") : (e === _.GOOD || e === _.EXCELLENT) && n.push("美しいビブラートの習得に挑戦してみましょう"), e === _.POOR ? (n.push("基礎的な発声練習から始めることをお勧めします"), n.push("専門的な指導を受けることを検討してください")) : e === _.EXCELLENT && n.push("素晴らしい声質です。この状態を維持する練習を続けてください"), n;
   }
   /**
    * Smooth frequency data using moving average
@@ -5963,12 +5974,12 @@ class mt {
     }
   }
 }
-const E = class E {
+const w = class w {
   /**
    * Generate scale from root note
    */
   static generateScale(e, t = "major") {
-    const i = E.SCALE_PATTERNS[t];
+    const i = w.SCALE_PATTERNS[t];
     if (!i)
       throw new Error(`Unknown scale type: ${t}`);
     return i.map((s) => {
@@ -5980,7 +5991,7 @@ const E = class E {
    * Generate chord from root note
    */
   static generateChord(e, t = "major") {
-    const i = E.CHORD_PATTERNS[t];
+    const i = w.CHORD_PATTERNS[t];
     if (!i)
       throw new Error(`Unknown chord type: ${t}`);
     return i.map((s) => {
@@ -5997,7 +6008,7 @@ const E = class E {
     const t = e.sort((n, r) => n - r), i = t[0], s = t.map(
       (n) => Math.round(12 * Math.log2(n / i))
     ), o = [];
-    return Object.entries(E.SCALE_PATTERNS).forEach(([n, r]) => {
+    return Object.entries(w.SCALE_PATTERNS).forEach(([n, r]) => {
       for (let a = 0; a < 12; a++) {
         const c = r.map((d) => (d + a) % 12).sort((d, f) => d - f), l = s.map((d) => d % 12).sort((d, f) => d - f);
         let m = 0;
@@ -6023,7 +6034,7 @@ const E = class E {
     if (e.length < 2)
       return [];
     const t = e.sort((s, o) => s - o), i = [];
-    return Object.entries(E.CHORD_PATTERNS).forEach(([s, o]) => {
+    return Object.entries(w.CHORD_PATTERNS).forEach(([s, o]) => {
       for (let n = 0; n < o.length; n++) {
         const r = [
           ...o.slice(n),
@@ -6139,7 +6150,7 @@ const E = class E {
    * Convert equal temperament interval to just intonation
    */
   static equalTemperamentToJustIntonation(e) {
-    const t = e * 100, i = E.getJustIntonationRatios();
+    const t = e * 100, i = w.getJustIntonationRatios();
     let s, o = 1 / 0;
     return Object.entries(i).forEach(([r, { cents: a }]) => {
       const c = Math.abs(t - a);
@@ -6176,9 +6187,9 @@ const E = class E {
     const s = T.scientificPitchToFrequency(e + "4");
     if (s === 0)
       throw new Error(`Invalid key: ${e}`);
-    const o = E.generateScale(s, t === "minor" ? "naturalMinor" : "major"), n = [];
+    const o = w.generateScale(s, t === "minor" ? "naturalMinor" : "major"), n = [];
     return i.forEach((r) => {
-      const a = o[(r - 1) % o.length], c = t === "major" ? E.getMajorScaleChordType(r) : E.getMinorScaleChordType(r), l = E.generateChord(a.frequency, c);
+      const a = o[(r - 1) % o.length], c = t === "major" ? w.getMajorScaleChordType(r) : w.getMinorScaleChordType(r), l = w.generateChord(a.frequency, c);
       n.push(l);
     }), n;
   }
@@ -6195,7 +6206,7 @@ const E = class E {
     return ["minor", "diminished", "major", "minor", "minor", "major", "major"][(e - 1) % 7];
   }
 };
-E.SCALE_PATTERNS = {
+w.SCALE_PATTERNS = {
   major: [0, 2, 4, 5, 7, 9, 11],
   naturalMinor: [0, 2, 3, 5, 7, 8, 10],
   harmonicMinor: [0, 2, 3, 5, 7, 8, 11],
@@ -6209,7 +6220,7 @@ E.SCALE_PATTERNS = {
   pentatonicMinor: [0, 3, 5, 7, 10],
   blues: [0, 3, 5, 6, 7, 10],
   chromatic: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-}, E.CHORD_PATTERNS = {
+}, w.CHORD_PATTERNS = {
   major: [0, 4, 7],
   minor: [0, 3, 7],
   diminished: [0, 3, 6],
@@ -6226,7 +6237,7 @@ E.SCALE_PATTERNS = {
   // 14 = 2 + 12 (octave)
   major9: [0, 4, 7, 11, 14],
   minor9: [0, 3, 7, 10, 14]
-}, E.CIRCLE_OF_FIFTHS = [
+}, w.CIRCLE_OF_FIFTHS = [
   "C",
   "G",
   "D",
@@ -6239,7 +6250,7 @@ E.SCALE_PATTERNS = {
   "Eb",
   "Bb",
   "F"
-], E.INTERVAL_NAMES = {
+], w.INTERVAL_NAMES = {
   0: "Perfect Unison",
   1: "Minor Second",
   2: "Major Second",
@@ -6254,7 +6265,7 @@ E.SCALE_PATTERNS = {
   11: "Major Seventh",
   12: "Perfect Octave"
 };
-let De = E;
+let De = w;
 const ft = (/* @__PURE__ */ new Date()).toISOString(), gt = {
   pitchDetector: {
     fftSize: 4096,

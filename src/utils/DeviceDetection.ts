@@ -133,7 +133,7 @@ export class DeviceDetection {
       default:
         return {
           sensitivity: 1.7,           // 🎤 マイク感度 (PC環境安定性重視)
-          noiseGate: 0.050,           // 🚪 ノイズゲート閾値 (環境ノイズ対策強化5%)
+          noiseGate: 0.023,           // 🚪 ノイズゲート閾値 (2.3%設定で低周波数検出最適化)
           volumeMultiplier: 7.5,      // 🔊 表示音量補正 (8.0→7.5 再調整)
           smoothingFactor: 0.25       // 📊 平滑化係数
         };

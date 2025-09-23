@@ -1241,8 +1241,46 @@ export class AudioDetectionComponent {
    */
   private resetAllUIElements(): void {
     try {
-      // Reset all possible UI elements by querying all selectors that might exist
-      const allPossibleSelectors = [
+      // 🎯 Step 1: Reset cached UI elements first (consistent with updateUI logic)
+      if (this.uiElements.volumeBar && this.config.volumeBarSelector) {
+        // Verify element matches current selector to prevent cross-mode updates
+        const currentElement = document.querySelector(this.config.volumeBarSelector);
+        if (currentElement && currentElement === this.uiElements.volumeBar) {
+          if (this.uiElements.volumeBar instanceof HTMLProgressElement) {
+            this.uiElements.volumeBar.value = 0;
+          } else {
+            (this.uiElements.volumeBar as HTMLElement).style.width = '0%';
+          }
+          this.debugLog(`Reset cached volume bar: ${this.config.volumeBarSelector}`);
+        }
+      }
+
+      if (this.uiElements.volumeText && this.config.volumeTextSelector) {
+        const currentElement = document.querySelector(this.config.volumeTextSelector);
+        if (currentElement && currentElement === this.uiElements.volumeText) {
+          this.uiElements.volumeText.textContent = '0.0%';
+          this.debugLog(`Reset cached volume text: ${this.config.volumeTextSelector}`);
+        }
+      }
+
+      if (this.uiElements.frequency && this.config.frequencySelector) {
+        const currentElement = document.querySelector(this.config.frequencySelector);
+        if (currentElement && currentElement === this.uiElements.frequency) {
+          this.uiElements.frequency.textContent = '0.0 Hz';
+          this.debugLog(`Reset cached frequency: ${this.config.frequencySelector}`);
+        }
+      }
+
+      if (this.uiElements.note && this.config.noteSelector) {
+        const currentElement = document.querySelector(this.config.noteSelector);
+        if (currentElement && currentElement === this.uiElements.note) {
+          this.uiElements.note.textContent = '-';
+          this.debugLog(`Reset cached note: ${this.config.noteSelector}`);
+        }
+      }
+
+      // 🎯 Step 2: Reset additional elements that are not in cached elements
+      const additionalSelectors = [
         // Mic mode selectors (all possible variations)
         '#mic-volume-bar', '#mic-volume-text', '#mic-frequency', '#mic-frequency-display',
         // Range mode selectors (all possible variations)
@@ -1252,14 +1290,9 @@ export class AudioDetectionComponent {
         // Add common frequency display patterns
         '#freq-1', '#freq-2', '#freq-3', '#freq-4', '#freq-5',
         '#frequency-1', '#frequency-2', '#frequency-3',
-        '#pitch-1', '#pitch-2', '#pitch-3',
-        // Also reset current configuration selectors
-        this.config.volumeBarSelector,
-        this.config.volumeTextSelector,
-        this.config.frequencySelector,
-        this.config.noteSelector
+        '#pitch-1', '#pitch-2', '#pitch-3'
       ];
-      
+
       // Additionally, try to find all elements with frequency-related IDs or classes
       // But be more selective to avoid breaking UI elements
       const frequencyElements = document.querySelectorAll('[id*="freq"]:not(.frequency-group):not(.frequency-box), [id*="frequency"]:not(.frequency-group):not(.frequency-box), [id*="pitch"]:not(.frequency-group):not(.frequency-box)');
@@ -1274,11 +1307,16 @@ export class AudioDetectionComponent {
         }
       });
 
-      allPossibleSelectors.forEach(selector => {
-        if (selector) {
+      // Reset additional selectors (excluding current cached ones to avoid duplicate processing)
+      additionalSelectors.forEach(selector => {
+        if (selector &&
+            selector !== this.config.volumeBarSelector &&
+            selector !== this.config.volumeTextSelector &&
+            selector !== this.config.frequencySelector &&
+            selector !== this.config.noteSelector) {
           const element = document.querySelector(selector);
           if (element) {
-            this.debugLog(`Processing selector: ${selector}, element found: ${!!element}`);
+            this.debugLog(`Processing additional selector: ${selector}`);
             if (selector.includes('volume-bar')) {
               // Reset volume bar (width style or progress value)
               if (element instanceof HTMLProgressElement) {
@@ -1319,7 +1357,7 @@ export class AudioDetectionComponent {
         }
       });
 
-      this.debugLog('All UI elements reset to initial state');
+      this.debugLog('All UI elements reset to initial state (cached elements processed first)');
     } catch (error) {
       this.debugLog('Error resetting UI elements:', error);
     }
