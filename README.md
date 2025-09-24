@@ -31,10 +31,10 @@ Web音楽アプリケーション開発のための包括的な音響処理ツ�
 - **無音検出**とノイズゲート機能
 
 ### 📱 クロスプラットフォーム最適化
-- **デバイス別感度調整**：
-  - iPad: 7.0倍感度（マイク特性補正）
-  - iPhone: 3.0倍感度（小型筐体対応）
-  - PC/Desktop: 1.0倍感度（標準設定）
+- **デバイス別最適化設定**（v1.3.1）：
+  - PC: noiseGate 2.3%、volumeMultiplier 7.5x（低周波数検出最適化）
+  - iPhone: noiseGate 2.8%、volumeMultiplier 9.0x（30Hz低周波数対応）
+  - iPad: noiseGate 2.3%、volumeMultiplier 13.0x（感度向上）
 - **iPadOS 13+検出対応**：「Macintosh」偽装の自動判別
 - **Safari WebKit最適化**：AudioContext自動サスペンド対応
 
@@ -45,17 +45,19 @@ Web音楽アプリケーション開発のための包括的な音響処理ツ�
 - **完全TypeScript対応**：strictモード対応、厳密な型定義とIntelliSense支援
 - **ES/CommonJS対応**：モダンバンドラーと従来環境の両対応
 
-## 🎯 最新リリース：v1.3.0 iPhone・iPad音響検出最適化
+## 🎯 最新リリース：v1.3.1 PC低周波数検出回復・音量バー更新最適化
 
-**デバイス固有音響特性の最適化**：iPhone特有の30Hz低周波数ノイズ問題を完全解決し、全デバイスで統一された音響検出を実現
-- **iPhone**: noiseGate 2.8%、volumeMultiplier 9.0x（30Hz低周波数ノイズ対策）
-- **iPad**: noiseGate 2.3%、volumeMultiplier 13.0x（感度向上）
-- **PC**: noiseGate 2.5%、volumeMultiplier 7.5x（環境ノイズ対策）
+**PC低周波数検出の完全回復**：PC環境での100Hz以下音響検出問題を解決し、全デバイスで安定した低周波数検出を実現
+- **PC**: noiseGate 2.3%（低周波数検出回復）、volumeMultiplier 7.5x
+- **iPhone**: noiseGate 2.8%（維持）、volumeMultiplier 9.0x
+- **iPad**: noiseGate 2.3%（維持）、volumeMultiplier 13.0x
 
-**対象ユーザー**：特にiPhoneでの音響検出品質を重視するユーザー（大幅な改善のため更新推奨）
+**音量バー更新処理統一**：キャッシュ要素優先によるクロスモード干渉完全防止
+
+**対象ユーザー**：PCで低周波数楽器（ベース・バリトンサックス等）を扱うユーザー（重要な修正のため更新強く推奨）
 ```bash
 # 最新版へのアップデート
-npm install @pitchpro/audio-processing@1.3.0
+npm install @pitchpro/audio-processing@1.3.1
 ```
 
 ## 🔄 v1.1.3 マイクレベル修正（継続中）
