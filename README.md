@@ -47,14 +47,25 @@ Web音楽アプリケーション開発のための包括的な音響処理ツ�
 
 ## 🎯 最新リリース：v1.3.1 PC低周波数検出回復・音量バー更新最適化
 
-**PC低周波数検出の完全回復**：PC環境での100Hz以下音響検出問題を解決し、全デバイスで安定した低周波数検出を実現
+### 🔧 PC環境での100Hz以下音響検出完全回復
+**根本原因解決**：commit 670f25eでの過度なノイズ対策が低周波数をブロックしていた問題を修正
+- **段階的最適化**：5.0% → 3.5% → 2.3%による科学的調整手法確立
+- **低周波数楽器対応**：ベース・バリトンサックス・チェロ等の安定検出実現
+- **Git履歴調査**：設定変更要因の完全特定による再発防止
+
+### 📊 デバイス間統一処理システム完成
+**音量バー更新処理の統一化**：
+- キャッシュ要素優先によるクロスモード干渉完全防止
+- updateUI()とreset処理の統合による干渉防止
+- 要素一致検証システムによる安全な更新
+
+**確定された最適化設定**：
 - **PC**: noiseGate 2.3%（低周波数検出回復）、volumeMultiplier 7.5x
 - **iPhone**: noiseGate 2.8%（維持）、volumeMultiplier 9.0x
 - **iPad**: noiseGate 2.3%（維持）、volumeMultiplier 13.0x
 
-**音量バー更新処理統一**：キャッシュ要素優先によるクロスモード干渉完全防止
+**🎯 対象ユーザー**：PCで低周波数楽器を扱うユーザー（重要な修正のため更新強く推奨）
 
-**対象ユーザー**：PCで低周波数楽器（ベース・バリトンサックス等）を扱うユーザー（重要な修正のため更新強く推奨）
 ```bash
 # 最新版へのアップデート
 npm install @pitchpro/audio-processing@1.3.1
@@ -168,8 +179,8 @@ npm install @pitchpro/audio-processing
 ```
 
 #### 📥 直接ダウンロード
-- **最新版**: [v1.3.0 リリース](https://github.com/kiyopi/pitchpro-audio-processing/releases/latest)
-- **UMDファイル**: [pitchpro.umd.js](https://github.com/kiyopi/pitchpro-audio-processing/releases/download/v1.3.0/pitchpro.umd.js)
+- **最新版**: [v1.3.1 リリース](https://github.com/kiyopi/pitchpro-audio-processing/releases/latest)
+- **UMDファイル**: [pitchpro.umd.js](https://github.com/kiyopi/pitchpro-audio-processing/releases/download/v1.3.1/pitchpro.umd.js)
 - **デモページ**: [ワンクリックダウンロード＋デモ](https://kiyopi.github.io/pitchpro-audio-processing/quickstart-demo.html)
 
 ### 基本的な使用方法
@@ -751,11 +762,11 @@ PitchProは各デバイスの音響特性を自動検出し、最適な設定を
 
 ### デバイス別最適化パラメータ
 
-| デバイス | 感度倍率 | ノイズゲート | 音量計算除数 | ノイズ閾値 | 特別対応 |
-|----------|----------|-------------|-------------|-----------|----------|
-| **iPad** | 7.0x | 0.01 | 4.0 | 12% | iPadOS 13+偽装検出 |
-| **iPhone** | 3.0x | 0.015 | 4.0 | 12% | 小型筐体補正 |
-| **PC/Desktop** | 1.0x | 0.02 | 6.0 | **5%** | 標準マイク対応 |
+| デバイス | 感度倍率 | ノイズゲート | 音量倍率 | 特別対応 |
+|----------|----------|-------------|----------|----------|
+| **PC** | 1.8x | 2.3% | 7.5x | 低周波数検出回復 |
+| **iPhone** | 3.5x | 2.8% | 9.0x | 30Hz低周波数最適化 |
+| **iPad** | 5.0x | 2.3% | 13.0x | 感度向上 |
 
 ### 自動デバイス検出と最適化
 

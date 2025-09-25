@@ -1,7 +1,7 @@
-var $e = Object.defineProperty;
-var He = (h, e, t) => e in h ? $e(h, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : h[e] = t;
-var x = (h, e, t) => He(h, typeof e != "symbol" ? e + "" : e, t);
-const Ve = "1.3.1", be = `PitchPro v${Ve}`, nt = (/* @__PURE__ */ new Date()).toISOString(), A = class A {
+var Be = Object.defineProperty;
+var $e = (h, e, t) => e in h ? Be(h, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : h[e] = t;
+var x = (h, e, t) => $e(h, typeof e != "symbol" ? e + "" : e, t);
+const He = "1.3.1", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).toISOString(), A = class A {
   /**
    * Detect current device and return optimized specifications
    */
@@ -248,7 +248,7 @@ class Ae extends E {
     super(e, "MICROPHONE_ACCESS_DENIED", t), this.name = "MicrophoneAccessError";
   }
 }
-class Ge extends E {
+class Ve extends E {
   constructor(e, t, i, s) {
     super(
       e,
@@ -460,7 +460,7 @@ class F {
     };
   }
 }
-class xe {
+class Ge {
   /**
    * Creates a new AudioManager instance with device-optimized configuration
    * 
@@ -1172,7 +1172,7 @@ D.prototype._transform4 = function() {
     var m = o >>> 2;
     for (n = 0; n < t; n += o)
       for (var u = n + m, d = n, f = 0; d < u; d += 2, f += s) {
-        const p = d, y = p + m, v = y + m, S = v + m, b = e[p], g = e[p + 1], C = e[y], I = e[y + 1], P = e[v], q = e[v + 1], z = e[S], L = e[S + 1], O = b, U = g, B = l[f], $ = c * l[f + 1], H = C * B - I * $, V = C * $ + I * B, X = l[2 * f], Y = c * l[2 * f + 1], K = P * X - q * Y, Z = P * Y + q * X, ee = l[3 * f], te = c * l[3 * f + 1], ie = z * ee - L * te, se = z * te + L * ee, oe = O + K, j = U + Z, Q = O - K, ne = U - Z, re = H + ie, W = V + se, J = c * (H - ie), ae = c * (V - se), he = oe + re, fe = j + W, ge = oe - re, pe = j - W, ve = Q + ae, ye = ne - J, Se = Q - ae, Ce = ne + J;
+        const p = d, y = p + m, v = y + m, S = v + m, b = e[p], g = e[p + 1], C = e[y], I = e[y + 1], P = e[v], q = e[v + 1], L = e[S], z = e[S + 1], O = b, U = g, B = l[f], $ = c * l[f + 1], H = C * B - I * $, V = C * $ + I * B, X = l[2 * f], Y = c * l[2 * f + 1], K = P * X - q * Y, Z = P * Y + q * X, ee = l[3 * f], te = c * l[3 * f + 1], ie = L * ee - z * te, se = L * te + z * ee, oe = O + K, j = U + Z, Q = O - K, ne = U - Z, re = H + ie, W = V + se, J = c * (H - ie), ae = c * (V - se), he = oe + re, fe = j + W, ge = oe - re, pe = j - W, ve = Q + ae, ye = ne - J, Se = Q - ae, Ce = ne + J;
         e[p] = he, e[p + 1] = fe, e[y] = ve, e[y + 1] = ye, e[v] = ge, e[v + 1] = pe, e[S] = Se, e[S + 1] = Ce;
       }
   }
@@ -1182,8 +1182,8 @@ D.prototype._singleTransform2 = function(e, t, i) {
   s[e] = l, s[e + 1] = m, s[e + 2] = u, s[e + 3] = d;
 };
 D.prototype._singleTransform4 = function(e, t, i) {
-  const s = this._out, o = this._data, n = this._inv ? -1 : 1, r = i * 2, a = i * 3, c = o[t], l = o[t + 1], m = o[t + i], u = o[t + i + 1], d = o[t + r], f = o[t + r + 1], p = o[t + a], y = o[t + a + 1], v = c + d, S = l + f, b = c - d, g = l - f, C = m + p, I = u + y, P = n * (m - p), q = n * (u - y), z = v + C, L = S + I, O = b + q, U = g - P, B = v - C, $ = S - I, H = b - q, V = g + P;
-  s[e] = z, s[e + 1] = L, s[e + 2] = O, s[e + 3] = U, s[e + 4] = B, s[e + 5] = $, s[e + 6] = H, s[e + 7] = V;
+  const s = this._out, o = this._data, n = this._inv ? -1 : 1, r = i * 2, a = i * 3, c = o[t], l = o[t + 1], m = o[t + i], u = o[t + i + 1], d = o[t + r], f = o[t + r + 1], p = o[t + a], y = o[t + a + 1], v = c + d, S = l + f, b = c - d, g = l - f, C = m + p, I = u + y, P = n * (m - p), q = n * (u - y), L = v + C, z = S + I, O = b + q, U = g - P, B = v - C, $ = S - I, H = b - q, V = g + P;
+  s[e] = L, s[e + 1] = z, s[e + 2] = O, s[e + 3] = U, s[e + 4] = B, s[e + 5] = $, s[e + 6] = H, s[e + 7] = V;
 };
 D.prototype._realTransform4 = function() {
   var e = this._out, t = this._csize, i = this._width, s = 1 << i, o = t / s << 1, n, r, a = this._bitrev;
@@ -1203,15 +1203,15 @@ D.prototype._realTransform4 = function() {
     var m = o >>> 1, u = m >>> 1, d = u >>> 1;
     for (n = 0; n < t; n += o)
       for (var f = 0, p = 0; f <= d; f += 2, p += s) {
-        var y = n + f, v = y + u, S = v + u, b = S + u, g = e[y], C = e[y + 1], I = e[v], P = e[v + 1], q = e[S], z = e[S + 1], L = e[b], O = e[b + 1], U = g, B = C, $ = l[p], H = c * l[p + 1], V = I * $ - P * H, X = I * H + P * $, Y = l[2 * p], K = c * l[2 * p + 1], Z = q * Y - z * K, ee = q * K + z * Y, te = l[3 * p], ie = c * l[3 * p + 1], se = L * te - O * ie, oe = L * ie + O * te, j = U + Z, Q = B + ee, ne = U - Z, re = B - ee, W = V + se, J = X + oe, ae = c * (V - se), he = c * (X - oe), fe = j + W, ge = Q + J, pe = ne + he, ve = re - ae;
+        var y = n + f, v = y + u, S = v + u, b = S + u, g = e[y], C = e[y + 1], I = e[v], P = e[v + 1], q = e[S], L = e[S + 1], z = e[b], O = e[b + 1], U = g, B = C, $ = l[p], H = c * l[p + 1], V = I * $ - P * H, X = I * H + P * $, Y = l[2 * p], K = c * l[2 * p + 1], Z = q * Y - L * K, ee = q * K + L * Y, te = l[3 * p], ie = c * l[3 * p + 1], se = z * te - O * ie, oe = z * ie + O * te, j = U + Z, Q = B + ee, ne = U - Z, re = B - ee, W = V + se, J = X + oe, ae = c * (V - se), he = c * (X - oe), fe = j + W, ge = Q + J, pe = ne + he, ve = re - ae;
         if (e[y] = fe, e[y + 1] = ge, e[v] = pe, e[v + 1] = ve, f === 0) {
           var ye = j - W, Se = Q - J;
           e[S] = ye, e[S + 1] = Se;
           continue;
         }
         if (f !== d) {
-          var Ce = ne, Ne = -re, Re = j, Pe = -Q, qe = -c * he, _e = -c * ae, ke = -c * J, ze = -c * W, Le = Ce + qe, Oe = Ne + _e, Ue = Re + ze, Be = Pe - ke, Ee = n + u - f, we = n + m - f;
-          e[Ee] = Le, e[Ee + 1] = Oe, e[we] = Ue, e[we + 1] = Be;
+          var Ce = ne, xe = -re, Ne = j, Re = -Q, Pe = -c * he, qe = -c * ae, _e = -c * J, ke = -c * W, Le = Ce + Pe, ze = xe + qe, Oe = Ne + ke, Ue = Re - _e, Ee = n + u - f, we = n + m - f;
+          e[Ee] = Le, e[Ee + 1] = ze, e[we] = Oe, e[we + 1] = Ue;
         }
       }
   }
@@ -2914,7 +2914,7 @@ class tt {
             }
           }, this.config.autoRecoveryDelayMs);
         else {
-          const n = new Ge(
+          const n = new Ve(
             `Microphone health check failed after ${this.autoRecoveryAttempts} recovery attempts. Monitoring stopped to prevent infinite error loop.`,
             o,
             this.autoRecoveryAttempts,
@@ -3434,7 +3434,7 @@ class st {
       this.config.logging.level,
       this.config.logging.prefix,
       { component: "MicrophoneController" }
-    ), this.logger.debug("Initializing MicrophoneController", { config: this.config }), this.audioManager = new xe(this.config.audioManager), this.lifecycleManager = new tt(this.audioManager, this.config.lifecycle), this.errorSystem = this.config.notifications.enabled ? new it() : null, this.setupEventHandlers(), this.detectDevice();
+    ), this.logger.debug("Initializing MicrophoneController", { config: this.config }), this.audioManager = new Ge(this.config.audioManager), this.lifecycleManager = new tt(this.audioManager, this.config.lifecycle), this.errorSystem = this.config.notifications.enabled ? new it() : null, this.setupEventHandlers(), this.detectDevice();
   }
   /**
    * Sets callback functions for microphone controller events
@@ -4732,13 +4732,7 @@ const N = class N {
       // コールバック関数はオプショナル
       debug: e.debug ?? !1,
       logPrefix: e.logPrefix ?? "🎵 AudioDetection"
-    }, this.audioManager = new xe({
-      sampleRate: 44100,
-      channelCount: 1,
-      echoCancellation: !1,
-      noiseSuppression: !1,
-      autoGainControl: !1
-    }), this.config.deviceOptimization && this.detectAndOptimizeDevice(), this.checkAutoUpdateUIWarnings(), this.debugLog(`${be} AudioDetectionComponent created with config:`, this.config);
+    }, this.config.deviceOptimization && this.detectAndOptimizeDevice(), this.checkAutoUpdateUIWarnings(), this.debugLog(`${be} AudioDetectionComponent created with config:`, this.config);
   }
   /** @private Helper method for creating delays */
   delay(e) {
@@ -4810,7 +4804,7 @@ const N = class N {
           var m, u;
           this.deviceSpecs = l, (u = (m = this.callbacks).onDeviceDetected) == null || u.call(m, l);
         }
-      }), await this.micController.initialize(), this.debugLog("DeviceDetection values:", {
+      }), await this.micController.initialize(), this.audioManager = this.micController.audioManager, this.debugLog("✅ AudioManager reference obtained from MicrophoneController"), this.debugLog("DeviceDetection values:", {
         device: (e = this.deviceSpecs) == null ? void 0 : e.deviceType,
         noiseGate: (t = this.deviceSpecs) == null ? void 0 : t.noiseGate,
         volumeMultiplier: (i = this.deviceSpecs) == null ? void 0 : i.volumeMultiplier,
@@ -6299,7 +6293,7 @@ const ft = (/* @__PURE__ */ new Date()).toISOString(), gt = {
 };
 export {
   Fe as AudioDetectionComponent,
-  xe as AudioManager,
+  Ge as AudioManager,
   ft as BUILD_DATE,
   nt as BUILD_TIMESTAMP,
   mt as CalibrationSystem,
@@ -6311,12 +6305,12 @@ export {
   de as LogLevel,
   le as Logger,
   st as MicrophoneController,
-  Ge as MicrophoneHealthError,
+  Ve as MicrophoneHealthError,
   tt as MicrophoneLifecycleManager,
   De as MusicTheory,
   rt as NoiseFilter,
   et as PitchDetector,
-  Ve as VERSION,
+  He as VERSION,
   be as VERSION_STRING,
   dt as VoiceAnalyzer,
   at as debug,

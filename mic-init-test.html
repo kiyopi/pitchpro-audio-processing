@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎤 マイク初期化テスト - PitchPro v1.3.1</title>
+
+    <!-- キャッシュ回避 -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #FFD700;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .test-section {
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .test-section.error {
+            border-left-color: #F44336;
+            background: rgba(244, 67, 54, 0.1);
+        }
+
+        .test-section.warning {
+            border-left-color: #FF9800;
+            background: rgba(255, 152, 0, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        button.danger {
+            background: linear-gradient(45deg, #F44336, #d32f2f);
+        }
+
+        button.warning {
+            background: linear-gradient(45deg, #FF9800, #f57c00);
+        }
+
+        #status {
+            background: #1e1e1e;
+            color: #4CAF50;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            min-height: 50px;
+            overflow-y: auto;
+            max-height: 200px;
+        }
+
+        .info-box {
+            background: rgba(33, 150, 243, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #2196F3;
+        }
+
+        .success-box {
+            background: rgba(76, 175, 80, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .error-box {
+            background: rgba(244, 67, 54, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #F44336;
+        }
+
+        .device-info {
+            background: rgba(156, 39, 176, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #9C27B0;
+        }
+
+        .highlight {
+            background: #FFD700;
+            color: #000;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 マイク初期化テスト - PitchPro v1.3.1</h1>
+
+        <div class="info-box">
+            <strong>📋 テスト目的:</strong> MicrophoneControllerとAudioDetectionComponentの初期化機能を検証<br>
+            <strong>🎯 想定問題:</strong> 初期化ボタンが機能しない、マイクアクセス許可の問題、AudioContext関連エラー
+        </div>
+
+        <div class="test-section" id="librarySection">
+            <h3>📚 ライブラリ読み込み</h3>
+            <p id="libraryStatus">待機中...</p>
+        </div>
+
+        <div class="test-section" id="compatibilitySection">
+            <h3>🌐 ブラウザ互換性</h3>
+            <p id="compatibilityStatus">待機中...</p>
+        </div>
+
+        <div class="test-section" id="deviceSection">
+            <h3>📱 デバイス検出</h3>
+            <p id="deviceStatus">待機中...</p>
+        </div>
+
+        <div class="button-group">
+            <button id="initMicController" onclick="testMicrophoneController()">MicrophoneController初期化</button>
+            <button id="initAudioDetection" onclick="testAudioDetection()">AudioDetectionComponent初期化</button>
+            <button id="startDetection" onclick="startDetection()" disabled>検出開始</button>
+            <button id="stopDetection" onclick="stopDetection()" disabled>検出停止</button>
+        </div>
+
+        <div class="button-group">
+            <button class="warning" onclick="testPermissions()">マイク許可テスト</button>
+            <button class="danger" onclick="resetAll()">すべてリセット</button>
+            <button onclick="copyResults()">結果コピー</button>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 テスト結果</h3>
+            <div id="status">テスト開始を待機中...</div>
+        </div>
+
+        <div id="detailInfo" style="display: none;">
+            <div class="device-info">
+                <h4>🔧 詳細情報</h4>
+                <div id="detailContent">
+                    <!-- 詳細情報がここに表示されます -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let testResults = [];
+        let microphoneController = null;
+        let audioDetectionComponent = null;
+        let PitchProLib = null;
+
+        function log(message, level = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const statusDiv = document.getElementById('status');
+            const logEntry = `[${timestamp}] ${message}`;
+
+            testResults.push(logEntry);
+            statusDiv.innerHTML += logEntry + '<br>';
+            statusDiv.scrollTop = statusDiv.scrollHeight;
+
+            console.log(`[MicTest] ${logEntry}`);
+        }
+
+        function updateSection(sectionId, status, className = '') {
+            const section = document.getElementById(sectionId);
+            const statusElement = document.getElementById(sectionId.replace('Section', 'Status'));
+
+            if (className) {
+                section.className = `test-section ${className}`;
+            }
+            statusElement.textContent = status;
+        }
+
+        // ライブラリ読み込みテスト
+        function loadLibrary() {
+            log('🚀 PitchPro ライブラリ読み込み開始');
+            updateSection('librarySection', '読み込み中...');
+
+            const timestamp = Date.now() + '_' + Math.random().toString(36).substring(2);
+            const script = document.createElement('script');
+            script.src = `./dist/pitchpro.umd.js?v=${timestamp}&cache=false`;
+
+            script.onload = function() {
+                if (typeof window.PitchPro !== 'undefined') {
+                    PitchProLib = window.PitchPro;
+                    log('✅ PitchPro ライブラリ読み込み成功');
+                    updateSection('librarySection', '✅ 読み込み完了', 'success');
+
+                    const components = Object.keys(PitchProLib);
+                    log(`📦 利用可能コンポーネント: ${components.join(', ')}`);
+
+                    checkCompatibility();
+                } else {
+                    log('❌ PitchPro オブジェクトが見つかりません');
+                    updateSection('librarySection', '❌ 読み込み失敗', 'error');
+                }
+            };
+
+            script.onerror = function(error) {
+                log('❌ ライブラリ読み込み失敗: ' + error.message);
+                updateSection('librarySection', '❌ 読み込み失敗', 'error');
+            };
+
+            document.head.appendChild(script);
+        }
+
+        // ブラウザ互換性チェック
+        function checkCompatibility() {
+            log('🌐 ブラウザ互換性チェック開始');
+            updateSection('compatibilitySection', 'チェック中...');
+
+            const compatibility = {
+                audioContext: !!(window.AudioContext || window.webkitAudioContext),
+                mediaDevices: !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia),
+                promises: typeof Promise !== 'undefined',
+                userAgent: navigator.userAgent
+            };
+
+            log(`📱 User Agent: ${compatibility.userAgent}`);
+
+            if (compatibility.audioContext) {
+                log('✅ AudioContext サポート確認');
+            } else {
+                log('❌ AudioContext がサポートされていません');
+            }
+
+            if (compatibility.mediaDevices) {
+                log('✅ MediaDevices API サポート確認');
+            } else {
+                log('❌ MediaDevices API がサポートされていません');
+                updateSection('compatibilitySection', '❌ MediaDevices未対応', 'error');
+                return;
+            }
+
+            if (compatibility.audioContext && compatibility.mediaDevices) {
+                log('✅ ブラウザ互換性チェック完了');
+                updateSection('compatibilitySection', '✅ 互換性OK');
+                detectDevice();
+            } else {
+                updateSection('compatibilitySection', '❌ 互換性エラー', 'error');
+            }
+        }
+
+        // デバイス検出テスト
+        function detectDevice() {
+            log('📱 デバイス検出開始');
+            updateSection('deviceSection', '検出中...');
+
+            try {
+                if (!PitchProLib || !PitchProLib.DeviceDetection) {
+                    log('❌ DeviceDetection クラスが見つかりません');
+                    updateSection('deviceSection', '❌ DeviceDetection未対応', 'error');
+                    return;
+                }
+
+                const deviceSpecs = PitchProLib.DeviceDetection.getDeviceSpecs();
+                log(`📱 検出デバイス: ${deviceSpecs.deviceType}`);
+                log(`🎚️ 感度: ${deviceSpecs.sensitivity}x`);
+                log(`🔇 ノイズゲート: ${deviceSpecs.noiseGate}`);
+                log(`📊 音量倍率: ${deviceSpecs.volumeMultiplier}x`);
+
+                updateSection('deviceSection', `✅ ${deviceSpecs.deviceType} 検出完了`);
+
+                document.getElementById('detailContent').innerHTML = `
+                    <strong>デバイス:</strong> <span class="highlight">${deviceSpecs.deviceType}</span><br>
+                    <strong>感度:</strong> <span class="highlight">${deviceSpecs.sensitivity}x</span><br>
+                    <strong>ノイズゲート:</strong> <span class="highlight">${deviceSpecs.noiseGate}</span><br>
+                    <strong>音量倍率:</strong> <span class="highlight">${deviceSpecs.volumeMultiplier}x</span><br>
+                    <strong>最適化:</strong> <span class="highlight">v1.3.1対応</span>
+                `;
+                document.getElementById('detailInfo').style.display = 'block';
+
+                log('✅ 初期診断完了 - 手動テスト開始可能');
+            } catch (error) {
+                log(`❌ デバイス検出エラー: ${error.message}`);
+                updateSection('deviceSection', '❌ 検出失敗', 'error');
+            }
+        }
+
+        // MicrophoneController初期化テスト
+        async function testMicrophoneController() {
+            log('🎤 MicrophoneController初期化テスト開始');
+
+            try {
+                if (!PitchProLib.MicrophoneController) {
+                    throw new Error('MicrophoneController クラスが見つかりません');
+                }
+
+                microphoneController = new PitchProLib.MicrophoneController();
+                log('✅ MicrophoneController インスタンス作成成功');
+
+                // コールバック設定
+                microphoneController.setCallbacks({
+                    onError: (error) => log(`❌ MicController Error: ${error.message}`),
+                    onStateChange: (state) => log(`🔄 状態変更: ${state}`),
+                    onDeviceChange: (specs) => log(`📱 デバイス変更: ${specs.deviceType}`)
+                });
+
+                log('⏳ MicrophoneController初期化実行中...');
+                await microphoneController.initialize();
+                log('✅ MicrophoneController初期化完了');
+
+                document.getElementById('initAudioDetection').disabled = false;
+
+            } catch (error) {
+                log(`❌ MicrophoneController初期化失敗: ${error.message}`);
+
+                // 詳細エラー診断
+                if (error.name === 'NotAllowedError') {
+                    log('⚠️ マイクアクセス許可が拒否されました');
+                } else if (error.name === 'NotFoundError') {
+                    log('⚠️ マイクデバイスが見つかりません');
+                } else if (error.message.includes('AudioContext')) {
+                    log('⚠️ AudioContext関連のエラーです');
+                }
+            }
+        }
+
+        // AudioDetectionComponent初期化テスト
+        async function testAudioDetection() {
+            log('🎵 AudioDetectionComponent初期化テスト開始');
+
+            try {
+                if (!PitchProLib.AudioDetectionComponent) {
+                    throw new Error('AudioDetectionComponent クラスが見つかりません');
+                }
+
+                audioDetectionComponent = new PitchProLib.AudioDetectionComponent({
+                    autoUpdateUI: false,
+                    debug: true
+                });
+                log('✅ AudioDetectionComponent インスタンス作成成功');
+
+                // コールバック設定
+                audioDetectionComponent.setCallbacks({
+                    onPitchUpdate: (result) => {
+                        if (result.frequency > 0) {
+                            log(`🎵 検出: ${result.frequency.toFixed(1)}Hz, ${result.note}, 音量: ${result.volume.toFixed(1)}%`);
+                        }
+                    },
+                    onError: (error) => log(`❌ AudioDetection Error: ${error.message}`),
+                    onStateChange: (state) => log(`🔄 検出状態: ${state}`)
+                });
+
+                log('⏳ AudioDetectionComponent初期化実行中...');
+                await audioDetectionComponent.initialize();
+                log('✅ AudioDetectionComponent初期化完了');
+
+                document.getElementById('startDetection').disabled = false;
+
+            } catch (error) {
+                log(`❌ AudioDetectionComponent初期化失敗: ${error.message}`);
+            }
+        }
+
+        // マイク許可テスト
+        async function testPermissions() {
+            log('🔐 マイク許可テスト開始');
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                log('✅ マイクアクセス許可確認');
+
+                // すぐに停止
+                stream.getTracks().forEach(track => track.stop());
+                log('✅ テスト用ストリーム停止');
+
+            } catch (error) {
+                log(`❌ マイク許可テスト失敗: ${error.message}`);
+
+                if (error.name === 'NotAllowedError') {
+                    log('⚠️ マイクアクセスが拒否されています。ブラウザ設定を確認してください。');
+                } else if (error.name === 'NotFoundError') {
+                    log('⚠️ マイクデバイスが見つかりません。');
+                }
+            }
+        }
+
+        // 検出開始
+        function startDetection() {
+            log('▶️ ピッチ検出開始');
+
+            if (!audioDetectionComponent) {
+                log('❌ AudioDetectionComponent が初期化されていません');
+                return;
+            }
+
+            try {
+                const result = audioDetectionComponent.startDetection();
+                if (result) {
+                    log('✅ ピッチ検出開始成功');
+                    document.getElementById('startDetection').disabled = true;
+                    document.getElementById('stopDetection').disabled = false;
+                } else {
+                    log('❌ ピッチ検出開始失敗');
+                }
+            } catch (error) {
+                log(`❌ 検出開始エラー: ${error.message}`);
+            }
+        }
+
+        // 検出停止
+        function stopDetection() {
+            log('⏹️ ピッチ検出停止');
+
+            if (!audioDetectionComponent) {
+                log('❌ AudioDetectionComponent が初期化されていません');
+                return;
+            }
+
+            try {
+                audioDetectionComponent.stopDetection();
+                log('✅ ピッチ検出停止完了');
+                document.getElementById('startDetection').disabled = false;
+                document.getElementById('stopDetection').disabled = true;
+            } catch (error) {
+                log(`❌ 検出停止エラー: ${error.message}`);
+            }
+        }
+
+        // リセット
+        function resetAll() {
+            log('🔄 すべてリセット実行');
+
+            if (audioDetectionComponent) {
+                try {
+                    audioDetectionComponent.destroy();
+                    log('✅ AudioDetectionComponent破棄完了');
+                } catch (error) {
+                    log(`⚠️ AudioDetectionComponent破棄エラー: ${error.message}`);
+                }
+            }
+
+            if (microphoneController) {
+                try {
+                    microphoneController.forceStop();
+                    log('✅ MicrophoneController停止完了');
+                } catch (error) {
+                    log(`⚠️ MicrophoneController停止エラー: ${error.message}`);
+                }
+            }
+
+            // 変数リセット
+            microphoneController = null;
+            audioDetectionComponent = null;
+
+            // ボタン状態リセット
+            document.getElementById('initAudioDetection').disabled = true;
+            document.getElementById('startDetection').disabled = true;
+            document.getElementById('stopDetection').disabled = true;
+
+            log('✅ リセット完了 - 再テスト可能');
+        }
+
+        // 結果コピー
+        function copyResults() {
+            const results = testResults.join('\n');
+            navigator.clipboard.writeText(results).then(() => {
+                log('✅ テスト結果をクリップボードにコピーしました');
+            }).catch(err => {
+                log(`❌ コピー失敗: ${err.message}`);
+            });
+        }
+
+        // 初期化開始
+        log('🚀 マイク初期化テスト開始 - PitchPro v1.3.1');
+        loadLibrary();
+    </script>
+</body>
+</html>

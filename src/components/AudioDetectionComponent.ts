@@ -399,8 +399,8 @@ export class AudioDetectionComponent {
     onPitchUpdate?: (result: PitchDetectionResult) => void;
   };
   
-  /** @private AudioManager instance for resource management */
-  private audioManager: AudioManager;
+  /** @private AudioManager instance for resource management (initialized from MicrophoneController) */
+  private audioManager!: AudioManager;
   
   /** @private PitchDetector instance for pitch detection */
   private pitchDetector: PitchDetector | null = null;
@@ -512,14 +512,8 @@ export class AudioDetectionComponent {
       logPrefix: config.logPrefix ?? '🎵 AudioDetection'
     };
 
-    // Initialize AudioManager
-    this.audioManager = new AudioManager({
-      sampleRate: 44100,
-      channelCount: 1,
-      echoCancellation: false,
-      noiseSuppression: false,
-      autoGainControl: false
-    });
+    // 🔧 FIX: AudioManager will be obtained from MicrophoneController during initialization
+    // this.audioManager = null; // Will be set in initialize()
 
     // Detect device and apply optimization
     if (this.config.deviceOptimization) {
@@ -624,8 +618,12 @@ export class AudioDetectionComponent {
         }
       });
 
-      // Initialize microphone
+      // Initialize microphone and get AudioManager reference
       await this.micController.initialize();
+      
+      // 🔧 FIX: Get AudioManager from MicrophoneController instead of creating new one
+      this.audioManager = this.micController.audioManager;
+      this.debugLog('✅ AudioManager reference obtained from MicrophoneController');
 
       // Log DeviceDetection values when debug is enabled
       this.debugLog('DeviceDetection values:', {
@@ -650,6 +648,7 @@ export class AudioDetectionComponent {
 
       this.debugLog('PitchDetector config object:', pitchDetectorConfig);
 
+      // 🔧 FIX: Now using the correct AudioManager reference from MicrophoneController
       this.pitchDetector = new PitchDetector(this.audioManager, pitchDetectorConfig);
 
       // Set up PitchDetector callbacks

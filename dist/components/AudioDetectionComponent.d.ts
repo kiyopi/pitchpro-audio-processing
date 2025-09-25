@@ -342,7 +342,7 @@ export declare class AudioDetectionComponent {
     private static readonly UI_RESTART_DELAY_MS;
     /** @private Configuration with applied defaults */
     private config;
-    /** @private AudioManager instance for resource management */
+    /** @private AudioManager instance for resource management (initialized from MicrophoneController) */
     private audioManager;
     /** @private PitchDetector instance for pitch detection */
     private pitchDetector;
@@ -563,7 +563,25 @@ export declare class AudioDetectionComponent {
             lastError: Error | null;
             audioManagerStatus: {
                 isInitialized: boolean;
-                refCount: number;
+                refCount: number; /**
+                 * コールバック関数を設定
+                 *
+                 * @param callbacks - 設定するコールバック関数
+                 *
+                 * @example
+                 * ```typescript
+                 * audioDetector.setCallbacks({
+                 *   onPitchUpdate: (result) => {
+                 *     console.log('音程検出:', result);
+                 *     // result.volume は既にデバイス固有補正済み（0-100%）
+                 *     // PC: 生音量 × 3.0, iPhone: 生音量 × 7.5, iPad: 生音量 × 20.0
+                 *   },
+                 *   onError: (error) => {
+                 *     console.error('検出エラー:', error);
+                 *   }
+                 * });
+                 * ```
+                 */
                 audioContextState: string;
                 mediaStreamActive: boolean;
                 activeAnalysers: string[];
@@ -582,7 +600,25 @@ export declare class AudioDetectionComponent {
                 lastHealthCheck: import("../types").HealthStatus | null;
                 audioManagerStatus: {
                     isInitialized: boolean;
-                    refCount: number;
+                    refCount: number; /**
+                     * コールバック関数を設定
+                     *
+                     * @param callbacks - 設定するコールバック関数
+                     *
+                     * @example
+                     * ```typescript
+                     * audioDetector.setCallbacks({
+                     *   onPitchUpdate: (result) => {
+                     *     console.log('音程検出:', result);
+                     *     // result.volume は既にデバイス固有補正済み（0-100%）
+                     *     // PC: 生音量 × 3.0, iPhone: 生音量 × 7.5, iPad: 生音量 × 20.0
+                     *   },
+                     *   onError: (error) => {
+                     *     console.error('検出エラー:', error);
+                     *   }
+                     * });
+                     * ```
+                     */
                     audioContextState: string;
                     mediaStreamActive: boolean;
                     activeAnalysers: string[];
