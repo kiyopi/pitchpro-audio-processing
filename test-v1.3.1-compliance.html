@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PitchPro v1.3.1 準拠テスト</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .version-info {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .test-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .test-section h2 {
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-ready { background: #fbbf24; color: #1f2937; }
+        .status-testing { background: #60a5fa; color: #1f2937; }
+        .status-pass { background: #34d399; color: #1f2937; }
+        .status-fail { background: #f87171; color: #1f2937; }
+
+        .control-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        button.primary {
+            background: #10b981;
+            border-color: #10b981;
+        }
+
+        button.danger {
+            background: #ef4444;
+            border-color: #ef4444;
+        }
+
+        .output-area {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+            font-size: 0.9rem;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .device-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .info-card h3 {
+            font-size: 1rem;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .info-card .value {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .meter {
+            width: 100%;
+            height: 30px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .meter-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #34d399, #10b981);
+            transition: width 0.2s ease;
+            border-radius: 15px;
+        }
+
+        .pitch-display {
+            font-size: 3rem;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+
+        .success-message {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid #10b981;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+
+        .config-table {
+            width: 100%;
+            margin-top: 15px;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .config-table th,
+        .config-table td {
+            padding: 10px 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .config-table th {
+            background: rgba(0, 0, 0, 0.2);
+            font-weight: 600;
+        }
+
+        .config-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .highlight {
+            background: rgba(250, 204, 21, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 PitchPro v1.3.1 準拠テスト</h1>
+        <p class="version-info">README.md 実装例の動作検証</p>
+
+        <!-- 1. デバイス検出とv1.3.1設定値確認 -->
+        <div class="test-section">
+            <h2>
+                1. デバイス検出とv1.3.1設定値
+                <span class="status-badge status-ready" id="device-status">待機中</span>
+            </h2>
+
+            <div class="device-info">
+                <div class="info-card">
+                    <h3>検出デバイス</h3>
+                    <div class="value" id="device-type">-</div>
+                </div>
+                <div class="info-card">
+                    <h3>Noise Gate (v1.3.1)</h3>
+                    <div class="value" id="noise-gate">-</div>
+                </div>
+                <div class="info-card">
+                    <h3>Volume Multiplier</h3>
+                    <div class="value" id="volume-multiplier">-</div>
+                </div>
+            </div>
+
+            <table class="config-table">
+                <thead>
+                    <tr>
+                        <th>デバイス</th>
+                        <th>Noise Gate</th>
+                        <th>Volume Multiplier</th>
+                        <th>状態</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>PC</td>
+                        <td><span class="highlight">2.3%</span></td>
+                        <td><span class="highlight">7.5x</span></td>
+                        <td id="pc-check">-</td>
+                    </tr>
+                    <tr>
+                        <td>iPhone</td>
+                        <td><span class="highlight">2.8%</span></td>
+                        <td><span class="highlight">9.0x</span></td>
+                        <td id="iphone-check">-</td>
+                    </tr>
+                    <tr>
+                        <td>iPad</td>
+                        <td><span class="highlight">2.3%</span></td>
+                        <td><span class="highlight">13.0x</span></td>
+                        <td id="ipad-check">-</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="control-group">
+                <button onclick="testDeviceDetection()">デバイス検出テスト</button>
+            </div>
+
+            <div class="output-area" id="device-output">デバイス検出結果がここに表示されます</div>
+        </div>
+
+        <!-- 2. MicrophoneController統合管理パターン -->
+        <div class="test-section">
+            <h2>
+                2. MicrophoneController統合管理
+                <span class="status-badge status-ready" id="mic-status">待機中</span>
+            </h2>
+
+            <p style="margin-bottom: 15px;">README Line 193-229の実装例テスト</p>
+
+            <div class="control-group">
+                <button class="primary" onclick="testMicrophoneController()">初期化</button>
+                <button onclick="startDetection()" disabled id="start-btn">検出開始</button>
+                <button onclick="resetDetection()" disabled id="reset-btn">リセット</button>
+                <button class="danger" onclick="destroyDetection()" disabled id="destroy-btn">破棄</button>
+            </div>
+
+            <div class="meter">
+                <div class="meter-fill" id="volume-bar" style="width: 0%"></div>
+            </div>
+
+            <div class="pitch-display" id="pitch-display">- Hz</div>
+
+            <div class="output-area" id="mic-output">MicrophoneController出力</div>
+        </div>
+
+        <!-- 3. AudioDetectionComponent実装 -->
+        <div class="test-section">
+            <h2>
+                3. AudioDetectionComponent
+                <span class="status-badge status-ready" id="audio-status">待機中</span>
+            </h2>
+
+            <p style="margin-bottom: 15px;">README Line 282-310の実装例テスト（UI自動更新）</p>
+
+            <div class="control-group">
+                <button class="primary" onclick="testAudioDetectionComponent()">初期化</button>
+                <button onclick="switchMode('test1')" disabled id="mode1-btn">モード1</button>
+                <button onclick="switchMode('test2')" disabled id="mode2-btn">モード2</button>
+                <button onclick="stopAudioDetection()" disabled id="stop-audio-btn">停止</button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                    <h4>モード1 UI要素</h4>
+                    <div class="meter">
+                        <div class="meter-fill" id="mode1-volume" style="width: 0%"></div>
+                    </div>
+                    <div id="mode1-freq">0 Hz</div>
+                </div>
+                <div>
+                    <h4>モード2 UI要素</h4>
+                    <div class="meter">
+                        <div class="meter-fill" id="mode2-volume" style="width: 0%"></div>
+                    </div>
+                    <div id="mode2-freq">0 Hz</div>
+                </div>
+            </div>
+
+            <div class="output-area" id="audio-output">AudioDetectionComponent出力</div>
+        </div>
+
+        <!-- 4. 実装検証結果 -->
+        <div class="test-section">
+            <h2>
+                4. 検証結果サマリー
+                <span class="status-badge status-ready" id="summary-status">待機中</span>
+            </h2>
+
+            <div id="test-summary">
+                <p>テストを実行してください...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- PitchPro v1.3.1 UMDビルド -->
+    <script src="dist/pitchpro.umd.js"></script>
+
+    <script>
+        // グローバル変数
+        let micController = null;
+        let pitchDetector = null;
+        let audioDetector = null;
+        let currentMode = 'test1';
+
+        // ログ出力関数
+        function log(elementId, message) {
+            const output = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString('ja-JP');
+            output.textContent += `[${timestamp}] ${message}\n`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function updateStatus(elementId, status) {
+            const badge = document.getElementById(elementId);
+            badge.className = `status-badge status-${status}`;
+            badge.textContent = status === 'ready' ? '待機中' :
+                              status === 'testing' ? 'テスト中' :
+                              status === 'pass' ? '成功' : '失敗';
+        }
+
+        // 1. デバイス検出テスト
+        function testDeviceDetection() {
+            updateStatus('device-status', 'testing');
+            log('device-output', '=== デバイス検出テスト開始 ===');
+
+            try {
+                // PitchProライブラリの存在確認
+                if (typeof PitchPro === 'undefined') {
+                    throw new Error('PitchProライブラリが読み込まれていません');
+                }
+
+                // DeviceDetection使用
+                const deviceSpecs = PitchPro.DeviceDetection.getDeviceSpecs();
+
+                log('device-output', `デバイスタイプ: ${deviceSpecs.deviceType}`);
+                log('device-output', `iOS: ${deviceSpecs.isIOS}`);
+                log('device-output', `Noise Gate: ${deviceSpecs.noiseGate}`);
+                log('device-output', `Volume Multiplier: ${deviceSpecs.volumeMultiplier || 'N/A'}`);
+
+                // UI更新
+                document.getElementById('device-type').textContent = deviceSpecs.deviceType;
+                document.getElementById('noise-gate').textContent = `${(deviceSpecs.noiseGate * 100).toFixed(1)}%`;
+
+                // v1.3.1設定値の確認
+                const v131Config = {
+                    'PC': { noiseGate: 0.023, volumeMultiplier: 7.5 },
+                    'iPhone': { noiseGate: 0.028, volumeMultiplier: 9.0 },
+                    'iPad': { noiseGate: 0.023, volumeMultiplier: 13.0 }
+                };
+
+                const expected = v131Config[deviceSpecs.deviceType];
+                if (expected) {
+                    const noiseGateMatch = Math.abs(deviceSpecs.noiseGate - expected.noiseGate) < 0.001;
+                    log('device-output', `Noise Gate検証: ${noiseGateMatch ? '✅ 一致' : '❌ 不一致'}`);
+                    log('device-output', `  期待値: ${expected.noiseGate}, 実際: ${deviceSpecs.noiseGate}`);
+
+                    // チェックマーク更新
+                    const checkId = `${deviceSpecs.deviceType.toLowerCase()}-check`;
+                    const checkElement = document.getElementById(checkId);
+                    if (checkElement) {
+                        checkElement.textContent = noiseGateMatch ? '✅' : '❌';
+                    }
+                }
+
+                // Volume Multiplier表示（AudioDetectionComponentから取得する必要あり）
+                document.getElementById('volume-multiplier').textContent = '-';
+
+                updateStatus('device-status', 'pass');
+                log('device-output', '✅ デバイス検出テスト成功');
+
+            } catch (error) {
+                updateStatus('device-status', 'fail');
+                log('device-output', `❌ エラー: ${error.message}`);
+            }
+        }
+
+        // 2. MicrophoneController統合管理テスト
+        async function testMicrophoneController() {
+            updateStatus('mic-status', 'testing');
+            log('mic-output', '=== MicrophoneController初期化開始 ===');
+
+            try {
+                // README Line 194-195の実装
+                micController = new PitchPro.MicrophoneController();
+
+                // エラーハンドリングと状態管理
+                micController.setCallbacks({
+                    onError: (error) => log('mic-output', `エラー: ${error.message}`),
+                    onStateChange: (state) => log('mic-output', `状態変更: ${state}`),
+                    onDeviceChange: (specs) => log('mic-output', `デバイス最適化: ${JSON.stringify(specs)}`)
+                });
+
+                // マイク許可とリソース確保
+                const resources = await micController.initialize();
+                log('mic-output', '✅ MicrophoneController初期化成功');
+
+                // README Line 209-210: v1.3.1推奨のデフォルト設定
+                pitchDetector = new PitchPro.PitchDetector(micController.audioManager);
+                await pitchDetector.initialize();
+
+                // コールバック設定
+                pitchDetector.setCallbacks({
+                    onPitchUpdate: (result) => {
+                        if (result.frequency > 0) {
+                            document.getElementById('pitch-display').textContent =
+                                `${result.frequency.toFixed(1)} Hz`;
+
+                            // 音量バー更新
+                            const volumePercent = Math.min(100, Math.max(0, result.volume));
+                            document.getElementById('volume-bar').style.width = `${volumePercent}%`;
+
+                            // デバッグ出力（頻度を制限）
+                            if (Math.random() < 0.1) { // 10%の確率で出力
+                                log('mic-output', `🎵 ${result.note} - ${result.frequency.toFixed(1)}Hz, 音量: ${result.volume.toFixed(1)}%`);
+                            }
+                        }
+                    }
+                });
+
+                // ボタン有効化
+                document.getElementById('start-btn').disabled = false;
+                document.getElementById('reset-btn').disabled = false;
+                document.getElementById('destroy-btn').disabled = false;
+
+                updateStatus('mic-status', 'pass');
+                log('mic-output', '✅ 初期化完了 - startボタンで検出開始');
+
+            } catch (error) {
+                updateStatus('mic-status', 'fail');
+                log('mic-output', `❌ 初期化エラー: ${error.message}`);
+            }
+        }
+
+        function startDetection() {
+            if (pitchDetector) {
+                pitchDetector.startDetection();
+                log('mic-output', '▶️ 検出開始');
+            }
+        }
+
+        function resetDetection() {
+            if (micController) {
+                micController.reset();
+                document.getElementById('pitch-display').textContent = '- Hz';
+                document.getElementById('volume-bar').style.width = '0%';
+                log('mic-output', '🔄 リセット完了');
+            }
+        }
+
+        function destroyDetection() {
+            if (micController) {
+                micController.destroy();
+                document.getElementById('start-btn').disabled = true;
+                document.getElementById('reset-btn').disabled = true;
+                document.getElementById('destroy-btn').disabled = true;
+                log('mic-output', '🗑️ リソース破棄完了');
+            }
+        }
+
+        // 3. AudioDetectionComponentテスト
+        async function testAudioDetectionComponent() {
+            updateStatus('audio-status', 'testing');
+            log('audio-output', '=== AudioDetectionComponent初期化開始 ===');
+
+            try {
+                // README Line 283-293の実装（v1.3.1推奨）
+                audioDetector = new PitchPro.AudioDetectionComponent({
+                    volumeBarSelector: '#mode1-volume',
+                    volumeTextSelector: null,
+                    frequencySelector: '#mode1-freq',
+                    noteSelector: null
+                    // v1.3.1推奨：その他の設定はデフォルト値を使用
+                });
+
+                await audioDetector.initialize();
+
+                // コールバック設定
+                audioDetector.setCallbacks({
+                    onPitchUpdate: (result) => {
+                        if (Math.random() < 0.1) { // 10%の確率で出力
+                            log('audio-output', `Mode: ${currentMode}, ${result.note} - ${result.frequency.toFixed(1)}Hz`);
+                        }
+                    },
+                    onError: (error) => {
+                        log('audio-output', `❌ エラー: ${error.message}`);
+                    }
+                });
+
+                audioDetector.startDetection();
+
+                // ボタン有効化
+                document.getElementById('mode1-btn').disabled = false;
+                document.getElementById('mode2-btn').disabled = false;
+                document.getElementById('stop-audio-btn').disabled = false;
+
+                updateStatus('audio-status', 'pass');
+                log('audio-output', '✅ AudioDetectionComponent初期化成功');
+                log('audio-output', 'モード切り替えボタンでupdateSelectors()をテスト');
+
+            } catch (error) {
+                updateStatus('audio-status', 'fail');
+                log('audio-output', `❌ エラー: ${error.message}`);
+            }
+        }
+
+        function switchMode(mode) {
+            if (!audioDetector) return;
+
+            currentMode = mode;
+
+            // README Line 332-351: updateSelectors()メソッドの使用
+            const selectors = {
+                'test1': {
+                    volumeBarSelector: '#mode1-volume',
+                    frequencySelector: '#mode1-freq'
+                },
+                'test2': {
+                    volumeBarSelector: '#mode2-volume',
+                    frequencySelector: '#mode2-freq'
+                }
+            };
+
+            audioDetector.updateSelectors(selectors[mode]);
+            log('audio-output', `✅ モード${mode === 'test1' ? '1' : '2'}に切り替え完了`);
+        }
+
+        function stopAudioDetection() {
+            if (audioDetector) {
+                // README FAQ: stopDetection()はUIをリセットしない
+                audioDetector.stopDetection();
+                log('audio-output', '⏹️ 検出停止（UIは保持される - 設計通り）');
+
+                // UIもリセットしたい場合
+                setTimeout(() => {
+                    audioDetector.resetDisplayElements();
+                    log('audio-output', '🔄 UI手動リセット完了');
+                }, 2000);
+            }
+        }
+
+        // ページ読み込み時の初期化
+        window.addEventListener('load', () => {
+            log('device-output', 'PitchPro v1.3.1準拠テスト開始');
+
+            // 自動的にデバイス検出を実行
+            setTimeout(() => {
+                testDeviceDetection();
+            }, 500);
+        });
+
+        // ページ離脱時のクリーンアップ
+        window.addEventListener('beforeunload', () => {
+            if (micController) {
+                micController.destroy();
+            }
+            if (audioDetector) {
+                audioDetector.destroy();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -206,7 +206,7 @@ micController.setCallbacks({
 // マイク許可とリソース確保
 const resources = await micController.initialize();
 
-// 音程検出器の作成（v1.1.9推奨：デフォルト設定）
+// 音程検出器の作成（v1.3.1推奨：デフォルト設定）
 const pitchDetector = new PitchDetector(micController.audioManager);
 
 await pitchDetector.initialize();
@@ -249,7 +249,7 @@ const audioManager = new AudioManager({
 
 const resources = await audioManager.initialize();
 
-// 音程検出器の作成（v1.1.9推奨：デフォルト設定）
+// 音程検出器の作成（v1.3.1推奨：デフォルト設定）
 const pitchDetector = new PitchDetector(audioManager);
 
 await pitchDetector.initialize();
@@ -289,7 +289,7 @@ const audioDetector = new AudioDetectionComponent({
   frequencySelector: '#frequency-display',
   noteSelector: '#note-display',
   
-  // v1.1.9推奨：その他の設定はデフォルト値を使用
+  // v1.3.1推奨：その他の設定はデフォルト値を使用
 });
 
 // 初期化
@@ -516,7 +516,7 @@ audioManager.release(['pitch-detection']);
 import { PitchDetector } from '@pitchpro/audio-processing/core';
 
 // 高精度設定での音程検出器
-// v1.1.9推奨：デフォルト設定で最適な精度を実現
+// v1.3.1推奨：デフォルト設定で最適な精度を実現
 const detector = new PitchDetector(audioManager);
 
 // PitchDetectorを初期化
@@ -760,13 +760,13 @@ console.log('📋 通知履歴:', history);
 
 PitchProは各デバイスの音響特性を自動検出し、最適な設定を適用します。
 
-### デバイス別最適化パラメータ
+### デバイス別最適化パラメータ（v1.3.1）
 
-| デバイス | 感度倍率 | ノイズゲート | 音量倍率 | 特別対応 |
-|----------|----------|-------------|----------|----------|
-| **PC** | 1.8x | 2.3% | 7.5x | 低周波数検出回復 |
-| **iPhone** | 3.5x | 2.8% | 9.0x | 30Hz低周波数最適化 |
-| **iPad** | 5.0x | 2.3% | 13.0x | 感度向上 |
+| デバイス | ノイズゲート | 音量倍率 | 特別対応 |
+|----------|-------------|----------|----------|
+| **PC** | 2.3% | 7.5x | 低周波数検出回復 |
+| **iPhone** | 2.8% | 9.0x | 30Hz低周波数最適化 |
+| **iPad** | 2.3% | 13.0x | 感度向上 |
 
 ### 自動デバイス検出と最適化
 
@@ -841,31 +841,6 @@ console.log('✅ デバイス能力:', {
 });
 ```
 
-## 📖 完全ドキュメンテーション
-
-### 📚 基本ガイド
-- [🚀 Getting Started](./docs/getting-started.md) - インストールから基本使用法
-- [🔧 API Reference](./docs/api-reference.md) - 全クラス・メソッド詳細
-- [💡 Examples Collection](./examples/) - 実装パターン集
-- [🔄 Migration Guide](./docs/migration.md) - 他ライブラリからの移行
-- **[🎯 統合ベストプラクティス](./INTEGRATION_BEST_PRACTICES.md)** - 実装時の落とし穴と推奨パターン
-
-### 🎯 専門ドキュメント
-- [🎤 Microphone Management](./docs/microphone-management.md) - マイクライフサイクル管理
-- [🔊 Audio Processing](./docs/audio-processing.md) - ノイズフィルタリング詳解
-- [📱 Device Optimization](./docs/device-optimization.md) - デバイス別最適化
-- [🎵 Pitch Detection](./docs/pitch-detection.md) - McLeod Pitch Method技術解説
-- [🔧 Advanced Features](./docs/advanced-features.md) - 倍音補正・キャリブレーション
-- [⚠️ Error Handling](./docs/error-handling.md) - エラー処理・通知システム
-
-### 🧪 実装例
-- [Basic Pitch Tuner](./examples/basic-tuner/) - シンプルなチューナー
-- [Vocal Trainer](./examples/vocal-trainer/) - 歌唱練習アプリ
-- [Instrument Tuner](./examples/instrument-tuner/) - 楽器チューナー
-- [Real-time Analysis](./examples/realtime-analysis/) - リアルタイム分析
-- [React Integration](./examples/react-integration/) - React連携
-- [Vue Integration](./examples/vue-integration/) - Vue連携
-- [Svelte Integration](./examples/svelte-integration/) - Svelte連携
 
 ## 🧪 ブラウザ互換性
 
@@ -1243,7 +1218,7 @@ export const usePitchDetection = () => {
         const resources = await controller.initialize();
         controllerRef.current = controller;
         
-        // 音程検出器設定（v1.1.9推奨：デフォルト設定）
+        // 音程検出器設定（v1.3.1推奨：デフォルト設定）
         const detector = new PitchDetector(controller.audioManager);
         
         await detector.initialize();
@@ -1368,13 +1343,13 @@ const pitchDetector = new PitchDetector(audioManager, {
 });
 ```
 
-### 📱 デバイス別ノイズ閾値
+### 📱 デバイス別ノイズゲート設定（v1.3.1）
 
-| デバイス | ノイズ閾値 | 理由 |
-|----------|-----------|------|
-| **PC/Desktop** | **5%** | デスクトップマイクの一般的なノイズレベル |
-| **iPhone** | **12%** | 小型筐体での音響特性補正 |
-| **iPad** | **12%** | タブレット特有のマイク配置対応 |
+| デバイス | ノイズゲート | 理由 |
+|----------|-------------|------|
+| **PC/Desktop** | **2.3%** | 低周波数検出回復のため最適化 |
+| **iPhone** | **2.8%** | 30Hz低周波数ノイズ除去のため調整 |
+| **iPad** | **2.3%** | 感度向上のため精密調整 |
 
 ### 🔧 なぜこれらの値なのか
 
@@ -1415,13 +1390,16 @@ pitchDetector.startDetection(); // すぐに音程検出開始！
 
 **原因と解決方法**:
 
-1. **ノイズ閾値が高すぎる**
+1. **ノイズゲートが高すぎる**
    ```typescript
    // ❌ 問題のあるコード
-   const deviceSpecs = { noiseThreshold: 15 }; // 15%は高すぎる
-   
-   // ✅ 修正版
-   const deviceSpecs = { noiseThreshold: 5 };  // 5%に調整
+   const deviceSpecs = { noiseGate: 0.15 }; // 15%は高すぎる
+
+   // ✅ 修正版 (v1.3.1準拠)
+   const deviceSpecs = {
+     noiseGate: 0.023  // PC: 2.3%
+     // iPhone: 0.028 (2.8%), iPad: 0.023 (2.3%)
+   };
    ```
 
 2. **音量検出閾値が不適切**
@@ -1548,11 +1526,12 @@ const deviceType = isIPadOS ? 'iPad' : 'PC';
 
 2. **設定値の調整**
    ```typescript
-   // デバッグ用緩い設定
+   // デバッグ用緩い設定 (v1.3.1パラメータ)
    const debugConfig = {
-     clarityThreshold: 0.1,    // 非常に緩い
-     minVolumeThreshold: 0.1,  // 非常に低い
-     noiseThreshold: 1         // 最小限
+     clarityThreshold: 0.1,     // 非常に緩い
+     minVolumeAbsolute: 0.001,  // 非常に低い (0.1%)
+     // noiseGateはDeviceDetectionで自動設定
+     // PC: 0.023, iPhone: 0.028, iPad: 0.023
    };
    ```
 
@@ -1565,7 +1544,7 @@ const setupPitchDetection = async () => {
   const audioManager = new PitchPro.AudioManager();
   await audioManager.initialize();
   
-  // 2. PitchDetector（v1.1.9推奨：デフォルト設定）  
+  // 2. PitchDetector（v1.3.1推奨：デフォルト設定）
   const pitchDetector = new PitchPro.PitchDetector(audioManager);
   
   // 3. コールバック設定
