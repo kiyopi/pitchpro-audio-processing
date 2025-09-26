@@ -1592,16 +1592,26 @@ const setupPitchDetection = async () => {
 
 ### Q: 停止ボタンを押してもUIがリセットされません
 
-**A:** `stopDetection()`は検出処理のみを停止し、UIの値は保持される設計です。UIもリセットしたい場合は以下のいずれかの方法を使用してください：
+**A:** `stopDetection()`は検出処理のみを停止し、**測定値を確認できるよう意図的にUIの値を保持**する設計です。UIもリセットしたい場合は以下の方法を使用してください：
 
 ```typescript
-// 方法1: 検出停止 + UI手動リセット
+// ✅ 推奨方法1: 検出停止 + UI明示的リセット
 audioDetector.stopDetection();
-audioDetector.resetDisplayElements();
+audioDetector.resetDisplayElements(); // 全UI要素を0/初期値にクリア
 
-// 方法2: MicrophoneController使用（推奨）
+// ✅ 推奨方法2: MicrophoneController使用（統合管理）
 micController.reset();  // 検出停止 + UIリセット + 状態クリア
+
+// ✅ デバッグ時の確認方法
+const detector = new AudioDetectionComponent({ debug: true }); // ログで動作確認
 ```
+
+**resetDisplayElements()が実行する処理**：
+- 音量バー → 0% / value=0
+- 音量テキスト → "0.0%"
+- 周波数表示 → "0.0 Hz"
+- 音名表示 → "-"
+- 追加の関連要素も自動検出してリセット
 
 ### Q: start()とreset()の違いは何ですか？
 
@@ -1615,23 +1625,56 @@ micController.reset();  // 検出停止 + UIリセット + 状態クリア
 
 ### Q: なぜstopDetection()でUIがリセットされないのですか？
 
-**A:** これは意図的な設計です。理由：
-1. **測定値の確認**: 停止後も最後の測定値を確認できる
-2. **柔軟な制御**: 必要に応じてリセットするかを選択可能
-3. **責任の分離**: 停止とリセットを明確に分離
+**A:** これは**ユーザビリティを考慮した意図的な設計**です：
+
+#### 設計理由
+1. **📊 測定値の確認**: 停止後も最後の測定値を確認できる
+   - 楽器チューニング時の最終結果確認
+   - 音域テスト結果の詳細確認
+2. **🎯 柔軟な制御**: 用途に応じて選択可能
+   - 一時停止 → 値を保持したまま再開
+   - 完全停止 → 明示的にリセット実行
+3. **🔧 責任の分離**: 停止とリセットを明確に分離
+   - `stopDetection()`: 検出処理の制御
+   - `resetDisplayElements()`: UI表示の制御
+
+#### 実装での動作確認
+```typescript
+// v1.3.1の実際の実装での動作
+audioDetector.stopDetection();
+// → コンソールに "✅ Detection stopped successfully, UI state preserved" 出力
+
+audioDetector.resetDisplayElements();
+// → コンソールに "All UI elements reset to initial state" 出力
+// → 音量バー、周波数、音名がすべて初期値にクリア
+```
 
 ### Q: 完全にリセットする最も簡単な方法は？
 
-**A:** MicrophoneControllerの`reset()`メソッドを使用してください：
+**A:** 用途に応じて以下の方法を選択してください：
 
 ```typescript
-// MicrophoneController（推奨）
-const micController = new MicrophoneController();
-micController.registerComponents(audioDetector, pitchDetector);
+// ✅ 方法1: AudioDetectionComponent単体の場合
+audioDetector.stopDetection();       // 検出停止
+audioDetector.resetDisplayElements(); // UI完全リセット
 
-// 完全リセット（停止 + UIリセット + 状態クリア）
-micController.reset();
+// ✅ 方法2: MicrophoneController統合管理の場合（v1.3.1推奨）
+const micController = new MicrophoneController();
+// 統合初期化時に自動的にコンポーネントが連携
+micController.reset(); // 停止 + UIリセット + 状態クリア + リソース管理
+
+// ✅ 方法3: 詳細制御が必要な場合
+if (micController) {
+  micController.stopDetection();      // 検出停止
+  micController.resetAllComponents(); // 全コンポーネントリセット
+  // 必要に応じて個別のUI要素も手動リセット
+}
 ```
+
+**各方法の特徴**:
+- **方法1**: シンプルで確実、単体コンポーネント用
+- **方法2**: 統合管理で推奨、複数コンポーネント連携時
+- **方法3**: 最大限の制御が必要な高度な用途
 
 ### Q: エラー「AudioContext was not allowed to start」が発生します
 
