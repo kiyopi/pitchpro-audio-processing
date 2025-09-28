@@ -316,6 +316,7 @@ audioDetector.startDetection();
 | ✅ `initialize()` | コンポーネント初期化 | `await audioDetector.initialize()` |
 | ✅ `startDetection()` | 音声検出開始 | `audioDetector.startDetection()` |
 | ✅ `stopDetection()` | 音声検出停止 | `audioDetector.stopDetection()` |
+| ✅ `resetDisplayElements()` | **UI要素完全リセット** | `audioDetector.resetDisplayElements()` |
 | ✅ `destroy()` | リソース完全破棄 | `audioDetector.destroy()` |
 | ✅ `updateSelectors()` | **UI要素セレクター変更** | `audioDetector.updateSelectors({...})` |
 | ✅ `setCallbacks()` | イベントコールバック設定 | `audioDetector.setCallbacks({...})` |
