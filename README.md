@@ -323,6 +323,25 @@ audioDetector.startDetection();
 | ✅ `updateUI()` | 手動UI更新 | `audioDetector.updateUI(result)` |
 | ✅ `getStatus()` | 現在状態取得 | `const status = audioDetector.getStatus()` |
 | ✅ `resetRecoveryAttempts()` | エラー回復処理リセット | `audioDetector.resetRecoveryAttempts()` |
+| ✅ `microphoneController` | **MicrophoneController取得** | `const controller = audioDetector.microphoneController` |
+| ✅ `detectAndOptimizeDevice()` | **デバイス検出・最適化** | `audioDetector.detectAndOptimizeDevice()` |
+
+#### 🎤 **MicrophoneController 利用可能メソッド一覧**
+
+| メソッド | 機能 | 使用例 |
+|----------|------|--------|
+| ✅ `initialize()` | 統合管理システム初期化 | `await micController.initialize()` |
+| ✅ `start()` | 検出開始 | `micController.start()` |
+| ✅ `stop()` | 検出停止 | `micController.stop()` |
+| ✅ `reset()` | **完全リセット（推奨）** | `micController.reset()` |
+| ✅ `destroy()` | リソース完全破棄 | `micController.destroy()` |
+| ✅ `setSensitivity()` | 感度調整 | `micController.setSensitivity(5.0)` |
+| ✅ `getSensitivity()` | 現在感度取得 | `const sensitivity = micController.getSensitivity()` |
+| ✅ `mute()` / `unmute()` | ミュート制御 | `micController.mute()` |
+| ✅ `getStatus()` | 詳細状態取得 | `const status = micController.getStatus()` |
+| ✅ `setCallbacks()` | イベントコールバック設定 | `micController.setCallbacks({...})` |
+| ✅ `audioManager` | AudioManager取得 | `const manager = micController.audioManager` |
+| ✅ `resetAllComponents()` | **全コンポーネントリセット** | `micController.resetAllComponents()` |
 
 #### 🔄 **音量バー切り替えの解決方法（v1.1.8で完全修正）**
 
