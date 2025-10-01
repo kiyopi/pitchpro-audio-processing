@@ -1,17 +1,17 @@
 var Be = Object.defineProperty;
 var $e = (h, e, t) => e in h ? Be(h, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : h[e] = t;
 var x = (h, e, t) => $e(h, typeof e != "symbol" ? e + "" : e, t);
-const He = "1.3.1", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).toISOString(), A = class A {
+const He = "1.3.1", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).toISOString(), E = class E {
   /**
    * Detect current device and return optimized specifications
    */
   static getDeviceSpecs() {
-    if (A.cachedSpecs)
-      return A.cachedSpecs;
+    if (E.cachedSpecs)
+      return E.cachedSpecs;
     if (typeof window > "u" || typeof navigator > "u")
-      return A.getDefaultSpecs();
-    const e = navigator.userAgent, t = A.analyzeUserAgent(e);
-    return A.cachedSpecs = t, console.log("📱 [DeviceDetection] Device analysis:", {
+      return E.getDefaultSpecs();
+    const e = navigator.userAgent, t = E.analyzeUserAgent(e);
+    return E.cachedSpecs = t, console.log("📱 [DeviceDetection] Device analysis:", {
       userAgent: e.substring(0, 100) + "...",
       deviceType: t.deviceType,
       isIOS: t.isIOS,
@@ -25,8 +25,8 @@ const He = "1.3.1", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).to
   static analyzeUserAgent(e) {
     const t = /iPhone/.test(e), i = /iPad/.test(e), s = /Macintosh/.test(e) && "ontouchend" in document, o = /iPad|iPhone|iPod/.test(e), n = /iPad|iPhone|iPod/.test(navigator.platform || ""), r = t || i || s || o || n;
     let a = "PC";
-    t ? a = "iPhone" : i || s ? a = "iPad" : r && (a = A.detectIOSDeviceType());
-    const c = A.getDeviceOptimizations(a, r);
+    t ? a = "iPhone" : i || s ? a = "iPad" : r && (a = E.detectIOSDeviceType());
+    const c = E.getDeviceOptimizations(a, r);
     return {
       deviceType: a,
       isIOS: r,
@@ -58,8 +58,8 @@ const He = "1.3.1", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).to
           // 🎤 マイク感度 (PitchDetector用)
           noiseGate: 0.023,
           // 🚪 ノイズゲート閾値 (2.3%設定で低周波数検出感度向上)
-          volumeMultiplier: 13,
-          // 🔊 表示音量補正 (17.0→13.0 23%削減で最適化)
+          volumeMultiplier: 4,
+          // 🔊 表示音量補正 (13.0→4.0 大幅削減で適切レベル)
           smoothingFactor: 0.25
           // 📊 平滑化係数
         };
@@ -69,8 +69,8 @@ const He = "1.3.1", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).to
           // 🎤 マイク感度 (iPhone最適化値)
           noiseGate: 0.028,
           // 🚪 ノイズゲート閾値 (2.8%設定でiPadとの中間値)
-          volumeMultiplier: 9,
-          // 🔊 表示音量補正 (音量表示レベル向上)
+          volumeMultiplier: 3,
+          // 🔊 表示音量補正 (9.0→3.0 大幅削減で適切レベル)
           smoothingFactor: 0.25
           // 📊 平滑化係数
         };
@@ -81,8 +81,8 @@ const He = "1.3.1", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).to
           // 🎤 マイク感度 (PC環境安定性重視)
           noiseGate: 0.023,
           // 🚪 ノイズゲート閾値 (2.3%設定で低周波数検出最適化)
-          volumeMultiplier: 7.5,
-          // 🔊 表示音量補正 (8.0→7.5 再調整)
+          volumeMultiplier: 2.5,
+          // 🔊 表示音量補正 (7.5→2.5 大幅削減で適切レベル)
           smoothingFactor: 0.25
           // 📊 平滑化係数
         };
@@ -132,10 +132,10 @@ const He = "1.3.1", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).to
    */
   static getDeviceCapabilities() {
     return {
-      deviceSpecs: A.getDeviceSpecs(),
-      webAudioSupport: A.supportsWebAudio(),
-      mediaDevicesSupport: A.supportsMediaDevices(),
-      mediaRecorderSupport: A.supportsMediaRecorder(),
+      deviceSpecs: E.getDeviceSpecs(),
+      webAudioSupport: E.supportsWebAudio(),
+      mediaDevicesSupport: E.supportsMediaDevices(),
+      mediaRecorderSupport: E.supportsMediaRecorder(),
       touchSupport: "ontouchend" in document,
       userAgent: typeof navigator < "u" ? navigator.userAgent : "Unknown",
       screenSize: typeof window < "u" ? {
@@ -151,13 +151,13 @@ const He = "1.3.1", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).to
    * Check if current device is mobile
    */
   static isMobile() {
-    return A.getDeviceSpecs().isIOS || /Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test((navigator == null ? void 0 : navigator.userAgent) || "");
+    return E.getDeviceSpecs().isIOS || /Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test((navigator == null ? void 0 : navigator.userAgent) || "");
   }
   /**
    * Check if current device is tablet
    */
   static isTablet() {
-    if (A.getDeviceSpecs().deviceType === "iPad") return !0;
+    if (E.getDeviceSpecs().deviceType === "iPad") return !0;
     const t = (navigator == null ? void 0 : navigator.userAgent) || "";
     return /Android/i.test(t) && !/Mobile/i.test(t);
   }
@@ -165,13 +165,13 @@ const He = "1.3.1", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).to
    * Check if current device is desktop
    */
   static isDesktop() {
-    return !A.isMobile() && !A.isTablet();
+    return !E.isMobile() && !E.isTablet();
   }
   /**
    * Get recommended audio constraints for current device
    */
   static getOptimalAudioConstraints() {
-    const e = A.getDeviceSpecs(), t = {
+    const e = E.getDeviceSpecs(), t = {
       audio: {
         echoCancellation: !1,
         noiseSuppression: !1,
@@ -201,14 +201,14 @@ const He = "1.3.1", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).to
    * Clear cached device specifications (for testing)
    */
   static clearCache() {
-    A.cachedSpecs = null;
+    E.cachedSpecs = null;
   }
   /**
    * Get device-specific debugging information
    */
   static getDebugInfo() {
     return {
-      ...A.getDeviceCapabilities(),
+      ...E.getDeviceCapabilities(),
       detectionMethods: {
         userAgentIPhone: /iPhone/.test((navigator == null ? void 0 : navigator.userAgent) || ""),
         userAgentIPad: /iPad/.test((navigator == null ? void 0 : navigator.userAgent) || ""),
@@ -220,12 +220,12 @@ const He = "1.3.1", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).to
     };
   }
 };
-A.cachedSpecs = null;
-let G = A;
+E.cachedSpecs = null;
+let G = E;
 var k = /* @__PURE__ */ ((h) => (h.AUDIO_CONTEXT_ERROR = "AUDIO_CONTEXT_ERROR", h.MICROPHONE_ACCESS_DENIED = "MICROPHONE_ACCESS_DENIED", h.PITCH_DETECTION_ERROR = "PITCH_DETECTION_ERROR", h.BUFFER_OVERFLOW = "BUFFER_OVERFLOW", h.INVALID_SAMPLE_RATE = "INVALID_SAMPLE_RATE", h.DEVICE_NOT_SUPPORTED = "DEVICE_NOT_SUPPORTED", h.PROCESSING_TIMEOUT = "PROCESSING_TIMEOUT", h))(k || {});
-class E extends Error {
+class A extends Error {
   constructor(e, t, i) {
-    super(e), this.name = "PitchProError", this.code = t, this.timestamp = /* @__PURE__ */ new Date(), this.context = i, Error.captureStackTrace && Error.captureStackTrace(this, E);
+    super(e), this.name = "PitchProError", this.code = t, this.timestamp = /* @__PURE__ */ new Date(), this.context = i, Error.captureStackTrace && Error.captureStackTrace(this, A);
   }
   toJSON() {
     return {
@@ -238,17 +238,17 @@ class E extends Error {
     };
   }
 }
-class R extends E {
+class R extends A {
   constructor(e, t) {
     super(e, "AUDIO_CONTEXT_ERROR", t), this.name = "AudioContextError";
   }
 }
-class Ae extends E {
+class Ee extends A {
   constructor(e, t) {
     super(e, "MICROPHONE_ACCESS_DENIED", t), this.name = "MicrophoneAccessError";
   }
 }
-class Ve extends E {
+class Ve extends A {
   constructor(e, t, i, s) {
     super(
       e,
@@ -270,7 +270,7 @@ class Ve extends E {
     return (e = this.context) == null ? void 0 : e.recoveryAttempts;
   }
 }
-class Te extends E {
+class Te extends A {
   constructor(e, t) {
     super(e, "PITCH_DETECTION_ERROR", t), this.name = "PitchDetectionError";
   }
@@ -911,7 +911,7 @@ class Ge {
         try {
           i.readyState !== "ended" ? (i.stop(), console.log(`🛑 [AudioManager] Track ${s} stop complete`)) : console.log(`⚠️ [AudioManager] Track ${s} already ended`);
         } catch (o) {
-          const n = new E(
+          const n = new A(
             `メディアトラック ${s} の停止中にエラーが発生しました: ${o.message}`,
             k.AUDIO_CONTEXT_ERROR,
             {
@@ -953,7 +953,7 @@ class Ge {
    */
   _createStructuredError(e, t) {
     var i, s;
-    return e.message.includes("Permission denied") || e.message.includes("NotAllowedError") || e.message.includes("permission") ? new Ae(
+    return e.message.includes("Permission denied") || e.message.includes("NotAllowedError") || e.message.includes("permission") ? new Ee(
       "マイクへのアクセス許可が拒否されました。ブラウザの設定でマイクアクセスを許可してください。",
       {
         operation: t,
@@ -970,7 +970,7 @@ class Ge {
         sampleRate: ((s = this.audioContext) == null ? void 0 : s.sampleRate) || "unknown",
         deviceSpecs: this.getPlatformSpecs()
       }
-    ) : new E(
+    ) : new A(
       `${t}中に予期しないエラーが発生しました: ${e.message}`,
       k.AUDIO_CONTEXT_ERROR,
       {
@@ -1172,7 +1172,7 @@ D.prototype._transform4 = function() {
     var m = o >>> 2;
     for (n = 0; n < t; n += o)
       for (var u = n + m, d = n, f = 0; d < u; d += 2, f += s) {
-        const p = d, y = p + m, v = y + m, S = v + m, b = e[p], g = e[p + 1], C = e[y], I = e[y + 1], P = e[v], q = e[v + 1], L = e[S], z = e[S + 1], O = b, U = g, B = l[f], $ = c * l[f + 1], H = C * B - I * $, V = C * $ + I * B, X = l[2 * f], Y = c * l[2 * f + 1], K = P * X - q * Y, Z = P * Y + q * X, ee = l[3 * f], te = c * l[3 * f + 1], ie = L * ee - z * te, se = L * te + z * ee, oe = O + K, j = U + Z, Q = O - K, ne = U - Z, re = H + ie, W = V + se, J = c * (H - ie), ae = c * (V - se), he = oe + re, fe = j + W, ge = oe - re, pe = j - W, ve = Q + ae, ye = ne - J, Se = Q - ae, Ce = ne + J;
+        const p = d, y = p + m, v = y + m, S = v + m, b = e[p], g = e[p + 1], C = e[y], I = e[y + 1], P = e[v], q = e[v + 1], O = e[S], z = e[S + 1], L = b, U = g, B = l[f], $ = c * l[f + 1], H = C * B - I * $, V = C * $ + I * B, X = l[2 * f], Y = c * l[2 * f + 1], K = P * X - q * Y, Z = P * Y + q * X, ee = l[3 * f], te = c * l[3 * f + 1], ie = O * ee - z * te, se = O * te + z * ee, oe = L + K, j = U + Z, Q = L - K, ne = U - Z, re = H + ie, W = V + se, J = c * (H - ie), ae = c * (V - se), he = oe + re, fe = j + W, ge = oe - re, pe = j - W, ve = Q + ae, ye = ne - J, Se = Q - ae, Ce = ne + J;
         e[p] = he, e[p + 1] = fe, e[y] = ve, e[y + 1] = ye, e[v] = ge, e[v + 1] = pe, e[S] = Se, e[S + 1] = Ce;
       }
   }
@@ -1182,8 +1182,8 @@ D.prototype._singleTransform2 = function(e, t, i) {
   s[e] = l, s[e + 1] = m, s[e + 2] = u, s[e + 3] = d;
 };
 D.prototype._singleTransform4 = function(e, t, i) {
-  const s = this._out, o = this._data, n = this._inv ? -1 : 1, r = i * 2, a = i * 3, c = o[t], l = o[t + 1], m = o[t + i], u = o[t + i + 1], d = o[t + r], f = o[t + r + 1], p = o[t + a], y = o[t + a + 1], v = c + d, S = l + f, b = c - d, g = l - f, C = m + p, I = u + y, P = n * (m - p), q = n * (u - y), L = v + C, z = S + I, O = b + q, U = g - P, B = v - C, $ = S - I, H = b - q, V = g + P;
-  s[e] = L, s[e + 1] = z, s[e + 2] = O, s[e + 3] = U, s[e + 4] = B, s[e + 5] = $, s[e + 6] = H, s[e + 7] = V;
+  const s = this._out, o = this._data, n = this._inv ? -1 : 1, r = i * 2, a = i * 3, c = o[t], l = o[t + 1], m = o[t + i], u = o[t + i + 1], d = o[t + r], f = o[t + r + 1], p = o[t + a], y = o[t + a + 1], v = c + d, S = l + f, b = c - d, g = l - f, C = m + p, I = u + y, P = n * (m - p), q = n * (u - y), O = v + C, z = S + I, L = b + q, U = g - P, B = v - C, $ = S - I, H = b - q, V = g + P;
+  s[e] = O, s[e + 1] = z, s[e + 2] = L, s[e + 3] = U, s[e + 4] = B, s[e + 5] = $, s[e + 6] = H, s[e + 7] = V;
 };
 D.prototype._realTransform4 = function() {
   var e = this._out, t = this._csize, i = this._width, s = 1 << i, o = t / s << 1, n, r, a = this._bitrev;
@@ -1203,15 +1203,15 @@ D.prototype._realTransform4 = function() {
     var m = o >>> 1, u = m >>> 1, d = u >>> 1;
     for (n = 0; n < t; n += o)
       for (var f = 0, p = 0; f <= d; f += 2, p += s) {
-        var y = n + f, v = y + u, S = v + u, b = S + u, g = e[y], C = e[y + 1], I = e[v], P = e[v + 1], q = e[S], L = e[S + 1], z = e[b], O = e[b + 1], U = g, B = C, $ = l[p], H = c * l[p + 1], V = I * $ - P * H, X = I * H + P * $, Y = l[2 * p], K = c * l[2 * p + 1], Z = q * Y - L * K, ee = q * K + L * Y, te = l[3 * p], ie = c * l[3 * p + 1], se = z * te - O * ie, oe = z * ie + O * te, j = U + Z, Q = B + ee, ne = U - Z, re = B - ee, W = V + se, J = X + oe, ae = c * (V - se), he = c * (X - oe), fe = j + W, ge = Q + J, pe = ne + he, ve = re - ae;
+        var y = n + f, v = y + u, S = v + u, b = S + u, g = e[y], C = e[y + 1], I = e[v], P = e[v + 1], q = e[S], O = e[S + 1], z = e[b], L = e[b + 1], U = g, B = C, $ = l[p], H = c * l[p + 1], V = I * $ - P * H, X = I * H + P * $, Y = l[2 * p], K = c * l[2 * p + 1], Z = q * Y - O * K, ee = q * K + O * Y, te = l[3 * p], ie = c * l[3 * p + 1], se = z * te - L * ie, oe = z * ie + L * te, j = U + Z, Q = B + ee, ne = U - Z, re = B - ee, W = V + se, J = X + oe, ae = c * (V - se), he = c * (X - oe), fe = j + W, ge = Q + J, pe = ne + he, ve = re - ae;
         if (e[y] = fe, e[y + 1] = ge, e[v] = pe, e[v + 1] = ve, f === 0) {
           var ye = j - W, Se = Q - J;
           e[S] = ye, e[S + 1] = Se;
           continue;
         }
         if (f !== d) {
-          var Ce = ne, xe = -re, Ne = j, Re = -Q, Pe = -c * he, qe = -c * ae, _e = -c * J, ke = -c * W, Le = Ce + Pe, ze = xe + qe, Oe = Ne + ke, Ue = Re - _e, Ee = n + u - f, we = n + m - f;
-          e[Ee] = Le, e[Ee + 1] = ze, e[we] = Oe, e[we + 1] = Ue;
+          var Ce = ne, xe = -re, Ne = j, Re = -Q, Pe = -c * he, qe = -c * ae, _e = -c * J, ke = -c * W, Oe = Ce + Pe, ze = xe + qe, Le = Ne + ke, Ue = Re - _e, Ae = n + u - f, we = n + m - f;
+          e[Ae] = Oe, e[Ae + 1] = ze, e[we] = Le, e[we + 1] = Ue;
         }
       }
   }
@@ -1760,7 +1760,7 @@ class et {
         useFilters: !1
       }), this.analyserIds.push(r), this.pitchDetector = Ye.forFloat32Array(this.analyser.fftSize), typeof process < "u" && ((e = process.env) == null ? void 0 : e.NODE_ENV) === "development" && console.log(`[Debug] Pitchyインスタンス作成: ${!!this.pitchDetector}, FFTサイズ: ${this.analyser.fftSize}`), this.componentState = "ready", this.isInitialized = !0, (i = (t = this.callbacks).onStateChange) == null || i.call(t, this.componentState);
     } catch (n) {
-      const r = n instanceof E ? n : new R(
+      const r = n instanceof A ? n : new R(
         "PitchDetector initialization failed",
         {
           originalError: n instanceof Error ? n.message : String(n),
@@ -2356,7 +2356,7 @@ class rt {
     if (!this.config.useFilters)
       return t && e.connect(t), e;
     if (!this.highpassFilter || !this.lowpassFilter || !this.notchFilter) {
-      const i = new E(
+      const i = new A(
         "ノイズフィルターが正しく初期化されていません。コンストラクタでuseFilters: trueで初期化してください。",
         k.AUDIO_CONTEXT_ERROR,
         {
@@ -2437,7 +2437,7 @@ class rt {
     try {
       e.highpassFreq !== void 0 && this.highpassFilter && (this.highpassFilter.frequency.setValueAtTime(e.highpassFreq, t), this.config.highpassFreq = e.highpassFreq), e.lowpassFreq !== void 0 && this.lowpassFilter && (this.lowpassFilter.frequency.setValueAtTime(e.lowpassFreq, t), this.config.lowpassFreq = e.lowpassFreq), e.notchFreq !== void 0 && this.notchFilter && (this.notchFilter.frequency.setValueAtTime(e.notchFreq, t), this.config.notchFreq = e.notchFreq), e.highpassQ !== void 0 && this.highpassFilter && (this.highpassFilter.Q.setValueAtTime(e.highpassQ, t), this.config.highpassQ = e.highpassQ), e.lowpassQ !== void 0 && this.lowpassFilter && (this.lowpassFilter.Q.setValueAtTime(e.lowpassQ, t), this.config.lowpassQ = e.lowpassQ), e.notchQ !== void 0 && this.notchFilter && (this.notchFilter.Q.setValueAtTime(e.notchQ, t), this.config.notchQ = e.notchQ), console.log("🔧 [NoiseFilter] Filter parameters updated:", e);
     } catch (i) {
-      const s = new E(
+      const s = new A(
         "フィルターパラメータの更新に失敗しました。指定した値が範囲外であるか、フィルターが無効になっている可能性があります。",
         k.INVALID_SAMPLE_RATE,
         {
@@ -2482,7 +2482,7 @@ class rt {
         phase: s[0]
       };
     } catch (t) {
-      const i = new E(
+      const i = new A(
         "フィルター応答の計算に失敗しました。デフォルト値を返します。",
         k.PROCESSING_TIMEOUT,
         {
@@ -3954,7 +3954,7 @@ class st {
    */
   handleError(e, t) {
     var s, o;
-    const i = e instanceof E ? e : this._createStructuredError(e, t);
+    const i = e instanceof A ? e : this._createStructuredError(e, t);
     F.logError(i, `MicrophoneController ${t}`), console.error(`❌ [MicrophoneController] Error in ${t}:`, i.toJSON()), this.lastError = e, this.updateState("error"), this.errorSystem && (t === "initialization" || t === "lifecycle" ? this.errorSystem.showMicrophoneError(e, t) : this.errorSystem.showError(
       "マイクエラー",
       `${t}でエラーが発生しました: ${e.message}`,
@@ -3997,7 +3997,7 @@ class st {
    * @returns Structured PitchProError with context
    */
   _createStructuredError(e, t) {
-    return e.message.includes("Permission denied") || e.message.includes("NotAllowedError") || e.message.includes("permission") || e.message.includes("denied") ? new Ae(
+    return e.message.includes("Permission denied") || e.message.includes("NotAllowedError") || e.message.includes("permission") || e.message.includes("denied") ? new Ee(
       "マイクへのアクセス許可が拒否されました。ブラウザの設定でマイクアクセスを許可してください。",
       {
         operation: t,
@@ -4016,7 +4016,7 @@ class st {
         audioManagerStatus: this.audioManager.getStatus(),
         deviceSpecs: this.deviceSpecs
       }
-    ) : new E(
+    ) : new A(
       `${t}中に予期しないエラーが発生しました: ${e.message}`,
       k.MICROPHONE_ACCESS_DENIED,
       {
@@ -5304,20 +5304,24 @@ const N = class N {
    * @see {@link detectAndOptimizeDevice} デバイス設定の決定方法
    */
   _getProcessedResult(e) {
-    var a, c, l, m;
+    var c, l, m, u, d;
     if (!e) return null;
-    const t = { ...e }, s = e.volume * 50, o = (((a = this.deviceSpecs) == null ? void 0 : a.noiseGate) ?? 0.06) * 100;
-    if (s < o)
-      return t.volume = 0, t.frequency = 0, t.note = "--", t.rawVolume = e.volume, t;
-    const n = ((c = this.deviceSpecs) == null ? void 0 : c.volumeMultiplier) ?? 1, r = s * n;
-    return t.volume = Math.min(100, Math.max(0, r)), t.rawVolume = e.volume, this.config.debug && e.volume > 1e-3 && this.debugLog("UnifiedVolumeProcessing:", {
-      device: (l = this.deviceSpecs) == null ? void 0 : l.deviceType,
-      step1_rawRMS: e.volume.toFixed(6),
-      step2_initial: s.toFixed(2),
-      step3_noiseGate: `${o.toFixed(2)}% (${s >= o ? "PASS" : "BLOCK"})`,
-      step4_multiplier: n,
-      step5_final: `${t.volume.toFixed(2)}%`,
-      frequency: `${(m = e.frequency) == null ? void 0 : m.toFixed(2)}Hz`
+    const t = { ...e }, s = e.volume * 200, n = (((c = this.deviceSpecs) == null ? void 0 : c.noiseGate) ?? 0.06) * 100 * 10;
+    if (s < n)
+      return t.volume = 0, t.frequency = 0, t.note = "--", t.rawVolume = e.volume, this.config.debug && this.debugLog("UnifiedVolumeProcessing: BLOCKED", {
+        device: (l = this.deviceSpecs) == null ? void 0 : l.deviceType,
+        volumeAsPercent: s.toFixed(2),
+        noiseGateThreshold: `${n.toFixed(2)}%`,
+        note: "Environment noise filtering active"
+      }), t;
+    const r = ((m = this.deviceSpecs) == null ? void 0 : m.volumeMultiplier) ?? 1, a = s * r;
+    return t.volume = Math.min(100, Math.max(0, a)), t.rawVolume = e.volume, this.config.debug && this.debugLog("UnifiedVolumeProcessing: PASSED", {
+      device: (u = this.deviceSpecs) == null ? void 0 : u.deviceType,
+      initialPercent: s.toFixed(2),
+      noiseGate: `${n.toFixed(2)}%`,
+      multiplier: r,
+      finalVolume: `${t.volume.toFixed(2)}%`,
+      frequency: `${(d = e.frequency) == null ? void 0 : d.toFixed(2)}Hz`
     }), t;
   }
   /**
@@ -5337,7 +5341,7 @@ const N = class N {
    */
   handleError(e, t) {
     var s, o;
-    const i = e instanceof E ? e : this.createStructuredError(e, t);
+    const i = e instanceof A ? e : this.createStructuredError(e, t);
     this.lastError = i, this.updateState("error"), (o = (s = this.callbacks).onError) == null || o.call(s, i), this.debugLog("Error handled:", i.toJSON());
   }
   /**
@@ -5345,7 +5349,7 @@ const N = class N {
    * @private
    */
   createStructuredError(e, t) {
-    return e.message.includes("Permission denied") || e.message.includes("NotAllowedError") || e.message.includes("permission") ? new Ae(
+    return e.message.includes("Permission denied") || e.message.includes("NotAllowedError") || e.message.includes("permission") ? new Ee(
       "マイクへのアクセス許可が拒否されました。ブラウザの設定でマイクアクセスを許可してください。",
       {
         operation: t,
@@ -5361,7 +5365,7 @@ const N = class N {
         componentState: this.currentState,
         deviceSpecs: this.deviceSpecs
       }
-    ) : new E(
+    ) : new A(
       `${t}中に予期しないエラーが発生しました: ${e.message}`,
       k.PITCH_DETECTION_ERROR,
       {
