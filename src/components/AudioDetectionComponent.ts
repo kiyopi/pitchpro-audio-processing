@@ -1489,53 +1489,55 @@ export class AudioDetectionComponent {
     if (!rawResult) return null;
 
     const processedResult = { ...rawResult };
-    
-    // Step 1: 🎯 最終最適化 SCALING_FACTOR (60→50)
-    // 計算例 - 新しい50の場合:
-    // - 70Hz低周波 (0.025 raw): 0.025 × 50 × 13.5 = 16.9% ✅ ノイズゲート2.5%を大幅に上回る
-    // - 通常の声 (0.06 raw): 0.06 × 50 × 13.5 = 40.5% ✅ 適度な上昇率
-    // - 強い声 (0.08 raw): 0.08 × 50 × 13.5 = 54% ✅ 良好な範囲
-    // - 非常に強い (0.10 raw): 0.10 × 50 × 13.5 = 67.5% ✅ 飽和回避
-    const BASE_SCALING_FACTOR = 50; 
-    const initialVolume = rawResult.volume * BASE_SCALING_FACTOR;
-    
-    // Step 2: DeviceDetectionからデバイス固有のノイズゲート閾値を取得
-    const noiseGateThreshold = (this.deviceSpecs?.noiseGate ?? 0.060) * 100; // %に変換
-    
-    // Step 3: ノイズゲートを適用
-    if (initialVolume < noiseGateThreshold) {
-      processedResult.volume = 0; // 閾値以下なら音量を0にする
-      processedResult.frequency = 0; // 周波数を0にする
-      processedResult.note = '--';
-      processedResult.rawVolume = rawResult.volume; // 生の値は保持
-      return processedResult; // ここで処理を終了
-    }
-    
-    // Step 4: ノイズゲートを通過した場合、デバイス固有のvolumeMultiplierで最終的な表示音量を計算
-    // 🔧 修正: DeviceDetection.tsの値を完全に信頼し、ハードコード値を削除
-    const volumeMultiplier = this.deviceSpecs?.volumeMultiplier ?? 1.0;
-    
-    const finalVolume = initialVolume * volumeMultiplier;
-    
-    // 最終的な値を0-100の範囲に丸めて設定
-    processedResult.volume = Math.min(100, Math.max(0, finalVolume));
-    processedResult.rawVolume = rawResult.volume; // 生の値は保持
 
-    // デバッグログ（70Hz問題のトラッキング用）
-    if (this.config.debug && rawResult.volume > 0.001) {
-      this.debugLog('UnifiedVolumeProcessing:', {
-        device: this.deviceSpecs?.deviceType,
-        step1_rawRMS: rawResult.volume.toFixed(6),
-        step2_initial: initialVolume.toFixed(2),
-        step3_noiseGate: `${noiseGateThreshold.toFixed(2)}% (${initialVolume >= noiseGateThreshold ? 'PASS' : 'BLOCK'})`,
-        step4_multiplier: volumeMultiplier,
-        step5_final: `${processedResult.volume.toFixed(2)}%`,
-        frequency: `${rawResult.frequency?.toFixed(2)}Hz`
-      });
+    // Step 1: 生のRMS値を、扱いやすい0-100の範囲の「初期音量」に変換します。
+    const RMS_TO_PERCENT_FACTOR = 200;
+    const volumeAsPercent = rawResult.volume * RMS_TO_PERCENT_FACTOR;
+
+    // Step 2: DeviceDetectionから、ノイズゲート閾値を取得（環境ノイズ対応で10倍に調整）
+    const baseNoiseGate = this.deviceSpecs?.noiseGate ?? 0.060;
+    const noiseGateThresholdPercent = baseNoiseGate * 100 * 10; // 10倍に調整（環境ノイズ対応）
+
+    // Step 3: ノイズゲートを適用します。
+    if (volumeAsPercent < noiseGateThresholdPercent) {
+        processedResult.volume = 0;
+        processedResult.frequency = 0;
+        processedResult.note = '--';
+        processedResult.rawVolume = rawResult.volume;
+        // デバッグログでブロックされたことを確認
+        if (this.config.debug) {
+            this.debugLog('UnifiedVolumeProcessing: BLOCKED', {
+                device: this.deviceSpecs?.deviceType,
+                volumeAsPercent: volumeAsPercent.toFixed(2),
+                noiseGateThreshold: `${noiseGateThresholdPercent.toFixed(2)}%`,
+                note: 'Environment noise filtering active'
+            });
+        }
+        return processedResult;
+    }
+
+    // Step 4: ノイズゲートを通過した場合、デバイス固有のvolumeMultiplierで最終的な表示音量を計算します。
+    const volumeMultiplier = this.deviceSpecs?.volumeMultiplier ?? 1.0;
+    const finalVolume = volumeAsPercent * volumeMultiplier;
+
+    // 最終的な値を0-100の範囲に丸めて設定します。
+    processedResult.volume = Math.min(100, Math.max(0, finalVolume));
+    processedResult.rawVolume = rawResult.volume;
+
+    // デバッグログ
+    if (this.config.debug) {
+        this.debugLog('UnifiedVolumeProcessing: PASSED', {
+            device: this.deviceSpecs?.deviceType,
+            initialPercent: volumeAsPercent.toFixed(2),
+            noiseGate: `${noiseGateThresholdPercent.toFixed(2)}%`,
+            multiplier: volumeMultiplier,
+            finalVolume: `${processedResult.volume.toFixed(2)}%`,
+            frequency: `${rawResult.frequency?.toFixed(2)}Hz`
+        });
     }
 
     return processedResult;
-  }
+}
 
   /**
    * Updates component state and notifies callbacks
