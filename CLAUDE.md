@@ -413,6 +413,77 @@ const NOISE_GATE_THRESHOLD = this.config.minVolumeAbsolute * NOISE_GATE_SCALING_
 
 ---
 
+## 🎹 重要：ピッチシフト機能の分離決定（2025年10月2日）
+
+### 📋 経緯と決定事項
+
+#### 背景
+当初、PitchProに**Tone.js Sampler**を使用したピッチシフト機能（C4.mp3ベース）を統合する試みがありました：
+- **ブランチ**: `feature/pitch-shift-integration`
+- **実装内容**: `src/advanced/PitchShifter.ts`
+- **音源**: `public/audio/piano/C4.mp3` (214KB)
+- **依存関係**: `tone@^15.1.22` 追加
+
+#### アーキテクチャ評価による分離決定
+
+**問題点の発見**:
+1. **責務の違反**: PitchProは**入力/検出**専用、PitchShifterは**出力/再生**機能
+2. **ライブラリ肥大化**: 362KB → 623KB（35%増加）
+3. **単一責任原則違反**: advanced/配下は全て分析系、再生機能は異質
+
+**最終決定**: ✅ **独立ライブラリとして分離**
+
+### 🎯 新ライブラリ: @pitchpro/reference-tones
+
+**リポジトリ**: https://github.com/kiyopi/pitchpro-reference-tones
+**バージョン**: v1.0.0
+**リリース日**: 2025年10月2日
+
+#### 主な機能
+- 🎹 Tone.js Sampler + C4.mp3ピッチシフト（C4-E5、15音符）
+- 🎵 Salamander Grand Piano (Yamaha C5, 48kHz/24bit)
+- 📦 軽量: ESM 1.97KB gzipped
+- 🔧 TypeScript完全対応
+- 📱 デバイス別音量最適化サポート
+- 🎸 複数楽器対応（Piano/Guitar/Violin）
+
+#### 統合例（Relative-pitch-app向け）
+```typescript
+import { AudioDetectionComponent } from '@pitchpro/audio-processing';
+import { PitchShifter } from '@pitchpro/reference-tones';
+
+// 検出（PitchPro）
+const detector = new AudioDetectionComponent({
+  onPitchUpdate: (result) => {
+    const refNote = PitchShifter.getNoteByFrequency(result.frequency);
+    console.log(`検出: ${result.frequency}Hz → ${refNote.note}`);
+  }
+});
+
+// 基準音再生（reference-tones）
+const tones = new PitchShifter();
+await tones.initialize();
+await tones.playRandomNote(2);
+```
+
+### ⚠️ feature/pitch-shift-integration ブランチについて
+
+**状態**: 実装完了したが統合しない（保留）
+**理由**: 独立ライブラリ化により不要
+**対応**:
+- ブランチは**削除せず保持**（参考・学習用）
+- mainにマージ**しない**
+- PitchProは**検出専用**を維持
+
+**コード移行先**: 全て@pitchpro/reference-tonesへ移行済み
+
+### 📚 関連ドキュメント
+- **@pitchpro/reference-tones README**: 完全なAPI・実装例
+- **RELEASE_NOTES_v1.0.0.md**: リリース詳細
+- **統合先**: Relative-pitch-app (https://github.com/kiyopi/Relative-pitch-app)
+
+---
+
 ## 次期課題（v1.3.0対応予定）
 
 ### ✅ v1.2.2で解決済み課題
