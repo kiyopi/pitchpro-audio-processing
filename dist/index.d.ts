@@ -20,6 +20,8 @@ export type { AudioDetectionConfig, AudioDetectionCallbacks } from './components
 export { HarmonicCorrection } from './advanced/HarmonicCorrection';
 export { VoiceAnalyzer } from './advanced/VoiceAnalyzer';
 export { CalibrationSystem } from './advanced/CalibrationSystem';
+export { PitchShifter } from './advanced/PitchShifter';
+export type { PitchShifterConfig, NoteInfo } from './advanced/PitchShifter';
 export { FrequencyUtils } from './utils/FrequencyUtils';
 export { MusicTheory } from './utils/MusicTheory';
 export { DeviceDetection } from './utils/DeviceDetection';

@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎹 PitchShifter Test - PitchPro v1.3.1</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+
+        .status {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .status.ready { background: #e8f5e9; color: #2e7d32; }
+        .status.playing { background: #e3f2fd; color: #1565c0; }
+        .status.error { background: #ffebee; color: #c62828; }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .note-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .note-btn {
+            padding: 20px 10px;
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .note-btn:hover:not(:disabled) {
+            background: #667eea;
+            color: white;
+        }
+
+        .info-card {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .info-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .info-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .current-note {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .current-note h2 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .current-note .frequency {
+            font-size: 1.5rem;
+            opacity: 0.9;
+        }
+
+        .current-note .japanese {
+            font-size: 1.2rem;
+            opacity: 0.8;
+        }
+
+        .log {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            line-height: 1.4;
+        }
+
+        .log-entry.error { color: #ff6b6b; }
+        .log-entry.success { color: #51cf66; }
+        .log-entry.info { color: #74c0fc; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎹 PitchShifter Test</h1>
+        <p class="subtitle">PitchPro v1.3.1 - Tone.js統合ピッチシフトシステム</p>
+
+        <div id="status" class="status">初期化待機中...</div>
+
+        <div id="currentNote" class="current-note" style="display: none;">
+            <h2 id="noteDisplay">--</h2>
+            <div class="frequency" id="frequencyDisplay">-- Hz</div>
+            <div class="japanese" id="japaneseDisplay">--</div>
+        </div>
+
+        <div class="controls">
+            <button id="initBtn" onclick="initializePitchShifter()">🎹 初期化</button>
+            <button id="randomBtn" onclick="playRandomNote()" disabled>🎲 ランダム再生</button>
+            <button id="stopBtn" onclick="stopAll()" disabled>🛑 停止</button>
+        </div>
+
+        <div class="info-card">
+            <h3>📋 個別音符再生</h3>
+            <p>以下のボタンから個別に音符を再生できます</p>
+        </div>
+
+        <div class="note-grid" id="noteGrid"></div>
+
+        <div class="info-card">
+            <h3>ℹ️ システム情報</h3>
+            <p>
+                <strong>音源:</strong> Salamander Grand Piano (C4.mp3)<br>
+                <strong>技術:</strong> Tone.js Sampler + 自動ピッチシフト<br>
+                <strong>対応範囲:</strong> C4〜E5 (15音符)<br>
+                <strong>品質:</strong> Yamaha C5 48kHz/24bit
+            </p>
+        </div>
+
+        <h3 style="margin-bottom: 10px; color: #667eea;">📝 システムログ</h3>
+        <div id="log" class="log"></div>
+    </div>
+
+    <script type="module">
+        import { PitchShifter } from './dist/index.esm.js';
+
+        let pitchShifter = null;
+        const logEl = document.getElementById('log');
+        const statusEl = document.getElementById('status');
+        const currentNoteEl = document.getElementById('currentNote');
+
+        function log(message, type = 'info') {
+            const time = new Date().toLocaleTimeString('ja-JP');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${time}] ${message}`;
+            logEl.appendChild(entry);
+            logEl.scrollTop = logEl.scrollHeight;
+            console.log(`[PitchShifter] ${message}`);
+        }
+
+        function updateStatus(message, className = '') {
+            statusEl.textContent = message;
+            statusEl.className = `status ${className}`;
+        }
+
+        function updateCurrentNote(noteInfo) {
+            if (noteInfo) {
+                document.getElementById('noteDisplay').textContent = noteInfo.note;
+                document.getElementById('frequencyDisplay').textContent = `${noteInfo.frequency.toFixed(2)} Hz`;
+                document.getElementById('japaneseDisplay').textContent = noteInfo.japaneseName;
+                currentNoteEl.style.display = 'block';
+            }
+        }
+
+        window.initializePitchShifter = async function() {
+            try {
+                log('🎹 PitchShifter初期化開始...', 'info');
+                updateStatus('初期化中...', '');
+
+                pitchShifter = new PitchShifter({
+                    baseUrl: '/audio/piano/',
+                    release: 1.5,
+                    volume: -6
+                });
+
+                await pitchShifter.initialize();
+
+                log('✅ PitchShifter初期化完了', 'success');
+                updateStatus('準備完了 - 音符を選択してください', 'ready');
+
+                document.getElementById('initBtn').disabled = true;
+                document.getElementById('randomBtn').disabled = false;
+                document.getElementById('stopBtn').disabled = false;
+
+                // Enable note buttons
+                document.querySelectorAll('.note-btn').forEach(btn => {
+                    btn.disabled = false;
+                });
+
+            } catch (error) {
+                log(`❌ 初期化エラー: ${error.message}`, 'error');
+                updateStatus(`エラー: ${error.message}`, 'error');
+            }
+        };
+
+        window.playRandomNote = async function() {
+            if (!pitchShifter) {
+                log('⚠️ PitchShifterが初期化されていません', 'error');
+                return;
+            }
+
+            try {
+                updateStatus('ランダム音符再生中...', 'playing');
+                const noteInfo = await pitchShifter.playRandomNote(2);
+
+                log(`🎲 ランダム再生: ${noteInfo.note} (${noteInfo.japaneseName})`, 'success');
+                updateCurrentNote(noteInfo);
+
+                setTimeout(() => {
+                    updateStatus('準備完了 - 音符を選択してください', 'ready');
+                }, 2000);
+
+            } catch (error) {
+                log(`❌ 再生エラー: ${error.message}`, 'error');
+                updateStatus('エラー発生', 'error');
+            }
+        };
+
+        window.playNote = async function(note) {
+            if (!pitchShifter) {
+                log('⚠️ PitchShifterが初期化されていません', 'error');
+                return;
+            }
+
+            try {
+                const noteInfo = PitchShifter.getNoteInfo(note);
+                updateStatus(`${note} 再生中...`, 'playing');
+
+                await pitchShifter.playNote(note, 2);
+
+                log(`🎵 再生: ${note} (${noteInfo.japaneseName})`, 'success');
+                updateCurrentNote(noteInfo);
+
+                setTimeout(() => {
+                    updateStatus('準備完了 - 音符を選択してください', 'ready');
+                }, 2000);
+
+            } catch (error) {
+                log(`❌ 再生エラー: ${error.message}`, 'error');
+                updateStatus('エラー発生', 'error');
+            }
+        };
+
+        window.stopAll = function() {
+            if (pitchShifter) {
+                pitchShifter.stopAll();
+                log('🛑 すべての音符を停止', 'info');
+                updateStatus('停止しました', 'ready');
+            }
+        };
+
+        // Create note buttons
+        window.addEventListener('DOMContentLoaded', () => {
+            const noteGrid = document.getElementById('noteGrid');
+
+            PitchShifter.AVAILABLE_NOTES.forEach(noteInfo => {
+                const btn = document.createElement('button');
+                btn.className = 'note-btn';
+                btn.disabled = true;
+                btn.innerHTML = `
+                    <div style="font-size: 1.2rem; margin-bottom: 5px;">${noteInfo.note}</div>
+                    <div style="font-size: 0.8rem; opacity: 0.8;">${noteInfo.japaneseName}</div>
+                `;
+                btn.onclick = () => playNote(noteInfo.note);
+                noteGrid.appendChild(btn);
+            });
+
+            log('✨ テストページ読み込み完了', 'success');
+            log('📝 「初期化」ボタンをクリックしてください', 'info');
+        });
+    </script>
+</body>
+</html>

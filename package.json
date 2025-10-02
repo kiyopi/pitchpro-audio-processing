@@ -85,6 +85,7 @@
     "vitest": "^1.0.0"
   },
   "dependencies": {
-    "pitchy": "^4.1.0"
+    "pitchy": "^4.1.0",
+    "tone": "^15.1.22"
   }
 }
