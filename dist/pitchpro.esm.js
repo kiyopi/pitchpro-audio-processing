@@ -1,7 +1,7 @@
 var Be = Object.defineProperty;
 var $e = (h, e, t) => e in h ? Be(h, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : h[e] = t;
 var x = (h, e, t) => $e(h, typeof e != "symbol" ? e + "" : e, t);
-const He = "1.3.2", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).toISOString(), E = class E {
+const He = "1.3.3", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).toISOString(), E = class E {
   /**
    * Detect current device and return optimized specifications
    */
@@ -60,8 +60,8 @@ const He = "1.3.2", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).to
           // 🚪 ノイズゲート閾値 (2.3%設定で低周波数検出感度向上)
           volumeMultiplier: 4,
           // 🔊 表示音量補正 (13.0→4.0 大幅削減で適切レベル)
-          smoothingFactor: 0.25
-          // 📊 平滑化係数
+          smoothingFactor: 0.1
+          // 📊 平滑化係数（CPU負荷軽減: 0.25→0.1）
         };
       case "iPhone":
         return {
@@ -71,8 +71,8 @@ const He = "1.3.2", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).to
           // 🚪 ノイズゲート閾値 (2.8%設定でiPadとの中間値)
           volumeMultiplier: 3,
           // 🔊 表示音量補正 (9.0→3.0 大幅削減で適切レベル)
-          smoothingFactor: 0.25
-          // 📊 平滑化係数
+          smoothingFactor: 0.1
+          // 📊 平滑化係数（CPU負荷軽減: 0.25→0.1）
         };
       case "PC":
       default:
@@ -83,8 +83,8 @@ const He = "1.3.2", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).to
           // 🚪 ノイズゲート閾値 (2.3%設定で低周波数検出最適化)
           volumeMultiplier: 2.5,
           // 🔊 表示音量補正 (7.5→2.5 大幅削減で適切レベル)
-          smoothingFactor: 0.25
-          // 📊 平滑化係数
+          smoothingFactor: 0.1
+          // 📊 平滑化係数（CPU負荷軽減: 0.25→0.1）
         };
     }
   }
@@ -101,8 +101,8 @@ const He = "1.3.2", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).to
       // 🚪 PC最適化値と統一 (6.0%) - getDeviceOptimizationsと完全一致
       volumeMultiplier: 3,
       // 🔊 PC最適化値と統一
-      smoothingFactor: 0.25,
-      // 📊 PC最適化値と統一
+      smoothingFactor: 0.1,
+      // 📊 PC最適化値と統一（CPU負荷軽減: 0.25→0.1）
       // 後方互換性のため残す（将来的に削除予定）
       divisor: 6,
       gainCompensation: 1,
@@ -1524,7 +1524,7 @@ class Ze {
   }
   shouldProcess() {
     const e = performance.now();
-    return this.nextFrameTime === 0 ? (this.nextFrameTime = e + this.frameInterval, this.lastFrameTime = e, !0) : e >= this.nextFrameTime ? (e - this.lastFrameTime > this.frameInterval * 1.5 && (this.frameDrops++, this.adjustFrameRate()), this.nextFrameTime = e + this.frameInterval, this.lastFrameTime = e, !0) : !1;
+    return this.nextFrameTime === 0 ? (this.nextFrameTime = e + this.frameInterval, this.lastFrameTime = e, !0) : e >= this.nextFrameTime ? (e - this.lastFrameTime > this.frameInterval * 2 && (this.frameDrops++, this.adjustFrameRate()), this.nextFrameTime = e + this.frameInterval, this.lastFrameTime = e, !0) : !1;
   }
   // CPU負荷に応じて動的にFPSを調整
   adjustFrameRate() {
@@ -1658,7 +1658,7 @@ class et {
       minVolumeThreshold: 0.01,
       // 消音判定の音量閾値
       ...t.silenceDetection
-    }, this.frameRateLimiter = new Ze(45), console.log(`${be} PitchDetector created with config:`, this.config);
+    }, this.frameRateLimiter = new Ze(60), console.log(`${be} PitchDetector created with config:`, this.config);
   }
   /**
    * Sets callback functions for pitch detection events
@@ -5306,13 +5306,13 @@ const N = class N {
   _getProcessedResult(e) {
     var c, l, m, u, d;
     if (!e) return null;
-    const t = { ...e }, s = e.volume * 200, n = (((c = this.deviceSpecs) == null ? void 0 : c.noiseGate) ?? 0.06) * 100 * 10;
+    const t = { ...e }, s = e.volume * 200, n = (((c = this.deviceSpecs) == null ? void 0 : c.noiseGate) ?? 0.06) * 100 * 2;
     if (s < n)
       return t.volume = 0, t.frequency = 0, t.note = "--", t.rawVolume = e.volume, this.config.debug && this.debugLog("UnifiedVolumeProcessing: BLOCKED", {
         device: (l = this.deviceSpecs) == null ? void 0 : l.deviceType,
         volumeAsPercent: s.toFixed(2),
         noiseGateThreshold: `${n.toFixed(2)}%`,
-        note: "Environment noise filtering active"
+        note: "Environment noise filtering (2.0x multiplier)"
       }), t;
     const r = ((m = this.deviceSpecs) == null ? void 0 : m.volumeMultiplier) ?? 1, a = s * r;
     return t.volume = Math.min(100, Math.max(0, a)), t.rawVolume = e.volume, this.config.debug && this.debugLog("UnifiedVolumeProcessing: PASSED", {

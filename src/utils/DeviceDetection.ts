@@ -118,24 +118,24 @@ export class DeviceDetection {
           sensitivity: 4.0,           // 🎤 マイク感度 (PitchDetector用)
           noiseGate: 0.023,           // 🚪 ノイズゲート閾値 (2.3%設定で低周波数検出感度向上)
           volumeMultiplier: 4.0,      // 🔊 表示音量補正 (13.0→4.0 大幅削減で適切レベル)
-          smoothingFactor: 0.25       // 📊 平滑化係数
+          smoothingFactor: 0.1        // 📊 平滑化係数（CPU負荷軽減: 0.25→0.1）
         };
-        
+
       case 'iPhone':
         return {
           sensitivity: 3.5,           // 🎤 マイク感度 (iPhone最適化値)
           noiseGate: 0.028,           // 🚪 ノイズゲート閾値 (2.8%設定でiPadとの中間値)
           volumeMultiplier: 3.0,      // 🔊 表示音量補正 (9.0→3.0 大幅削減で適切レベル)
-          smoothingFactor: 0.25       // 📊 平滑化係数
+          smoothingFactor: 0.1        // 📊 平滑化係数（CPU負荷軽減: 0.25→0.1）
         };
-        
+
       case 'PC':
       default:
         return {
           sensitivity: 1.7,           // 🎤 マイク感度 (PC環境安定性重視)
           noiseGate: 0.023,           // 🚪 ノイズゲート閾値 (2.3%設定で低周波数検出最適化)
           volumeMultiplier: 2.5,      // 🔊 表示音量補正 (7.5→2.5 大幅削減で適切レベル)
-          smoothingFactor: 0.25       // 📊 平滑化係数
+          smoothingFactor: 0.1        // 📊 平滑化係数（CPU負荷軽減: 0.25→0.1）
         };
     }
   }
@@ -152,7 +152,7 @@ export class DeviceDetection {
       sensitivity: 1.7,           // 🎤 PC最適化値と統一
       noiseGate: 0.060,           // 🚪 PC最適化値と統一 (6.0%) - getDeviceOptimizationsと完全一致
       volumeMultiplier: 3.0,      // 🔊 PC最適化値と統一
-      smoothingFactor: 0.25,      // 📊 PC最適化値と統一
+      smoothingFactor: 0.1,       // 📊 PC最適化値と統一（CPU負荷軽減: 0.25→0.1）
       // 後方互換性のため残す（将来的に削除予定）
       divisor: 6.0,
       gainCompensation: 1.0,

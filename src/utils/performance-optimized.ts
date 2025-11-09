@@ -33,9 +33,10 @@ export class AdaptiveFrameRateLimiter {
     // 次フレーム時刻に到達したかチェック
     if (now >= this.nextFrameTime) {
       const actualElapsed = now - this.lastFrameTime;
-      
-      // フレーム落ちを検出（期待間隔の1.5倍を超過）
-      if (actualElapsed > this.frameInterval * 1.5) {
+
+      // フレーム落ちを検出（期待間隔の2.0倍を超過）
+      // 1.5倍→2.0倍に緩和: 一時的な負荷変動を許容し、安定性を向上
+      if (actualElapsed > this.frameInterval * 2.0) {
         this.frameDrops++;
         this.adjustFrameRate();
       }

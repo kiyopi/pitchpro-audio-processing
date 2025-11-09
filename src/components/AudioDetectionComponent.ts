@@ -1494,9 +1494,9 @@ export class AudioDetectionComponent {
     const RMS_TO_PERCENT_FACTOR = 200;
     const volumeAsPercent = rawResult.volume * RMS_TO_PERCENT_FACTOR;
 
-    // Step 2: DeviceDetectionから、ノイズゲート閾値を取得（環境ノイズ対応で10倍に調整）
+    // Step 2: DeviceDetectionから、ノイズゲート閾値を取得（適度な環境ノイズ対応）
     const baseNoiseGate = this.deviceSpecs?.noiseGate ?? 0.060;
-    const noiseGateThresholdPercent = baseNoiseGate * 100 * 10; // 10倍に調整（環境ノイズ対応）
+    const noiseGateThresholdPercent = baseNoiseGate * 100 * 2.0; // 2.0倍に調整（音量バー安定化）
 
     // Step 3: ノイズゲートを適用します。
     if (volumeAsPercent < noiseGateThresholdPercent) {
@@ -1510,7 +1510,7 @@ export class AudioDetectionComponent {
                 device: this.deviceSpecs?.deviceType,
                 volumeAsPercent: volumeAsPercent.toFixed(2),
                 noiseGateThreshold: `${noiseGateThresholdPercent.toFixed(2)}%`,
-                note: 'Environment noise filtering active'
+                note: 'Environment noise filtering (2.0x multiplier)'
             });
         }
         return processedResult;

@@ -2,7 +2,7 @@
  * Library version information
  * Auto-synced with package.json during build
  */
-export const VERSION = '1.3.2';;
+export const VERSION = '1.3.3';;
 
 /**
  * Version display string for debug logs

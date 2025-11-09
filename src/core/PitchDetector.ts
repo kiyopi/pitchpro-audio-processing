@@ -335,9 +335,9 @@ export class PitchDetector {
     };
     
     // Note: getPlatformSpecs() will be called during initialize() to avoid timing issues
-    
+
     // Initialize performance optimization
-    this.frameRateLimiter = new AdaptiveFrameRateLimiter(45); // 45FPS optimal for music
+    this.frameRateLimiter = new AdaptiveFrameRateLimiter(60); // 60FPS for maximum data collection accuracy
 
     // Debug log with version information
     console.log(`${VERSION_STRING} PitchDetector created with config:`, this.config);
