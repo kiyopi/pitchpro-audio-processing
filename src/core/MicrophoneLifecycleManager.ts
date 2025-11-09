@@ -287,19 +287,33 @@ export class MicrophoneLifecycleManager {
    */
   private handleVisibilityChange(): void {
     if (!this.isActive) return;
-    
+
     if (this.isPageVisible) {
       console.log('👁️ [MicrophoneLifecycleManager] Page became visible - resuming monitoring');
       this.updateActivity();
-      
+
+      // Reset recovery attempts when page becomes visible
+      this.autoRecoveryAttempts = 0;
+
+      // Restore isActive if needed
+      if (!this.isActive && this.refCount > 0) {
+        this.isActive = true;
+        this.startHealthMonitoring();
+        this.startIdleMonitoring();
+        this.startVisibilityMonitoring();
+      }
+
       // Check microphone health after page becomes visible
       setTimeout(() => {
         this.performHealthCheck();
       }, 1000);
-      
+
     } else {
-      console.log('🙈 [MicrophoneLifecycleManager] Page became hidden - reducing monitoring frequency');
-      
+      console.log('🙈 [MicrophoneLifecycleManager] Page became hidden - stopping health monitoring');
+
+      // Stop health monitoring completely when page is hidden
+      this.stopAllMonitoring();
+
       // Consider releasing resources if page stays hidden for too long
       setTimeout(() => {
         if (!this.isPageVisible && this.isActive) {

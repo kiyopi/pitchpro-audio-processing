@@ -2845,9 +2845,9 @@ class tt {
    * Handle page visibility changes
    */
   handleVisibilityChange() {
-    this.isActive && (this.isPageVisible ? (console.log("👁️ [MicrophoneLifecycleManager] Page became visible - resuming monitoring"), this.updateActivity(), setTimeout(() => {
+    this.isActive && (this.isPageVisible ? (console.log("👁️ [MicrophoneLifecycleManager] Page became visible - resuming monitoring"), this.updateActivity(), this.autoRecoveryAttempts = 0, !this.isActive && this.refCount > 0 && (this.isActive = !0, this.startHealthMonitoring(), this.startIdleMonitoring(), this.startVisibilityMonitoring()), setTimeout(() => {
       this.performHealthCheck();
-    }, 1e3)) : (console.log("🙈 [MicrophoneLifecycleManager] Page became hidden - reducing monitoring frequency"), setTimeout(() => {
+    }, 1e3)) : (console.log("🙈 [MicrophoneLifecycleManager] Page became hidden - stopping health monitoring"), this.stopAllMonitoring(), setTimeout(() => {
       !this.isPageVisible && this.isActive && Date.now() - this.lastActivityTime > this.config.maxIdleTimeBeforeRelease && (console.log("⏰ [MicrophoneLifecycleManager] Long inactivity detected - releasing resources"), this.forceRelease());
     }, this.config.maxIdleTimeBeforeRelease)));
   }
