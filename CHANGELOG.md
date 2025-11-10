@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.4] - 2025-11-10
+
+### 🐛 Bug Fixes
+
+#### result.noteにオクターブ番号を含めるように修正
+
+**問題**:
+- `PitchDetector`が返す`result.note`プロパティが音名のみ（例: `"E"`, `"C#"`）を返し、オクターブ番号が含まれていなかった
+- アプリケーション側で独自の音名変換処理を実装する必要があった
+- 音域範囲表示が不完全（例: `"E2 - E"`）になっていた
+
+**修正内容**:
+- `FrequencyUtils.frequencyToNote()`を活用し、完全な音名（例: `"E4"`, `"C#2"`）を返すように変更
+- `PitchDetector.ts`の音名変換処理を`FrequencyUtils`に統一
+- 重複していた`frequencyToNoteAndOctave()`メソッドを削除
+
+**影響**:
+- ✅ `result.note`が常に完全な音名（音名+オクターブ番号）を返すようになりました
+- ✅ `result.octave`プロパティは引き続き利用可能（後方互換性維持）
+- ✅ アプリケーション側のフォールバック処理が不要になりました
+
+**アップグレードガイド**:
+```typescript
+// 修正前（フォールバック処理が必要だった）
+const note = result.note && /\d/.test(result.note)
+    ? result.note
+    : MusicTheory.frequencyToNote(result.frequency);
+
+// 修正後（シンプルに使用可能）
+const note = result.note;  // 常に "E4" のような完全な音名
+```
+
+**関連ファイル**:
+- `/src/core/PitchDetector.ts`: FrequencyUtils使用に統一
+- `/ISSUE_RESULT_NOTE_OCTAVE.md`: 詳細な問題分析ドキュメント
+
 ## [1.3.1] - 2025-09-24
 
 ### 🔧 PC低周波数検出回復・音量バー更新最適化

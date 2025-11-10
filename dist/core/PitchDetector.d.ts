@@ -369,22 +369,6 @@ export declare class PitchDetector {
     private resetHarmonicHistory;
     /**
      * Convert frequency to musical note name and octave number
-     *
-     * @private
-     * @description Converts a frequency in Hz to standard musical notation using
-     * equal temperament tuning (A4 = 440Hz). Calculates semitone distances
-     * and maps to chromatic scale positions.
-     *
-     * @param frequency - Input frequency in Hz
-     * @returns Object containing note name (C, C#, D, etc.) and octave number
-     *
-     * @example
-     * ```typescript
-     * frequencyToNoteAndOctave(440) // { note: 'A', octave: 4 }
-     * frequencyToNoteAndOctave(261.63) // { note: 'C', octave: 4 }
-     * ```
-     */
-    private frequencyToNoteAndOctave;
     /**
      * Convert frequency to cents deviation from the nearest semitone
      *

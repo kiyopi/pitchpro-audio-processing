@@ -66,9 +66,10 @@
  */
 
 import { PitchDetector as PitchyDetector } from 'pitchy';
-import type { 
-  PitchDetectorConfig, 
-  PitchDetectionResult, 
+import { FrequencyUtils } from '../utils/FrequencyUtils';
+import type {
+  PitchDetectorConfig,
+  PitchDetectionResult,
   PitchCallback,
   ErrorCallback,
   StateChangeCallback,
@@ -681,8 +682,8 @@ export class PitchDetector {
       
       // Update frequency display (preserve decimal precision)
       this.currentFrequency = finalFreq;
-      const noteInfo = this.frequencyToNoteAndOctave(this.currentFrequency);
-      this.detectedNote = noteInfo.note;
+      const noteInfo = FrequencyUtils.frequencyToNote(this.currentFrequency);
+      this.detectedNote = noteInfo.name;  // 完全な音名（例: "E4", "C#2"）
       this.detectedOctave = noteInfo.octave;
       this.pitchClarity = clarity;
       
@@ -811,35 +812,6 @@ export class PitchDetector {
 
   /**
    * Convert frequency to musical note name and octave number
-   * 
-   * @private
-   * @description Converts a frequency in Hz to standard musical notation using
-   * equal temperament tuning (A4 = 440Hz). Calculates semitone distances
-   * and maps to chromatic scale positions.
-   * 
-   * @param frequency - Input frequency in Hz
-   * @returns Object containing note name (C, C#, D, etc.) and octave number
-   * 
-   * @example
-   * ```typescript
-   * frequencyToNoteAndOctave(440) // { note: 'A', octave: 4 }
-   * frequencyToNoteAndOctave(261.63) // { note: 'C', octave: 4 }
-   * ```
-   */
-  private frequencyToNoteAndOctave(frequency: number): { note: string; octave: number | null } {
-    const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-    const A4 = 440;
-    
-    if (frequency <= 0) return { note: '--', octave: null };
-    
-    const semitonesFromA4 = Math.round(12 * Math.log2(frequency / A4));
-    const noteIndex = (semitonesFromA4 + 9 + 120) % 12;
-    const octave = Math.floor((semitonesFromA4 + 9) / 12) + 4;
-    
-    return { note: noteNames[noteIndex], octave };
-  }
-  
-
   /**
    * Convert frequency to cents deviation from the nearest semitone
    * 

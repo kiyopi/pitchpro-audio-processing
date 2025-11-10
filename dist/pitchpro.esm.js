@@ -1,7 +1,7 @@
 var Be = Object.defineProperty;
 var $e = (h, e, t) => e in h ? Be(h, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : h[e] = t;
 var x = (h, e, t) => $e(h, typeof e != "symbol" ? e + "" : e, t);
-const He = "1.3.3", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).toISOString(), E = class E {
+const He = "1.3.4", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).toISOString(), E = class E {
   /**
    * Detect current device and return optimized specifications
    */
@@ -1172,7 +1172,7 @@ D.prototype._transform4 = function() {
     var m = o >>> 2;
     for (n = 0; n < t; n += o)
       for (var u = n + m, d = n, f = 0; d < u; d += 2, f += s) {
-        const p = d, y = p + m, v = y + m, S = v + m, b = e[p], g = e[p + 1], C = e[y], I = e[y + 1], P = e[v], q = e[v + 1], O = e[S], z = e[S + 1], L = b, U = g, B = l[f], $ = c * l[f + 1], H = C * B - I * $, V = C * $ + I * B, X = l[2 * f], Y = c * l[2 * f + 1], K = P * X - q * Y, Z = P * Y + q * X, ee = l[3 * f], te = c * l[3 * f + 1], ie = O * ee - z * te, se = O * te + z * ee, oe = L + K, j = U + Z, Q = L - K, ne = U - Z, re = H + ie, W = V + se, J = c * (H - ie), ae = c * (V - se), he = oe + re, fe = j + W, ge = oe - re, pe = j - W, ve = Q + ae, ye = ne - J, Se = Q - ae, Ce = ne + J;
+        const p = d, y = p + m, v = y + m, S = v + m, b = e[p], g = e[p + 1], C = e[y], I = e[y + 1], P = e[v], q = e[v + 1], z = e[S], L = e[S + 1], O = b, U = g, B = l[f], $ = c * l[f + 1], H = C * B - I * $, V = C * $ + I * B, X = l[2 * f], Y = c * l[2 * f + 1], K = P * X - q * Y, Z = P * Y + q * X, ee = l[3 * f], te = c * l[3 * f + 1], ie = z * ee - L * te, se = z * te + L * ee, oe = O + K, j = U + Z, Q = O - K, ne = U - Z, re = H + ie, W = V + se, J = c * (H - ie), ae = c * (V - se), he = oe + re, fe = j + W, ge = oe - re, pe = j - W, ve = Q + ae, ye = ne - J, Se = Q - ae, Ce = ne + J;
         e[p] = he, e[p + 1] = fe, e[y] = ve, e[y + 1] = ye, e[v] = ge, e[v + 1] = pe, e[S] = Se, e[S + 1] = Ce;
       }
   }
@@ -1182,8 +1182,8 @@ D.prototype._singleTransform2 = function(e, t, i) {
   s[e] = l, s[e + 1] = m, s[e + 2] = u, s[e + 3] = d;
 };
 D.prototype._singleTransform4 = function(e, t, i) {
-  const s = this._out, o = this._data, n = this._inv ? -1 : 1, r = i * 2, a = i * 3, c = o[t], l = o[t + 1], m = o[t + i], u = o[t + i + 1], d = o[t + r], f = o[t + r + 1], p = o[t + a], y = o[t + a + 1], v = c + d, S = l + f, b = c - d, g = l - f, C = m + p, I = u + y, P = n * (m - p), q = n * (u - y), O = v + C, z = S + I, L = b + q, U = g - P, B = v - C, $ = S - I, H = b - q, V = g + P;
-  s[e] = O, s[e + 1] = z, s[e + 2] = L, s[e + 3] = U, s[e + 4] = B, s[e + 5] = $, s[e + 6] = H, s[e + 7] = V;
+  const s = this._out, o = this._data, n = this._inv ? -1 : 1, r = i * 2, a = i * 3, c = o[t], l = o[t + 1], m = o[t + i], u = o[t + i + 1], d = o[t + r], f = o[t + r + 1], p = o[t + a], y = o[t + a + 1], v = c + d, S = l + f, b = c - d, g = l - f, C = m + p, I = u + y, P = n * (m - p), q = n * (u - y), z = v + C, L = S + I, O = b + q, U = g - P, B = v - C, $ = S - I, H = b - q, V = g + P;
+  s[e] = z, s[e + 1] = L, s[e + 2] = O, s[e + 3] = U, s[e + 4] = B, s[e + 5] = $, s[e + 6] = H, s[e + 7] = V;
 };
 D.prototype._realTransform4 = function() {
   var e = this._out, t = this._csize, i = this._width, s = 1 << i, o = t / s << 1, n, r, a = this._bitrev;
@@ -1203,15 +1203,15 @@ D.prototype._realTransform4 = function() {
     var m = o >>> 1, u = m >>> 1, d = u >>> 1;
     for (n = 0; n < t; n += o)
       for (var f = 0, p = 0; f <= d; f += 2, p += s) {
-        var y = n + f, v = y + u, S = v + u, b = S + u, g = e[y], C = e[y + 1], I = e[v], P = e[v + 1], q = e[S], O = e[S + 1], z = e[b], L = e[b + 1], U = g, B = C, $ = l[p], H = c * l[p + 1], V = I * $ - P * H, X = I * H + P * $, Y = l[2 * p], K = c * l[2 * p + 1], Z = q * Y - O * K, ee = q * K + O * Y, te = l[3 * p], ie = c * l[3 * p + 1], se = z * te - L * ie, oe = z * ie + L * te, j = U + Z, Q = B + ee, ne = U - Z, re = B - ee, W = V + se, J = X + oe, ae = c * (V - se), he = c * (X - oe), fe = j + W, ge = Q + J, pe = ne + he, ve = re - ae;
+        var y = n + f, v = y + u, S = v + u, b = S + u, g = e[y], C = e[y + 1], I = e[v], P = e[v + 1], q = e[S], z = e[S + 1], L = e[b], O = e[b + 1], U = g, B = C, $ = l[p], H = c * l[p + 1], V = I * $ - P * H, X = I * H + P * $, Y = l[2 * p], K = c * l[2 * p + 1], Z = q * Y - z * K, ee = q * K + z * Y, te = l[3 * p], ie = c * l[3 * p + 1], se = L * te - O * ie, oe = L * ie + O * te, j = U + Z, Q = B + ee, ne = U - Z, re = B - ee, W = V + se, J = X + oe, ae = c * (V - se), he = c * (X - oe), fe = j + W, ge = Q + J, pe = ne + he, ve = re - ae;
         if (e[y] = fe, e[y + 1] = ge, e[v] = pe, e[v + 1] = ve, f === 0) {
           var ye = j - W, Se = Q - J;
           e[S] = ye, e[S + 1] = Se;
           continue;
         }
         if (f !== d) {
-          var Ce = ne, xe = -re, Ne = j, Re = -Q, Pe = -c * he, qe = -c * ae, _e = -c * J, ke = -c * W, Oe = Ce + Pe, ze = xe + qe, Le = Ne + ke, Ue = Re - _e, Ae = n + u - f, we = n + m - f;
-          e[Ae] = Oe, e[Ae + 1] = ze, e[we] = Le, e[we + 1] = Ue;
+          var Ce = ne, xe = -re, Ne = j, Re = -Q, Pe = -c * he, qe = -c * ae, _e = -c * J, ke = -c * W, ze = Ce + Pe, Le = xe + qe, Oe = Ne + ke, Ue = Re - _e, Ae = n + u - f, we = n + m - f;
+          e[Ae] = ze, e[Ae + 1] = Le, e[we] = Oe, e[we + 1] = Ue;
         }
       }
   }
@@ -1517,6 +1517,567 @@ let Ye = class ue {
 function Ke(h) {
   return h--, h |= h >> 1, h |= h >> 2, h |= h >> 4, h |= h >> 8, h |= h >> 16, h++, h;
 }
+const M = class M {
+  /**
+   * Converts frequency in Hz to MIDI note number
+   * 
+   * @param frequency - Input frequency in Hz
+   * @returns MIDI note number (0-127, where 69 = A4 = 440Hz)
+   * 
+   * @example
+   * ```typescript
+   * const midiNote = FrequencyUtils.frequencyToMidi(440);
+   * console.log(midiNote); // 69 (A4)
+   * 
+   * const midiNote2 = FrequencyUtils.frequencyToMidi(261.63);
+   * console.log(midiNote2); // 60 (C4)
+   * ```
+   */
+  static frequencyToMidi(e) {
+    return e <= 0 ? 0 : Math.round(12 * Math.log2(e / M.A4_FREQUENCY) + M.A4_MIDI_NUMBER);
+  }
+  /**
+   * Converts MIDI note number to frequency in Hz
+   * 
+   * @param midiNumber - MIDI note number (0-127)
+   * @returns Frequency in Hz
+   * 
+   * @example
+   * ```typescript
+   * const frequency = FrequencyUtils.midiToFrequency(69);
+   * console.log(frequency); // 440 (A4)
+   * 
+   * const frequency2 = FrequencyUtils.midiToFrequency(60);
+   * console.log(frequency2); // 261.63 (C4)
+   * ```
+   */
+  static midiToFrequency(e) {
+    return M.A4_FREQUENCY * Math.pow(2, (e - M.A4_MIDI_NUMBER) / 12);
+  }
+  /**
+   * Converts frequency to musical note with octave detection and enharmonic support
+   * 
+   * @param frequency - Input frequency in Hz
+   * @param useFlats - Use flat notation instead of sharps (default: false)
+   * @returns Musical note object with name, octave, MIDI number, and exact frequency
+   * 
+   * @example
+   * ```typescript
+   * const note1 = FrequencyUtils.frequencyToNote(440);
+   * console.log(note1); // { name: 'A4', octave: 4, midi: 69, frequency: 440 }
+   * 
+   * const note2 = FrequencyUtils.frequencyToNote(466.16, true);
+   * console.log(note2); // { name: 'Bb4', octave: 4, midi: 70, frequency: 466.164... }
+   * 
+   * // Invalid frequency handling
+   * const invalid = FrequencyUtils.frequencyToNote(-10);
+   * console.log(invalid); // { name: '--', octave: 0, midi: 0, frequency: 0 }
+   * ```
+   */
+  static frequencyToNote(e, t = !1) {
+    if (e <= 0)
+      return {
+        name: "--",
+        octave: 0,
+        midi: 0,
+        frequency: 0
+      };
+    const i = M.frequencyToMidi(e), s = t ? M.FLAT_NOTE_NAMES : M.NOTE_NAMES, o = (i - 12) % 12, n = Math.floor((i - 12) / 12);
+    return {
+      name: s[o] + n,
+      octave: n,
+      midi: i,
+      frequency: M.midiToFrequency(i)
+    };
+  }
+  /**
+   * Calculates cents deviation from the nearest semitone for pitch accuracy analysis
+   * 
+   * @description Converts frequency to cents deviation, where 100 cents = 1 semitone.
+   * Positive values indicate sharp pitch, negative values indicate flat pitch.
+   * 
+   * @param frequency - Input frequency in Hz
+   * @returns Cents deviation from nearest semitone (-50 to +50 cents)
+   * 
+   * @example
+   * ```typescript
+   * const cents1 = FrequencyUtils.frequencyToCents(440);
+   * console.log(cents1); // 0 (A4 is perfectly in tune)
+   * 
+   * const cents2 = FrequencyUtils.frequencyToCents(445);
+   * console.log(cents2); // +20 (20 cents sharp)
+   * 
+   * const cents3 = FrequencyUtils.frequencyToCents(435);
+   * console.log(cents3); // -20 (20 cents flat)
+   * ```
+   */
+  static frequencyToCents(e) {
+    if (e <= 0) return 0;
+    const t = 12 * Math.log2(e / M.A4_FREQUENCY) + M.A4_MIDI_NUMBER, i = Math.round(t), s = (t - i) * 100;
+    return Math.round(s);
+  }
+  /**
+   * Converts cents to frequency ratio for interval calculations
+   * 
+   * @description Calculates the frequency multiplier for a given cent value.
+   * Useful for transposition and interval calculations.
+   * 
+   * @param cents - Cents value (100 cents = 1 semitone)
+   * @returns Frequency ratio multiplier
+   * 
+   * @example
+   * ```typescript
+   * const ratio1 = FrequencyUtils.centsToRatio(1200);
+   * console.log(ratio1); // 2.0 (1200 cents = 1 octave = 2x frequency)
+   * 
+   * const ratio2 = FrequencyUtils.centsToRatio(700);
+   * console.log(ratio2); // ~1.498 (700 cents ≈ perfect fifth)
+   * 
+   * // Apply ratio to transpose frequency
+   * const newFreq = 440 * FrequencyUtils.centsToRatio(100); // 440 * semitone ratio
+   * console.log(newFreq); // ~466.16 (A# above A4)
+   * ```
+   */
+  static centsToRatio(e) {
+    return Math.pow(2, e / 1200);
+  }
+  /**
+   * Converts frequency ratio to cents for interval analysis
+   * 
+   * @description Calculates the cent value for a given frequency ratio.
+   * Useful for analyzing musical intervals and pitch relationships.
+   * 
+   * @param ratio - Frequency ratio (higher frequency / lower frequency)
+   * @returns Cents value (positive for ascending intervals)
+   * 
+   * @example
+   * ```typescript
+   * const cents1 = FrequencyUtils.ratioToCents(2.0);
+   * console.log(cents1); // 1200 (octave)
+   * 
+   * const cents2 = FrequencyUtils.ratioToCents(1.5);
+   * console.log(cents2); // 702 (perfect fifth)
+   * 
+   * const cents3 = FrequencyUtils.ratioToCents(880 / 440);
+   * console.log(cents3); // 1200 (A4 to A5 = octave)
+   * ```
+   */
+  static ratioToCents(e) {
+    return e <= 0 ? 0 : Math.round(1200 * Math.log2(e));
+  }
+  /**
+   * Finds the exact frequency of the closest equal temperament note
+   * 
+   * @description Rounds the input frequency to the nearest semitone frequency
+   * in equal temperament tuning. Useful for pitch correction and reference.
+   * 
+   * @param frequency - Input frequency in Hz
+   * @returns Exact frequency of the closest note in Hz
+   * 
+   * @example
+   * ```typescript
+   * const closest1 = FrequencyUtils.getClosestNoteFrequency(445);
+   * console.log(closest1); // 440 (closest to A4)
+   * 
+   * const closest2 = FrequencyUtils.getClosestNoteFrequency(470);
+   * console.log(closest2); // 466.16 (closest to A#4/Bb4)
+   * 
+   * const closest3 = FrequencyUtils.getClosestNoteFrequency(260);
+   * console.log(closest3); // 261.63 (closest to C4)
+   * ```
+   */
+  static getClosestNoteFrequency(e) {
+    if (e <= 0) return 0;
+    const t = M.frequencyToMidi(e);
+    return M.midiToFrequency(t);
+  }
+  /**
+   * Calculates the absolute interval between two frequencies in semitones
+   * 
+   * @description Determines the musical interval size between two frequencies,
+   * always returning a positive value regardless of frequency order.
+   * 
+   * @param frequency1 - First frequency in Hz
+   * @param frequency2 - Second frequency in Hz
+   * @returns Absolute interval in semitones (always positive)
+   * 
+   * @example
+   * ```typescript
+   * const interval1 = FrequencyUtils.getInterval(440, 880);
+   * console.log(interval1); // 12 (octave)
+   * 
+   * const interval2 = FrequencyUtils.getInterval(880, 440);
+   * console.log(interval2); // 12 (same interval, order doesn't matter)
+   * 
+   * const interval3 = FrequencyUtils.getInterval(440, 659.25);
+   * console.log(interval3); // 7 (perfect fifth)
+   * ```
+   */
+  static getInterval(e, t) {
+    if (e <= 0 || t <= 0) return 0;
+    const i = M.frequencyToMidi(e), s = M.frequencyToMidi(t);
+    return Math.abs(s - i);
+  }
+  /**
+   * Calculates the signed interval between two frequencies with direction
+   * 
+   * @description Determines the musical interval with direction information.
+   * Positive values indicate ascending intervals, negative values indicate descending.
+   * 
+   * @param fromFrequency - Starting frequency in Hz
+   * @param toFrequency - Target frequency in Hz
+   * @returns Signed interval in semitones (positive = ascending, negative = descending)
+   * 
+   * @example
+   * ```typescript
+   * const interval1 = FrequencyUtils.getSignedInterval(440, 880);
+   * console.log(interval1); // +12 (ascending octave)
+   * 
+   * const interval2 = FrequencyUtils.getSignedInterval(880, 440);
+   * console.log(interval2); // -12 (descending octave)
+   * 
+   * const interval3 = FrequencyUtils.getSignedInterval(261.63, 392);
+   * console.log(interval3); // +7 (ascending perfect fifth)
+   * ```
+   */
+  static getSignedInterval(e, t) {
+    if (e <= 0 || t <= 0) return 0;
+    const i = M.frequencyToMidi(e);
+    return M.frequencyToMidi(t) - i;
+  }
+  /**
+   * Provides comprehensive musical interval information and analysis
+   * 
+   * @description Converts semitone count to detailed interval information including
+   * name, cents value, and frequency ratio. Handles compound intervals with octaves.
+   * 
+   * @param semitones - Interval size in semitones
+   * @returns Musical interval object with name, semitones, cents, and ratio
+   * 
+   * @example
+   * ```typescript
+   * const fifth = FrequencyUtils.getIntervalInfo(7);
+   * console.log(fifth);
+   * // { name: 'Perfect Fifth', semitones: 7, cents: 700, ratio: 1.498... }
+   * 
+   * const compound = FrequencyUtils.getIntervalInfo(19);
+   * console.log(compound);
+   * // { name: 'Perfect Fifth + 1 octave(s)', semitones: 19, cents: 1900, ratio: 2.996... }
+   * 
+   * const unison = FrequencyUtils.getIntervalInfo(0);
+   * console.log(unison);
+   * // { name: 'Perfect Unison', semitones: 0, cents: 0, ratio: 1.0 }
+   * ```
+   */
+  static getIntervalInfo(e) {
+    const t = {
+      0: "Perfect Unison",
+      1: "Minor Second",
+      2: "Major Second",
+      3: "Minor Third",
+      4: "Major Third",
+      5: "Perfect Fourth",
+      6: "Tritone",
+      7: "Perfect Fifth",
+      8: "Minor Sixth",
+      9: "Major Sixth",
+      10: "Minor Seventh",
+      11: "Major Seventh",
+      12: "Perfect Octave"
+    }, i = (e % 12 + 12) % 12, s = Math.floor(e / 12), o = t[i] || "Unknown";
+    return {
+      name: s > 0 ? `${o} + ${s} octave(s)` : o,
+      semitones: e,
+      cents: e * 100,
+      ratio: Math.pow(2, e / 12)
+    };
+  }
+  /**
+   * Checks if frequency falls within typical human vocal range
+   * 
+   * @description Tests whether a frequency is within the fundamental vocal range
+   * of approximately 80Hz to 1100Hz, covering bass to soprano voices.
+   * 
+   * @param frequency - Input frequency in Hz
+   * @returns True if frequency is within vocal range, false otherwise
+   * 
+   * @example
+   * ```typescript
+   * const isVocal1 = FrequencyUtils.isInVocalRange(220);
+   * console.log(isVocal1); // true (A3, typical male voice)
+   * 
+   * const isVocal2 = FrequencyUtils.isInVocalRange(50);
+   * console.log(isVocal2); // false (below vocal range)
+   * 
+   * const isVocal3 = FrequencyUtils.isInVocalRange(2000);
+   * console.log(isVocal3); // false (above fundamental vocal range)
+   * ```
+   */
+  static isInVocalRange(e) {
+    return e >= 80 && e <= 1100;
+  }
+  /**
+   * Checks if frequency falls within standard piano key range
+   * 
+   * @description Tests whether a frequency is within the range of a standard
+   * 88-key piano, from A0 (27.5Hz) to C8 (4186Hz).
+   * 
+   * @param frequency - Input frequency in Hz
+   * @returns True if frequency is within piano range, false otherwise
+   * 
+   * @example
+   * ```typescript
+   * const isPiano1 = FrequencyUtils.isInPianoRange(440);
+   * console.log(isPiano1); // true (A4, middle of piano range)
+   * 
+   * const isPiano2 = FrequencyUtils.isInPianoRange(20);
+   * console.log(isPiano2); // false (below piano range)
+   * 
+   * const isPiano3 = FrequencyUtils.isInPianoRange(5000);
+   * console.log(isPiano3); // false (above piano range)
+   * ```
+   */
+  static isInPianoRange(e) {
+    return e >= 27.5 && e <= 4186;
+  }
+  /**
+   * Retrieves frequency range specifications for common instruments
+   * 
+   * @description Returns the typical fundamental frequency range for various
+   * instruments and voice types. Useful for instrument-specific audio processing.
+   * 
+   * @param instrument - Instrument name (piano, guitar, violin, cello, voice_bass, voice_tenor, voice_alto, voice_soprano)
+   * @returns Object with min/max frequencies in Hz, or null if instrument not found
+   * 
+   * @example
+   * ```typescript
+   * const guitarRange = FrequencyUtils.getInstrumentRange('guitar');
+   * console.log(guitarRange); // { min: 82.4, max: 1397 } (E2 to F6)
+   * 
+   * const bassRange = FrequencyUtils.getInstrumentRange('voice_bass');
+   * console.log(bassRange); // { min: 87.3, max: 349 } (F2 to F4)
+   * 
+   * const unknown = FrequencyUtils.getInstrumentRange('kazoo');
+   * console.log(unknown); // null (instrument not in database)
+   * ```
+   */
+  static getInstrumentRange(e) {
+    return {
+      piano: { min: 27.5, max: 4186 },
+      guitar: { min: 82.4, max: 1397 },
+      // E2 to F6
+      violin: { min: 196, max: 3520 },
+      // G3 to A7
+      cello: { min: 65.4, max: 1397 },
+      // C2 to F6
+      voice_bass: { min: 87.3, max: 349 },
+      // F2 to F4
+      voice_tenor: { min: 131, max: 523 },
+      // C3 to C5
+      voice_alto: { min: 175, max: 698 },
+      // F3 to F5
+      voice_soprano: { min: 262, max: 1047 }
+      // C4 to C6
+    }[e] || null;
+  }
+  /**
+   * Generates chromatic scale frequencies from a base frequency
+   * 
+   * @description Creates an array of frequencies representing a chromatic scale
+   * (all 12 semitones) starting from the given base frequency.
+   * 
+   * @param baseFrequency - Starting frequency in Hz
+   * @param octaves - Number of octaves to generate (default: 1)
+   * @returns Array of frequencies representing the chromatic scale
+   * 
+   * @example
+   * ```typescript
+   * const chromaticC4 = FrequencyUtils.generateChromaticScale(261.63, 1);
+   * console.log(chromaticC4);
+   * // [261.63, 277.18, 293.66, 311.13, 329.63, 349.23, 369.99, 392.00, 415.30, 440.00, 466.16, 493.88, 523.25]
+   * 
+   * const chromatic2Oct = FrequencyUtils.generateChromaticScale(440, 2);
+   * console.log(chromatic2Oct.length); // 24 (2 octaves × 12 semitones)
+   * ```
+   */
+  static generateChromaticScale(e, t = 1) {
+    const i = [];
+    for (let s = 0; s < 12 * t; s++) {
+      const o = e * Math.pow(2, s / 12);
+      i.push(o);
+    }
+    return i;
+  }
+  /**
+   * Generates major scale frequencies from a base frequency
+   * 
+   * @description Creates an array of frequencies representing a major scale
+   * using the pattern W-W-H-W-W-W-H (whole step, half step intervals).
+   * 
+   * @param baseFrequency - Starting frequency in Hz (tonic note)
+   * @returns Array of 8 frequencies representing the major scale (including octave)
+   * 
+   * @example
+   * ```typescript
+   * const cMajor = FrequencyUtils.generateMajorScale(261.63); // C4 major
+   * console.log(cMajor);
+   * // [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25]
+   * // [C4,     D4,     E4,     F4,     G4,     A4,     B4,     C5]
+   * 
+   * const gMajor = FrequencyUtils.generateMajorScale(392); // G4 major
+   * console.log(gMajor.length); // 8 notes (including octave)
+   * ```
+   */
+  static generateMajorScale(e) {
+    return [0, 2, 4, 5, 7, 9, 11, 12].map((i) => e * Math.pow(2, i / 12));
+  }
+  /**
+   * Generates natural minor scale frequencies from a base frequency
+   * 
+   * @description Creates an array of frequencies representing a natural minor scale
+   * using the pattern W-H-W-W-H-W-W (whole step, half step intervals).
+   * 
+   * @param baseFrequency - Starting frequency in Hz (tonic note)
+   * @returns Array of 8 frequencies representing the natural minor scale (including octave)
+   * 
+   * @example
+   * ```typescript
+   * const aMinor = FrequencyUtils.generateMinorScale(440); // A4 minor
+   * console.log(aMinor);
+   * // [440.00, 493.88, 523.25, 587.33, 659.25, 698.46, 783.99, 880.00]
+   * // [A4,     B4,     C5,     D5,     E5,     F5,     G5,     A5]
+   * 
+   * const dMinor = FrequencyUtils.generateMinorScale(293.66); // D4 minor
+   * console.log(dMinor.length); // 8 notes (including octave)
+   * ```
+   */
+  static generateMinorScale(e) {
+    return [0, 2, 3, 5, 7, 8, 10, 12].map((i) => e * Math.pow(2, i / 12));
+  }
+  /**
+   * Calculates harmonic series frequencies for a given fundamental
+   * 
+   * @description Generates the harmonic series by multiplying the fundamental
+   * frequency by integer values. Essential for understanding timbre and overtones.
+   * 
+   * @param fundamental - Fundamental frequency in Hz
+   * @param maxHarmonic - Maximum harmonic number to calculate (default: 8)
+   * @returns Array of harmonic frequencies including the fundamental
+   * 
+   * @example
+   * ```typescript
+   * const harmonics = FrequencyUtils.findHarmonics(220, 5); // A3 harmonics
+   * console.log(harmonics);
+   * // [220, 440, 660, 880, 1100] (A3, A4, E5, A5, C#6)
+   * 
+   * const allHarmonics = FrequencyUtils.findHarmonics(100, 8);
+   * console.log(allHarmonics.length); // 8 harmonics
+   * ```
+   */
+  static findHarmonics(e, t = 8) {
+    const i = [];
+    for (let s = 1; s <= t; s++)
+      i.push(e * s);
+    return i;
+  }
+  /**
+   * Analyzes whether a frequency is a harmonic of a fundamental frequency
+   * 
+   * @description Tests if the given frequency matches a harmonic of the fundamental
+   * within the specified tolerance. Returns detailed harmonic analysis.
+   * 
+   * @param frequency - Frequency to test in Hz
+   * @param fundamental - Fundamental frequency in Hz
+   * @param tolerance - Tolerance for harmonic matching (default: 0.05 = 5%)
+   * @returns Object containing harmonic analysis results
+   * 
+   * @example
+   * ```typescript
+   * const result1 = FrequencyUtils.isHarmonic(440, 220);
+   * console.log(result1);
+   * // { isHarmonic: true, harmonicNumber: 2, exactFrequency: 440 }
+   * 
+   * const result2 = FrequencyUtils.isHarmonic(665, 220, 0.1);
+   * console.log(result2);
+   * // { isHarmonic: true, harmonicNumber: 3, exactFrequency: 660 } (within 10% tolerance)
+   * 
+   * const result3 = FrequencyUtils.isHarmonic(450, 220);
+   * console.log(result3);
+   * // { isHarmonic: false, harmonicNumber: null, exactFrequency: null }
+   * ```
+   */
+  static isHarmonic(e, t, i = 0.05) {
+    if (t <= 0 || e <= 0)
+      return { isHarmonic: !1, harmonicNumber: null, exactFrequency: null };
+    const s = e / t, o = Math.round(s);
+    return o >= 1 && Math.abs(s - o) <= i ? {
+      isHarmonic: !0,
+      harmonicNumber: o,
+      exactFrequency: t * o
+    } : { isHarmonic: !1, harmonicNumber: null, exactFrequency: null };
+  }
+  /**
+   * Calculate the fundamental frequency from a suspected harmonic
+   */
+  static calculateFundamental(e, t) {
+    return t <= 0 || e <= 0 ? 0 : e / t;
+  }
+  /**
+   * Convert frequency to scientific pitch notation
+   */
+  static frequencyToScientificPitch(e) {
+    return M.frequencyToNote(e).name;
+  }
+  /**
+   * Convert scientific pitch notation to frequency
+   */
+  static scientificPitchToFrequency(e) {
+    const t = e.match(/^([A-G][#b]?)(-?\d+)$/);
+    if (!t) return 0;
+    const [, i, s] = t, o = parseInt(s, 10);
+    let n = 0;
+    const r = i[0], a = i.slice(1);
+    n = {
+      C: 0,
+      D: 2,
+      E: 4,
+      F: 5,
+      G: 7,
+      A: 9,
+      B: 11
+    }[r] || 0, a === "#" ? n += 1 : a === "b" && (n -= 1);
+    const l = (o + 1) * 12 + n;
+    return M.midiToFrequency(l);
+  }
+  /**
+   * Format frequency display with appropriate precision
+   */
+  static formatFrequency(e, t = 1) {
+    return e === 0 ? "0 Hz" : e < 0.1 ? "<0.1 Hz" : e >= 1e4 ? `${Math.round(e / 1e3)}k Hz` : `${e.toFixed(t)} Hz`;
+  }
+  /**
+   * Format cents display with sign
+   */
+  static formatCents(e) {
+    return e === 0 ? "0¢" : `${e > 0 ? "+" : ""}${e}¢`;
+  }
+};
+M.A4_FREQUENCY = 440, M.A4_MIDI_NUMBER = 69, M.NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"], M.FLAT_NOTE_NAMES = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"], M.INTERVALS = {
+  unison: 0,
+  minorSecond: 1,
+  majorSecond: 2,
+  minorThird: 3,
+  majorThird: 4,
+  perfectFourth: 5,
+  tritone: 6,
+  perfectFifth: 7,
+  minorSixth: 8,
+  majorSixth: 9,
+  minorSeventh: 10,
+  majorSeventh: 11,
+  octave: 12
+};
+let T = M;
 class Ze {
   // 推奨45FPS（22ms、音楽演奏に適切）
   constructor(e = 45) {
@@ -1876,8 +2437,8 @@ class et {
         g = this.correctHarmonic(c, I);
       }
       this.currentFrequency = g;
-      const C = this.frequencyToNoteAndOctave(this.currentFrequency);
-      this.detectedNote = C.note, this.detectedOctave = C.octave, this.pitchClarity = l;
+      const C = T.frequencyToNote(this.currentFrequency);
+      this.detectedNote = C.name, this.detectedOctave = C.octave, this.pitchClarity = l;
     } else
       this.currentFrequency === 0 && this.resetHarmonicHistory(), this.currentFrequency = 0, this.detectedNote = "--", this.detectedOctave = null, this.pitchClarity = 0;
     this.processSilenceDetection(this.currentVolume);
@@ -1932,27 +2493,6 @@ class et {
   }
   /**
    * Convert frequency to musical note name and octave number
-   * 
-   * @private
-   * @description Converts a frequency in Hz to standard musical notation using
-   * equal temperament tuning (A4 = 440Hz). Calculates semitone distances
-   * and maps to chromatic scale positions.
-   * 
-   * @param frequency - Input frequency in Hz
-   * @returns Object containing note name (C, C#, D, etc.) and octave number
-   * 
-   * @example
-   * ```typescript
-   * frequencyToNoteAndOctave(440) // { note: 'A', octave: 4 }
-   * frequencyToNoteAndOctave(261.63) // { note: 'C', octave: 4 }
-   * ```
-   */
-  frequencyToNoteAndOctave(e) {
-    const t = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-    if (e <= 0) return { note: "--", octave: null };
-    const s = Math.round(12 * Math.log2(e / 440)), o = (s + 9 + 120) % 12, n = Math.floor((s + 9) / 12) + 4;
-    return { note: t[o], octave: n };
-  }
   /**
    * Convert frequency to cents deviation from the nearest semitone
    * 
@@ -4034,567 +4574,6 @@ class st {
     );
   }
 }
-const M = class M {
-  /**
-   * Converts frequency in Hz to MIDI note number
-   * 
-   * @param frequency - Input frequency in Hz
-   * @returns MIDI note number (0-127, where 69 = A4 = 440Hz)
-   * 
-   * @example
-   * ```typescript
-   * const midiNote = FrequencyUtils.frequencyToMidi(440);
-   * console.log(midiNote); // 69 (A4)
-   * 
-   * const midiNote2 = FrequencyUtils.frequencyToMidi(261.63);
-   * console.log(midiNote2); // 60 (C4)
-   * ```
-   */
-  static frequencyToMidi(e) {
-    return e <= 0 ? 0 : Math.round(12 * Math.log2(e / M.A4_FREQUENCY) + M.A4_MIDI_NUMBER);
-  }
-  /**
-   * Converts MIDI note number to frequency in Hz
-   * 
-   * @param midiNumber - MIDI note number (0-127)
-   * @returns Frequency in Hz
-   * 
-   * @example
-   * ```typescript
-   * const frequency = FrequencyUtils.midiToFrequency(69);
-   * console.log(frequency); // 440 (A4)
-   * 
-   * const frequency2 = FrequencyUtils.midiToFrequency(60);
-   * console.log(frequency2); // 261.63 (C4)
-   * ```
-   */
-  static midiToFrequency(e) {
-    return M.A4_FREQUENCY * Math.pow(2, (e - M.A4_MIDI_NUMBER) / 12);
-  }
-  /**
-   * Converts frequency to musical note with octave detection and enharmonic support
-   * 
-   * @param frequency - Input frequency in Hz
-   * @param useFlats - Use flat notation instead of sharps (default: false)
-   * @returns Musical note object with name, octave, MIDI number, and exact frequency
-   * 
-   * @example
-   * ```typescript
-   * const note1 = FrequencyUtils.frequencyToNote(440);
-   * console.log(note1); // { name: 'A4', octave: 4, midi: 69, frequency: 440 }
-   * 
-   * const note2 = FrequencyUtils.frequencyToNote(466.16, true);
-   * console.log(note2); // { name: 'Bb4', octave: 4, midi: 70, frequency: 466.164... }
-   * 
-   * // Invalid frequency handling
-   * const invalid = FrequencyUtils.frequencyToNote(-10);
-   * console.log(invalid); // { name: '--', octave: 0, midi: 0, frequency: 0 }
-   * ```
-   */
-  static frequencyToNote(e, t = !1) {
-    if (e <= 0)
-      return {
-        name: "--",
-        octave: 0,
-        midi: 0,
-        frequency: 0
-      };
-    const i = M.frequencyToMidi(e), s = t ? M.FLAT_NOTE_NAMES : M.NOTE_NAMES, o = (i - 12) % 12, n = Math.floor((i - 12) / 12);
-    return {
-      name: s[o] + n,
-      octave: n,
-      midi: i,
-      frequency: M.midiToFrequency(i)
-    };
-  }
-  /**
-   * Calculates cents deviation from the nearest semitone for pitch accuracy analysis
-   * 
-   * @description Converts frequency to cents deviation, where 100 cents = 1 semitone.
-   * Positive values indicate sharp pitch, negative values indicate flat pitch.
-   * 
-   * @param frequency - Input frequency in Hz
-   * @returns Cents deviation from nearest semitone (-50 to +50 cents)
-   * 
-   * @example
-   * ```typescript
-   * const cents1 = FrequencyUtils.frequencyToCents(440);
-   * console.log(cents1); // 0 (A4 is perfectly in tune)
-   * 
-   * const cents2 = FrequencyUtils.frequencyToCents(445);
-   * console.log(cents2); // +20 (20 cents sharp)
-   * 
-   * const cents3 = FrequencyUtils.frequencyToCents(435);
-   * console.log(cents3); // -20 (20 cents flat)
-   * ```
-   */
-  static frequencyToCents(e) {
-    if (e <= 0) return 0;
-    const t = 12 * Math.log2(e / M.A4_FREQUENCY) + M.A4_MIDI_NUMBER, i = Math.round(t), s = (t - i) * 100;
-    return Math.round(s);
-  }
-  /**
-   * Converts cents to frequency ratio for interval calculations
-   * 
-   * @description Calculates the frequency multiplier for a given cent value.
-   * Useful for transposition and interval calculations.
-   * 
-   * @param cents - Cents value (100 cents = 1 semitone)
-   * @returns Frequency ratio multiplier
-   * 
-   * @example
-   * ```typescript
-   * const ratio1 = FrequencyUtils.centsToRatio(1200);
-   * console.log(ratio1); // 2.0 (1200 cents = 1 octave = 2x frequency)
-   * 
-   * const ratio2 = FrequencyUtils.centsToRatio(700);
-   * console.log(ratio2); // ~1.498 (700 cents ≈ perfect fifth)
-   * 
-   * // Apply ratio to transpose frequency
-   * const newFreq = 440 * FrequencyUtils.centsToRatio(100); // 440 * semitone ratio
-   * console.log(newFreq); // ~466.16 (A# above A4)
-   * ```
-   */
-  static centsToRatio(e) {
-    return Math.pow(2, e / 1200);
-  }
-  /**
-   * Converts frequency ratio to cents for interval analysis
-   * 
-   * @description Calculates the cent value for a given frequency ratio.
-   * Useful for analyzing musical intervals and pitch relationships.
-   * 
-   * @param ratio - Frequency ratio (higher frequency / lower frequency)
-   * @returns Cents value (positive for ascending intervals)
-   * 
-   * @example
-   * ```typescript
-   * const cents1 = FrequencyUtils.ratioToCents(2.0);
-   * console.log(cents1); // 1200 (octave)
-   * 
-   * const cents2 = FrequencyUtils.ratioToCents(1.5);
-   * console.log(cents2); // 702 (perfect fifth)
-   * 
-   * const cents3 = FrequencyUtils.ratioToCents(880 / 440);
-   * console.log(cents3); // 1200 (A4 to A5 = octave)
-   * ```
-   */
-  static ratioToCents(e) {
-    return e <= 0 ? 0 : Math.round(1200 * Math.log2(e));
-  }
-  /**
-   * Finds the exact frequency of the closest equal temperament note
-   * 
-   * @description Rounds the input frequency to the nearest semitone frequency
-   * in equal temperament tuning. Useful for pitch correction and reference.
-   * 
-   * @param frequency - Input frequency in Hz
-   * @returns Exact frequency of the closest note in Hz
-   * 
-   * @example
-   * ```typescript
-   * const closest1 = FrequencyUtils.getClosestNoteFrequency(445);
-   * console.log(closest1); // 440 (closest to A4)
-   * 
-   * const closest2 = FrequencyUtils.getClosestNoteFrequency(470);
-   * console.log(closest2); // 466.16 (closest to A#4/Bb4)
-   * 
-   * const closest3 = FrequencyUtils.getClosestNoteFrequency(260);
-   * console.log(closest3); // 261.63 (closest to C4)
-   * ```
-   */
-  static getClosestNoteFrequency(e) {
-    if (e <= 0) return 0;
-    const t = M.frequencyToMidi(e);
-    return M.midiToFrequency(t);
-  }
-  /**
-   * Calculates the absolute interval between two frequencies in semitones
-   * 
-   * @description Determines the musical interval size between two frequencies,
-   * always returning a positive value regardless of frequency order.
-   * 
-   * @param frequency1 - First frequency in Hz
-   * @param frequency2 - Second frequency in Hz
-   * @returns Absolute interval in semitones (always positive)
-   * 
-   * @example
-   * ```typescript
-   * const interval1 = FrequencyUtils.getInterval(440, 880);
-   * console.log(interval1); // 12 (octave)
-   * 
-   * const interval2 = FrequencyUtils.getInterval(880, 440);
-   * console.log(interval2); // 12 (same interval, order doesn't matter)
-   * 
-   * const interval3 = FrequencyUtils.getInterval(440, 659.25);
-   * console.log(interval3); // 7 (perfect fifth)
-   * ```
-   */
-  static getInterval(e, t) {
-    if (e <= 0 || t <= 0) return 0;
-    const i = M.frequencyToMidi(e), s = M.frequencyToMidi(t);
-    return Math.abs(s - i);
-  }
-  /**
-   * Calculates the signed interval between two frequencies with direction
-   * 
-   * @description Determines the musical interval with direction information.
-   * Positive values indicate ascending intervals, negative values indicate descending.
-   * 
-   * @param fromFrequency - Starting frequency in Hz
-   * @param toFrequency - Target frequency in Hz
-   * @returns Signed interval in semitones (positive = ascending, negative = descending)
-   * 
-   * @example
-   * ```typescript
-   * const interval1 = FrequencyUtils.getSignedInterval(440, 880);
-   * console.log(interval1); // +12 (ascending octave)
-   * 
-   * const interval2 = FrequencyUtils.getSignedInterval(880, 440);
-   * console.log(interval2); // -12 (descending octave)
-   * 
-   * const interval3 = FrequencyUtils.getSignedInterval(261.63, 392);
-   * console.log(interval3); // +7 (ascending perfect fifth)
-   * ```
-   */
-  static getSignedInterval(e, t) {
-    if (e <= 0 || t <= 0) return 0;
-    const i = M.frequencyToMidi(e);
-    return M.frequencyToMidi(t) - i;
-  }
-  /**
-   * Provides comprehensive musical interval information and analysis
-   * 
-   * @description Converts semitone count to detailed interval information including
-   * name, cents value, and frequency ratio. Handles compound intervals with octaves.
-   * 
-   * @param semitones - Interval size in semitones
-   * @returns Musical interval object with name, semitones, cents, and ratio
-   * 
-   * @example
-   * ```typescript
-   * const fifth = FrequencyUtils.getIntervalInfo(7);
-   * console.log(fifth);
-   * // { name: 'Perfect Fifth', semitones: 7, cents: 700, ratio: 1.498... }
-   * 
-   * const compound = FrequencyUtils.getIntervalInfo(19);
-   * console.log(compound);
-   * // { name: 'Perfect Fifth + 1 octave(s)', semitones: 19, cents: 1900, ratio: 2.996... }
-   * 
-   * const unison = FrequencyUtils.getIntervalInfo(0);
-   * console.log(unison);
-   * // { name: 'Perfect Unison', semitones: 0, cents: 0, ratio: 1.0 }
-   * ```
-   */
-  static getIntervalInfo(e) {
-    const t = {
-      0: "Perfect Unison",
-      1: "Minor Second",
-      2: "Major Second",
-      3: "Minor Third",
-      4: "Major Third",
-      5: "Perfect Fourth",
-      6: "Tritone",
-      7: "Perfect Fifth",
-      8: "Minor Sixth",
-      9: "Major Sixth",
-      10: "Minor Seventh",
-      11: "Major Seventh",
-      12: "Perfect Octave"
-    }, i = (e % 12 + 12) % 12, s = Math.floor(e / 12), o = t[i] || "Unknown";
-    return {
-      name: s > 0 ? `${o} + ${s} octave(s)` : o,
-      semitones: e,
-      cents: e * 100,
-      ratio: Math.pow(2, e / 12)
-    };
-  }
-  /**
-   * Checks if frequency falls within typical human vocal range
-   * 
-   * @description Tests whether a frequency is within the fundamental vocal range
-   * of approximately 80Hz to 1100Hz, covering bass to soprano voices.
-   * 
-   * @param frequency - Input frequency in Hz
-   * @returns True if frequency is within vocal range, false otherwise
-   * 
-   * @example
-   * ```typescript
-   * const isVocal1 = FrequencyUtils.isInVocalRange(220);
-   * console.log(isVocal1); // true (A3, typical male voice)
-   * 
-   * const isVocal2 = FrequencyUtils.isInVocalRange(50);
-   * console.log(isVocal2); // false (below vocal range)
-   * 
-   * const isVocal3 = FrequencyUtils.isInVocalRange(2000);
-   * console.log(isVocal3); // false (above fundamental vocal range)
-   * ```
-   */
-  static isInVocalRange(e) {
-    return e >= 80 && e <= 1100;
-  }
-  /**
-   * Checks if frequency falls within standard piano key range
-   * 
-   * @description Tests whether a frequency is within the range of a standard
-   * 88-key piano, from A0 (27.5Hz) to C8 (4186Hz).
-   * 
-   * @param frequency - Input frequency in Hz
-   * @returns True if frequency is within piano range, false otherwise
-   * 
-   * @example
-   * ```typescript
-   * const isPiano1 = FrequencyUtils.isInPianoRange(440);
-   * console.log(isPiano1); // true (A4, middle of piano range)
-   * 
-   * const isPiano2 = FrequencyUtils.isInPianoRange(20);
-   * console.log(isPiano2); // false (below piano range)
-   * 
-   * const isPiano3 = FrequencyUtils.isInPianoRange(5000);
-   * console.log(isPiano3); // false (above piano range)
-   * ```
-   */
-  static isInPianoRange(e) {
-    return e >= 27.5 && e <= 4186;
-  }
-  /**
-   * Retrieves frequency range specifications for common instruments
-   * 
-   * @description Returns the typical fundamental frequency range for various
-   * instruments and voice types. Useful for instrument-specific audio processing.
-   * 
-   * @param instrument - Instrument name (piano, guitar, violin, cello, voice_bass, voice_tenor, voice_alto, voice_soprano)
-   * @returns Object with min/max frequencies in Hz, or null if instrument not found
-   * 
-   * @example
-   * ```typescript
-   * const guitarRange = FrequencyUtils.getInstrumentRange('guitar');
-   * console.log(guitarRange); // { min: 82.4, max: 1397 } (E2 to F6)
-   * 
-   * const bassRange = FrequencyUtils.getInstrumentRange('voice_bass');
-   * console.log(bassRange); // { min: 87.3, max: 349 } (F2 to F4)
-   * 
-   * const unknown = FrequencyUtils.getInstrumentRange('kazoo');
-   * console.log(unknown); // null (instrument not in database)
-   * ```
-   */
-  static getInstrumentRange(e) {
-    return {
-      piano: { min: 27.5, max: 4186 },
-      guitar: { min: 82.4, max: 1397 },
-      // E2 to F6
-      violin: { min: 196, max: 3520 },
-      // G3 to A7
-      cello: { min: 65.4, max: 1397 },
-      // C2 to F6
-      voice_bass: { min: 87.3, max: 349 },
-      // F2 to F4
-      voice_tenor: { min: 131, max: 523 },
-      // C3 to C5
-      voice_alto: { min: 175, max: 698 },
-      // F3 to F5
-      voice_soprano: { min: 262, max: 1047 }
-      // C4 to C6
-    }[e] || null;
-  }
-  /**
-   * Generates chromatic scale frequencies from a base frequency
-   * 
-   * @description Creates an array of frequencies representing a chromatic scale
-   * (all 12 semitones) starting from the given base frequency.
-   * 
-   * @param baseFrequency - Starting frequency in Hz
-   * @param octaves - Number of octaves to generate (default: 1)
-   * @returns Array of frequencies representing the chromatic scale
-   * 
-   * @example
-   * ```typescript
-   * const chromaticC4 = FrequencyUtils.generateChromaticScale(261.63, 1);
-   * console.log(chromaticC4);
-   * // [261.63, 277.18, 293.66, 311.13, 329.63, 349.23, 369.99, 392.00, 415.30, 440.00, 466.16, 493.88, 523.25]
-   * 
-   * const chromatic2Oct = FrequencyUtils.generateChromaticScale(440, 2);
-   * console.log(chromatic2Oct.length); // 24 (2 octaves × 12 semitones)
-   * ```
-   */
-  static generateChromaticScale(e, t = 1) {
-    const i = [];
-    for (let s = 0; s < 12 * t; s++) {
-      const o = e * Math.pow(2, s / 12);
-      i.push(o);
-    }
-    return i;
-  }
-  /**
-   * Generates major scale frequencies from a base frequency
-   * 
-   * @description Creates an array of frequencies representing a major scale
-   * using the pattern W-W-H-W-W-W-H (whole step, half step intervals).
-   * 
-   * @param baseFrequency - Starting frequency in Hz (tonic note)
-   * @returns Array of 8 frequencies representing the major scale (including octave)
-   * 
-   * @example
-   * ```typescript
-   * const cMajor = FrequencyUtils.generateMajorScale(261.63); // C4 major
-   * console.log(cMajor);
-   * // [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25]
-   * // [C4,     D4,     E4,     F4,     G4,     A4,     B4,     C5]
-   * 
-   * const gMajor = FrequencyUtils.generateMajorScale(392); // G4 major
-   * console.log(gMajor.length); // 8 notes (including octave)
-   * ```
-   */
-  static generateMajorScale(e) {
-    return [0, 2, 4, 5, 7, 9, 11, 12].map((i) => e * Math.pow(2, i / 12));
-  }
-  /**
-   * Generates natural minor scale frequencies from a base frequency
-   * 
-   * @description Creates an array of frequencies representing a natural minor scale
-   * using the pattern W-H-W-W-H-W-W (whole step, half step intervals).
-   * 
-   * @param baseFrequency - Starting frequency in Hz (tonic note)
-   * @returns Array of 8 frequencies representing the natural minor scale (including octave)
-   * 
-   * @example
-   * ```typescript
-   * const aMinor = FrequencyUtils.generateMinorScale(440); // A4 minor
-   * console.log(aMinor);
-   * // [440.00, 493.88, 523.25, 587.33, 659.25, 698.46, 783.99, 880.00]
-   * // [A4,     B4,     C5,     D5,     E5,     F5,     G5,     A5]
-   * 
-   * const dMinor = FrequencyUtils.generateMinorScale(293.66); // D4 minor
-   * console.log(dMinor.length); // 8 notes (including octave)
-   * ```
-   */
-  static generateMinorScale(e) {
-    return [0, 2, 3, 5, 7, 8, 10, 12].map((i) => e * Math.pow(2, i / 12));
-  }
-  /**
-   * Calculates harmonic series frequencies for a given fundamental
-   * 
-   * @description Generates the harmonic series by multiplying the fundamental
-   * frequency by integer values. Essential for understanding timbre and overtones.
-   * 
-   * @param fundamental - Fundamental frequency in Hz
-   * @param maxHarmonic - Maximum harmonic number to calculate (default: 8)
-   * @returns Array of harmonic frequencies including the fundamental
-   * 
-   * @example
-   * ```typescript
-   * const harmonics = FrequencyUtils.findHarmonics(220, 5); // A3 harmonics
-   * console.log(harmonics);
-   * // [220, 440, 660, 880, 1100] (A3, A4, E5, A5, C#6)
-   * 
-   * const allHarmonics = FrequencyUtils.findHarmonics(100, 8);
-   * console.log(allHarmonics.length); // 8 harmonics
-   * ```
-   */
-  static findHarmonics(e, t = 8) {
-    const i = [];
-    for (let s = 1; s <= t; s++)
-      i.push(e * s);
-    return i;
-  }
-  /**
-   * Analyzes whether a frequency is a harmonic of a fundamental frequency
-   * 
-   * @description Tests if the given frequency matches a harmonic of the fundamental
-   * within the specified tolerance. Returns detailed harmonic analysis.
-   * 
-   * @param frequency - Frequency to test in Hz
-   * @param fundamental - Fundamental frequency in Hz
-   * @param tolerance - Tolerance for harmonic matching (default: 0.05 = 5%)
-   * @returns Object containing harmonic analysis results
-   * 
-   * @example
-   * ```typescript
-   * const result1 = FrequencyUtils.isHarmonic(440, 220);
-   * console.log(result1);
-   * // { isHarmonic: true, harmonicNumber: 2, exactFrequency: 440 }
-   * 
-   * const result2 = FrequencyUtils.isHarmonic(665, 220, 0.1);
-   * console.log(result2);
-   * // { isHarmonic: true, harmonicNumber: 3, exactFrequency: 660 } (within 10% tolerance)
-   * 
-   * const result3 = FrequencyUtils.isHarmonic(450, 220);
-   * console.log(result3);
-   * // { isHarmonic: false, harmonicNumber: null, exactFrequency: null }
-   * ```
-   */
-  static isHarmonic(e, t, i = 0.05) {
-    if (t <= 0 || e <= 0)
-      return { isHarmonic: !1, harmonicNumber: null, exactFrequency: null };
-    const s = e / t, o = Math.round(s);
-    return o >= 1 && Math.abs(s - o) <= i ? {
-      isHarmonic: !0,
-      harmonicNumber: o,
-      exactFrequency: t * o
-    } : { isHarmonic: !1, harmonicNumber: null, exactFrequency: null };
-  }
-  /**
-   * Calculate the fundamental frequency from a suspected harmonic
-   */
-  static calculateFundamental(e, t) {
-    return t <= 0 || e <= 0 ? 0 : e / t;
-  }
-  /**
-   * Convert frequency to scientific pitch notation
-   */
-  static frequencyToScientificPitch(e) {
-    return M.frequencyToNote(e).name;
-  }
-  /**
-   * Convert scientific pitch notation to frequency
-   */
-  static scientificPitchToFrequency(e) {
-    const t = e.match(/^([A-G][#b]?)(-?\d+)$/);
-    if (!t) return 0;
-    const [, i, s] = t, o = parseInt(s, 10);
-    let n = 0;
-    const r = i[0], a = i.slice(1);
-    n = {
-      C: 0,
-      D: 2,
-      E: 4,
-      F: 5,
-      G: 7,
-      A: 9,
-      B: 11
-    }[r] || 0, a === "#" ? n += 1 : a === "b" && (n -= 1);
-    const l = (o + 1) * 12 + n;
-    return M.midiToFrequency(l);
-  }
-  /**
-   * Format frequency display with appropriate precision
-   */
-  static formatFrequency(e, t = 1) {
-    return e === 0 ? "0 Hz" : e < 0.1 ? "<0.1 Hz" : e >= 1e4 ? `${Math.round(e / 1e3)}k Hz` : `${e.toFixed(t)} Hz`;
-  }
-  /**
-   * Format cents display with sign
-   */
-  static formatCents(e) {
-    return e === 0 ? "0¢" : `${e > 0 ? "+" : ""}${e}¢`;
-  }
-};
-M.A4_FREQUENCY = 440, M.A4_MIDI_NUMBER = 69, M.NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"], M.FLAT_NOTE_NAMES = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"], M.INTERVALS = {
-  unison: 0,
-  minorSecond: 1,
-  majorSecond: 2,
-  minorThird: 3,
-  majorThird: 4,
-  perfectFourth: 5,
-  tritone: 6,
-  perfectFifth: 7,
-  minorSixth: 8,
-  majorSixth: 9,
-  minorSeventh: 10,
-  majorSeventh: 11,
-  octave: 12
-};
-let T = M;
 /**
  * PitchPro Audio Processing Library
  * High-precision pitch detection and audio processing for web applications
