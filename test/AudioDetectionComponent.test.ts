@@ -224,8 +224,8 @@ describe('AudioDetectionComponent - autoUpdateUI Feature', () => {
       const processedResult = (component as any)._getProcessedResult(rawResult);
 
       expect(processedResult).not.toBeNull();
-      // 計算: 0.8 * 50 (BASE_SCALING_FACTOR) * 1.5 (volumeMultiplier) = 60
-      expect(processedResult.volume).toBe(60);
+      // 計算: 0.8 * 200 (RMS_TO_PERCENT_FACTOR) * 1.5 (volumeMultiplier) = 240 → clamp to 100
+      expect(processedResult.volume).toBe(100);
       expect(processedResult.frequency).toBe(440); // 他の値は変更されない
       expect(processedResult.note).toBe('A4');
       expect(processedResult.clarity).toBe(0.8);
@@ -286,14 +286,14 @@ describe('AudioDetectionComponent - autoUpdateUI Feature', () => {
       const rawResult = {
         frequency: 440,
         note: 'A4',
-        volume: 0.08, // 0.08 * 50 = 4% < 5%（ノイズゲート閾値）
+        volume: 0.04, // 0.04 * 200 = 8% < 10%（noiseGate 0.05 * 100 * 2.0）ブロックされる
         clarity: 0.8
       };
 
       const processedResult = (component as any)._getProcessedResult(rawResult);
 
       expect(processedResult).not.toBeNull();
-      expect(processedResult.volume).toBe(0); // ノイズゲートによって0になる
+      expect(processedResult.volume).toBe(0); // v1.3.3+: ノイズゲート2.0倍でブロック
       expect(processedResult.frequency).toBe(0); // 周波数も0になる
       expect(processedResult.note).toBe('--'); // ノート表示も無効化
     });
@@ -315,15 +315,15 @@ describe('AudioDetectionComponent - autoUpdateUI Feature', () => {
       const rawResult = {
         frequency: 440,
         note: 'A4',
-        volume: 0.1, // 0.1 * 50 * 15.0 = 75.0
+        volume: 0.1, // 0.1 * 200 * 15.0 = 300 → clamp to 100
         clarity: 0.8
       };
 
       const processedResult = (component as any)._getProcessedResult(rawResult);
 
       expect(processedResult).not.toBeNull();
-      // iPad特別処理: volumeMultiplier 15.0が適用される (テスト設定値)
-      expect(processedResult.volume).toBe(75.0);
+      // iPad特別処理: volumeMultiplier 15.0が適用される (テスト設定値) → 100に制限
+      expect(processedResult.volume).toBe(100);
     });
 
     it('should use default multiplier when deviceSpecs is undefined', () => {
@@ -345,8 +345,8 @@ describe('AudioDetectionComponent - autoUpdateUI Feature', () => {
 
       const processedResult = (component as any)._getProcessedResult(rawResult);
 
-      // 計算: 1.0 * 50 (BASE_SCALING_FACTOR) * 1.0（デフォルト） = 50
-      expect(processedResult.volume).toBe(50);
+      // 計算: 1.0 * 200 (RMS_TO_PERCENT_FACTOR) * 1.0（デフォルト） = 200 → clamp to 100
+      expect(processedResult.volume).toBe(100);
     });
   });
 
