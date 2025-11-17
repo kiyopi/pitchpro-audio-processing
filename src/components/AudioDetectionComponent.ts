@@ -1138,17 +1138,23 @@ export class AudioDetectionComponent {
    */
   async startDetection(): Promise<boolean> {
     this.debugLog('Starting detection via AudioDetectionComponent...');
-    
+
     if (!this.isInitialized) {
       this.debugLog('Cannot start detection - component not initialized');
       return false;
     }
-    
+
     if (!this.micController) {
       this.debugLog('Cannot start detection - no MicrophoneController available');
       return false;
     }
-    
+
+    // 【v1.3.5追加】既に検出中の場合はスキップ（冪等性保証）
+    if (this.currentState === 'detecting') {
+      this.debugLog('Already detecting - skipping start');
+      return true;  // 既に検出中なので成功扱い
+    }
+
     try {
       // Use the unified MicrophoneController system
       const started = this.micController.start();

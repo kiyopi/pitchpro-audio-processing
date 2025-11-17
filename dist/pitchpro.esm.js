@@ -1,7 +1,7 @@
 var Be = Object.defineProperty;
 var $e = (h, e, t) => e in h ? Be(h, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : h[e] = t;
 var x = (h, e, t) => $e(h, typeof e != "symbol" ? e + "" : e, t);
-const He = "1.3.4", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).toISOString(), E = class E {
+const He = "1.3.5", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).toISOString(), E = class E {
   /**
    * Detect current device and return optimized specifications
    */
@@ -1172,7 +1172,7 @@ D.prototype._transform4 = function() {
     var m = o >>> 2;
     for (n = 0; n < t; n += o)
       for (var u = n + m, d = n, f = 0; d < u; d += 2, f += s) {
-        const p = d, y = p + m, v = y + m, S = v + m, b = e[p], g = e[p + 1], C = e[y], I = e[y + 1], P = e[v], q = e[v + 1], z = e[S], L = e[S + 1], O = b, U = g, B = l[f], $ = c * l[f + 1], H = C * B - I * $, V = C * $ + I * B, X = l[2 * f], Y = c * l[2 * f + 1], K = P * X - q * Y, Z = P * Y + q * X, ee = l[3 * f], te = c * l[3 * f + 1], ie = z * ee - L * te, se = z * te + L * ee, oe = O + K, j = U + Z, Q = O - K, ne = U - Z, re = H + ie, W = V + se, J = c * (H - ie), ae = c * (V - se), he = oe + re, fe = j + W, ge = oe - re, pe = j - W, ve = Q + ae, ye = ne - J, Se = Q - ae, Ce = ne + J;
+        const p = d, y = p + m, v = y + m, S = v + m, b = e[p], g = e[p + 1], C = e[y], I = e[y + 1], P = e[v], q = e[v + 1], L = e[S], z = e[S + 1], O = b, U = g, B = l[f], $ = c * l[f + 1], H = C * B - I * $, V = C * $ + I * B, X = l[2 * f], Y = c * l[2 * f + 1], K = P * X - q * Y, Z = P * Y + q * X, ee = l[3 * f], te = c * l[3 * f + 1], ie = L * ee - z * te, se = L * te + z * ee, oe = O + K, j = U + Z, Q = O - K, ne = U - Z, re = H + ie, W = V + se, J = c * (H - ie), ae = c * (V - se), he = oe + re, fe = j + W, ge = oe - re, pe = j - W, ve = Q + ae, ye = ne - J, Se = Q - ae, Ce = ne + J;
         e[p] = he, e[p + 1] = fe, e[y] = ve, e[y + 1] = ye, e[v] = ge, e[v + 1] = pe, e[S] = Se, e[S + 1] = Ce;
       }
   }
@@ -1182,8 +1182,8 @@ D.prototype._singleTransform2 = function(e, t, i) {
   s[e] = l, s[e + 1] = m, s[e + 2] = u, s[e + 3] = d;
 };
 D.prototype._singleTransform4 = function(e, t, i) {
-  const s = this._out, o = this._data, n = this._inv ? -1 : 1, r = i * 2, a = i * 3, c = o[t], l = o[t + 1], m = o[t + i], u = o[t + i + 1], d = o[t + r], f = o[t + r + 1], p = o[t + a], y = o[t + a + 1], v = c + d, S = l + f, b = c - d, g = l - f, C = m + p, I = u + y, P = n * (m - p), q = n * (u - y), z = v + C, L = S + I, O = b + q, U = g - P, B = v - C, $ = S - I, H = b - q, V = g + P;
-  s[e] = z, s[e + 1] = L, s[e + 2] = O, s[e + 3] = U, s[e + 4] = B, s[e + 5] = $, s[e + 6] = H, s[e + 7] = V;
+  const s = this._out, o = this._data, n = this._inv ? -1 : 1, r = i * 2, a = i * 3, c = o[t], l = o[t + 1], m = o[t + i], u = o[t + i + 1], d = o[t + r], f = o[t + r + 1], p = o[t + a], y = o[t + a + 1], v = c + d, S = l + f, b = c - d, g = l - f, C = m + p, I = u + y, P = n * (m - p), q = n * (u - y), L = v + C, z = S + I, O = b + q, U = g - P, B = v - C, $ = S - I, H = b - q, V = g + P;
+  s[e] = L, s[e + 1] = z, s[e + 2] = O, s[e + 3] = U, s[e + 4] = B, s[e + 5] = $, s[e + 6] = H, s[e + 7] = V;
 };
 D.prototype._realTransform4 = function() {
   var e = this._out, t = this._csize, i = this._width, s = 1 << i, o = t / s << 1, n, r, a = this._bitrev;
@@ -1203,15 +1203,15 @@ D.prototype._realTransform4 = function() {
     var m = o >>> 1, u = m >>> 1, d = u >>> 1;
     for (n = 0; n < t; n += o)
       for (var f = 0, p = 0; f <= d; f += 2, p += s) {
-        var y = n + f, v = y + u, S = v + u, b = S + u, g = e[y], C = e[y + 1], I = e[v], P = e[v + 1], q = e[S], z = e[S + 1], L = e[b], O = e[b + 1], U = g, B = C, $ = l[p], H = c * l[p + 1], V = I * $ - P * H, X = I * H + P * $, Y = l[2 * p], K = c * l[2 * p + 1], Z = q * Y - z * K, ee = q * K + z * Y, te = l[3 * p], ie = c * l[3 * p + 1], se = L * te - O * ie, oe = L * ie + O * te, j = U + Z, Q = B + ee, ne = U - Z, re = B - ee, W = V + se, J = X + oe, ae = c * (V - se), he = c * (X - oe), fe = j + W, ge = Q + J, pe = ne + he, ve = re - ae;
+        var y = n + f, v = y + u, S = v + u, b = S + u, g = e[y], C = e[y + 1], I = e[v], P = e[v + 1], q = e[S], L = e[S + 1], z = e[b], O = e[b + 1], U = g, B = C, $ = l[p], H = c * l[p + 1], V = I * $ - P * H, X = I * H + P * $, Y = l[2 * p], K = c * l[2 * p + 1], Z = q * Y - L * K, ee = q * K + L * Y, te = l[3 * p], ie = c * l[3 * p + 1], se = z * te - O * ie, oe = z * ie + O * te, j = U + Z, Q = B + ee, ne = U - Z, re = B - ee, W = V + se, J = X + oe, ae = c * (V - se), he = c * (X - oe), fe = j + W, ge = Q + J, pe = ne + he, ve = re - ae;
         if (e[y] = fe, e[y + 1] = ge, e[v] = pe, e[v + 1] = ve, f === 0) {
           var ye = j - W, Se = Q - J;
           e[S] = ye, e[S + 1] = Se;
           continue;
         }
         if (f !== d) {
-          var Ce = ne, xe = -re, Ne = j, Re = -Q, Pe = -c * he, qe = -c * ae, _e = -c * J, ke = -c * W, ze = Ce + Pe, Le = xe + qe, Oe = Ne + ke, Ue = Re - _e, Ae = n + u - f, we = n + m - f;
-          e[Ae] = ze, e[Ae + 1] = Le, e[we] = Oe, e[we + 1] = Ue;
+          var Ce = ne, xe = -re, Ne = j, Re = -Q, Pe = -c * he, qe = -c * ae, _e = -c * J, ke = -c * W, Le = Ce + Pe, ze = xe + qe, Oe = Ne + ke, Ue = Re - _e, Ae = n + u - f, we = n + m - f;
+          e[Ae] = Le, e[Ae + 1] = ze, e[we] = Oe, e[we + 1] = Ue;
         }
       }
   }
@@ -5068,6 +5068,8 @@ const N = class N {
       return this.debugLog("Cannot start detection - component not initialized"), !1;
     if (!this.micController)
       return this.debugLog("Cannot start detection - no MicrophoneController available"), !1;
+    if (this.currentState === "detecting")
+      return this.debugLog("Already detecting - skipping start"), !0;
     try {
       return this.micController.start() ? (this.debugLog("✅ Detection started successfully via MicrophoneController"), this.updateState("detecting"), !0) : (this.debugLog("❌ Failed to start detection via MicrophoneController"), !1);
     } catch (e) {

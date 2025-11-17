@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.5] - 2025-11-18
+
+### 🐛 Bug Fixes
+
+#### startDetection()に冪等性を追加
+
+**問題**:
+- `AudioDetectionComponent.startDetection()`を既に検出中の状態で呼ぶと `"Cannot start detection: component state is detecting"` エラーが発生
+- アプリケーション側が毎回 `getStatus()` で状態確認してから `startDetection()` を呼ぶ必要があった
+- 同じ状態チェックコードが複数箇所に重複実装される設計上の問題
+- `stopDetection()` は冪等性を持つが `startDetection()` は持たない非対称性
+
+**修正内容**:
+- `startDetection()` メソッドに冪等性を追加（src/components/AudioDetectionComponent.ts:1152-1156）
+- 既に `detecting` 状態の場合は安全にスキップして `true` を返却
+- `stopDetection()` と同じ設計パターンに統一
+
+**影響**:
+- ✅ `startDetection()` を何度呼んでも安全（冪等性保証）
+- ✅ アプリケーション側の状態チェックコード削減可能
+- ✅ エラーハンドリング不要（ライブラリ側で安全性保証）
+- ✅ `stopDetection()` との設計一貫性確保
+
+**アップグレードガイド**:
+```typescript
+// 修正前（状態チェックが必要だった）
+const status = audioDetector.getStatus();
+if (status.state !== 'detecting') {
+    await audioDetector.startDetection();
+}
+
+// 修正後（状態チェック不要）
+await audioDetector.startDetection();  // 既に検出中なら安全にスキップ
+```
+
+**関連ファイル**:
+- `/src/components/AudioDetectionComponent.ts`: 冪等性チェック追加（Line 1152-1156）
+
 ## [1.3.4] - 2025-11-10
 
 ### 🐛 Bug Fixes

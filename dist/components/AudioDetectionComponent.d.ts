@@ -547,10 +547,7 @@ export declare class AudioDetectionComponent {
                 currentFPS: number;
                 frameDrops: number;
                 latency: number;
-            }; /**
-             * Resets all UI elements to their initial state (0 values)
-             * @private
-             */
+            };
             deviceSpecs: DeviceSpecs | null;
             hasRequiredComponents: boolean;
             harmonicConfig: Required<import("../core/PitchDetector").HarmonicCorrectionConfig>;
