@@ -45,44 +45,47 @@ Web音楽アプリケーション開発のための包括的な音響処理ツ�
 - **完全TypeScript対応**：strictモード対応、厳密な型定義とIntelliSense支援
 - **ES/CommonJS対応**：モダンバンドラーと従来環境の両対応
 
-## 🎯 最新リリース：v1.3.4 result.noteにオクターブ番号を含める
+## 🎯 最新リリース：v1.3.5 startDetection() 冪等性修正
 
 ### 🐛 バグ修正
 
-**result.noteが完全な音名を返すように修正**
+**startDetection()に冪等性を追加**
 
 **問題**:
-- `result.note`が音名のみ（例: `"E"`, `"C#"`）を返していた
-- アプリケーション側で独自の変換処理が必要だった
-- 音域範囲表示が不完全（例: `"E2 - E"`）になっていた
+- `startDetection()`を既に検出中の状態で呼ぶと `"Cannot start detection"` エラーが発生
+- アプリケーション側が毎回 `getStatus()` で状態確認する必要があった
+- 同じ状態チェックコードが複数箇所に重複実装される設計上の問題
+- `stopDetection()` は冪等性を持つが `startDetection()` は持たない非対称性
 
 **修正内容**:
-- `FrequencyUtils.frequencyToNote()`を活用し、完全な音名（例: `"E4"`, `"C#2"`）を返すように変更
-- `PitchDetector.ts`の音名変換処理を`FrequencyUtils`に統一
-- 重複していた`frequencyToNoteAndOctave()`メソッドを削除（約25行削減）
+- `startDetection()` メソッドに冪等性を追加
+- 既に `detecting` 状態の場合は安全にスキップして `true` を返却
+- `stopDetection()` と同じ設計パターンに統一
 
 **影響**:
-- ✅ `result.note`が常に完全な音名（音名+オクターブ番号）を返す
-- ✅ `result.octave`プロパティは引き続き利用可能（後方互換性維持）
-- ✅ アプリケーション側のフォールバック処理が不要に
+- ✅ `startDetection()` を何度呼んでも安全（冪等性保証）
+- ✅ アプリケーション側の状態チェックコード削減可能
+- ✅ エラーハンドリング不要（ライブラリ側で安全性保証）
+- ✅ `stopDetection()` との設計一貫性確保
 
 ### アップグレードガイド
 
 ```typescript
-// 修正前（フォールバック処理が必要だった）
-const note = result.note && /\d/.test(result.note)
-    ? result.note
-    : MusicTheory.frequencyToNote(result.frequency);
+// 修正前（状態チェックが必要だった）
+const status = audioDetector.getStatus();
+if (status.state !== 'detecting') {
+    await audioDetector.startDetection();
+}
 
-// 修正後（シンプルに使用可能）
-const note = result.note;  // 常に "E4" のような完全な音名
+// 修正後（状態チェック不要）
+await audioDetector.startDetection();  // 既に検出中なら安全にスキップ
 ```
 
-**🎯 対象ユーザー**：音域範囲表示を使用しているすべてのユーザー（更新推奨）
+**🎯 対象ユーザー**：`startDetection()`を複数回呼び出す可能性があるすべてのユーザー（更新推奨）
 
 ```bash
 # 最新版へのアップデート
-npm install @pitchpro/audio-processing@1.3.4
+npm install @pitchpro/audio-processing@1.3.5
 ```
 
 ## 🔄 v1.1.3 マイクレベル修正（継続中）
@@ -111,6 +114,12 @@ import PitchPro from './dist/index.esm.js';
 NPM/CDNを利用している場合は変更不要です。
 
 ### 🚀 過去のリリース
+
+#### v1.3.4 - result.noteにオクターブ番号を含める
+- **🐛 バグ修正**: `result.note`が完全な音名（例: "E4", "C#2"）を返すように変更
+- **🔧 コード整理**: 重複していた`frequencyToNoteAndOctave()`メソッドを削除（約25行削減）
+- **✅ 後方互換性**: `result.octave`プロパティは引き続き利用可能
+- **📝 改善効果**: アプリケーション側のフォールバック処理が不要に
 
 #### v1.3.3 - パフォーマンス最適化と音量バー安定化
 - **⚡ CPU負荷軽減**: smoothingFactor 0.25 → 0.1（-15%削減）
