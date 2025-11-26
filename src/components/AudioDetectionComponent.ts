@@ -925,11 +925,18 @@ export class AudioDetectionComponent {
   setCallbacks(callbacks: AudioDetectionCallbacks): void {
     this.debugLog('Setting callbacks:', Object.keys(callbacks));
     this.callbacks = { ...this.callbacks, ...callbacks };
-    
+
     // コールバックが設定された場合、既存のPitchDetectorにも設定を伝播
+    // 注意: onPitchUpdateは_getProcessedResult()経由で処理済み結果を返すようにラップする
     if (this.pitchDetector) {
       this.pitchDetector.setCallbacks({
-        onPitchUpdate: callbacks.onPitchUpdate,
+        // onPitchUpdateをラップして、デバイス最適化済みの値をコールバックに渡す
+        onPitchUpdate: callbacks.onPitchUpdate ? (rawResult: PitchDetectionResult) => {
+          const processedResult = this._getProcessedResult(rawResult);
+          if (processedResult) {
+            callbacks.onPitchUpdate?.(processedResult);
+          }
+        } : undefined,
         // PitchDetectorのErrorCallbackは標準Errorを期待するため、PitchProErrorをErrorにラップ
         onError: callbacks.onError ? (error: Error) => {
           // PitchProErrorの場合はそのまま、標準Errorの場合は構造化エラーに変換

@@ -4925,7 +4925,12 @@ const N = class N {
    */
   setCallbacks(e) {
     this.debugLog("Setting callbacks:", Object.keys(e)), this.callbacks = { ...this.callbacks, ...e }, this.pitchDetector && this.pitchDetector.setCallbacks({
-      onPitchUpdate: e.onPitchUpdate,
+      // onPitchUpdateをラップして、デバイス最適化済みの値をコールバックに渡す
+      onPitchUpdate: e.onPitchUpdate ? (t) => {
+        var s;
+        const i = this._getProcessedResult(t);
+        i && ((s = e.onPitchUpdate) == null || s.call(e, i));
+      } : void 0,
       // PitchDetectorのErrorCallbackは標準Errorを期待するため、PitchProErrorをErrorにラップ
       onError: e.onError ? (t) => {
         var s;

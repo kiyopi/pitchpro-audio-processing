@@ -438,8 +438,9 @@ describe('AudioDetectionComponent - autoUpdateUI Feature', () => {
       expect(mockPitchDetector.setCallbacks).toHaveBeenCalledTimes(1);
       const callArgs = mockPitchDetector.setCallbacks.mock.calls[0][0];
 
-      // Verify onPitchUpdate is passed directly
-      expect(callArgs.onPitchUpdate).toBe(mockOnPitchUpdate);
+      // Verify onPitchUpdate is wrapped (to apply _getProcessedResult processing)
+      expect(typeof callArgs.onPitchUpdate).toBe('function');
+      expect(callArgs.onPitchUpdate).not.toBe(mockOnPitchUpdate); // Should be wrapped
 
       // Verify onError is wrapped (function will be different due to error type conversion)
       expect(typeof callArgs.onError).toBe('function');
