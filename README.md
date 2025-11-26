@@ -45,47 +45,53 @@ Web音楽アプリケーション開発のための包括的な音響処理ツ�
 - **完全TypeScript対応**：strictモード対応、厳密な型定義とIntelliSense支援
 - **ES/CommonJS対応**：モダンバンドラーと従来環境の両対応
 
-## 🎯 最新リリース：v1.3.5 startDetection() 冪等性修正
+## 🎯 最新リリース：v1.3.6 setCallbacks() 音量値修正
 
 ### 🐛 バグ修正
 
-**startDetection()に冪等性を追加**
+**setCallbacks()のonPitchUpdateが処理済み音量を返すように修正**
 
 **問題**:
-- `startDetection()`を既に検出中の状態で呼ぶと `"Cannot start detection"` エラーが発生
-- アプリケーション側が毎回 `getStatus()` で状態確認する必要があった
-- 同じ状態チェックコードが複数箇所に重複実装される設計上の問題
-- `stopDetection()` は冪等性を持つが `startDetection()` は持たない非対称性
+- `setCallbacks()`で設定した`onPitchUpdate`コールバックが、生のRMS値（0.006等）を返していた
+- UIの音量バーは処理済みの値（80%等）を表示しており、コールバックと不一致
+- `autoUpdateUI: true`の時、コールバックで受け取る`result.volume`がUIと乖離する問題
+
+**原因**:
+- `setCallbacks()`が`onPitchUpdate`を`PitchDetector`に直接渡していた
+- `_getProcessedResult()`によるデバイス最適化処理がバイパスされていた
 
 **修正内容**:
-- `startDetection()` メソッドに冪等性を追加
-- 既に `detecting` 状態の場合は安全にスキップして `true` を返却
-- `stopDetection()` と同じ設計パターンに統一
+- `setCallbacks()`で`onPitchUpdate`を`_getProcessedResult()`経由でラップ
+- コールバックがUIと同じデバイス最適化済みの値を受け取るように変更
 
 **影響**:
-- ✅ `startDetection()` を何度呼んでも安全（冪等性保証）
-- ✅ アプリケーション側の状態チェックコード削減可能
-- ✅ エラーハンドリング不要（ライブラリ側で安全性保証）
-- ✅ `stopDetection()` との設計一貫性確保
+- ✅ `result.volume`がUI表示と一致（0-100%範囲）
+- ✅ デバイス固有の`noiseGate`と`volumeMultiplier`が適用済み
+- ✅ 既存の`autoUpdateUI`機能に影響なし
 
 ### アップグレードガイド
 
 ```typescript
-// 修正前（状態チェックが必要だった）
-const status = audioDetector.getStatus();
-if (status.state !== 'detecting') {
-    await audioDetector.startDetection();
-}
+// 修正前: result.volumeは生RMS値（例: 0.006）
+audioDetector.setCallbacks({
+  onPitchUpdate: (result) => {
+    console.log(result.volume); // 0.006（生RMS値）
+  }
+});
 
-// 修正後（状態チェック不要）
-await audioDetector.startDetection();  // 既に検出中なら安全にスキップ
+// 修正後: result.volumeは処理済み値（例: 80.5）
+audioDetector.setCallbacks({
+  onPitchUpdate: (result) => {
+    console.log(result.volume); // 80.5（UI表示と同じ%値）
+  }
+});
 ```
 
-**🎯 対象ユーザー**：`startDetection()`を複数回呼び出す可能性があるすべてのユーザー（更新推奨）
+**🎯 対象ユーザー**：`setCallbacks()`で`onPitchUpdate`を使用しているすべてのユーザー（更新推奨）
 
 ```bash
 # 最新版へのアップデート
-npm install @pitchpro/audio-processing@1.3.5
+npm install @pitchpro/audio-processing@1.3.6
 ```
 
 ## 🔄 v1.1.3 マイクレベル修正（継続中）
@@ -114,6 +120,11 @@ import PitchPro from './dist/index.esm.js';
 NPM/CDNを利用している場合は変更不要です。
 
 ### 🚀 過去のリリース
+
+#### v1.3.5 - startDetection()に冪等性を追加
+- **🐛 バグ修正**: `startDetection()`を既に検出中の状態で呼んでも安全にスキップ
+- **🔧 設計改善**: `stopDetection()`と同じ冪等性パターンに統一
+- **✅ 効果**: アプリケーション側の状態チェックコード削減可能
 
 #### v1.3.4 - result.noteにオクターブ番号を含める
 - **🐛 バグ修正**: `result.note`が完全な音名（例: "E4", "C#2"）を返すように変更
@@ -222,8 +233,8 @@ npm install @pitchpro/audio-processing
 ```
 
 #### 📥 直接ダウンロード
-- **最新版**: [v1.3.1 リリース](https://github.com/kiyopi/pitchpro-audio-processing/releases/latest)
-- **UMDファイル**: [pitchpro.umd.js](https://github.com/kiyopi/pitchpro-audio-processing/releases/download/v1.3.1/pitchpro.umd.js)
+- **最新版**: [v1.3.6 リリース](https://github.com/kiyopi/pitchpro-audio-processing/releases/latest)
+- **UMDファイル**: [pitchpro.umd.js](https://github.com/kiyopi/pitchpro-audio-processing/releases/download/v1.3.6/pitchpro.umd.js)
 - **デモページ**: [ワンクリックダウンロード＋デモ](https://kiyopi.github.io/pitchpro-audio-processing/quickstart-demo.html)
 
 ### 基本的な使用方法
