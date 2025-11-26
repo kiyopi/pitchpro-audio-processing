@@ -348,9 +348,18 @@
         };
 
         let lastLogTime = 0;
+        let logCount = 0;
         const LOG_INTERVAL = 500; // 500ms間隔でログ出力
 
         function updateDisplay(result) {
+            // 最初の数回だけresultオブジェクトの中身をログ出力
+            if (logCount < 3) {
+                logCount++;
+                console.log('📦 result object keys:', Object.keys(result));
+                console.log('📦 result full:', JSON.stringify(result, null, 2));
+                log('info', `📦 result keys: ${Object.keys(result).join(', ')}`);
+            }
+
             // 生データと処理後データを表示
             const rawVol = result.rawVolume !== undefined ? result.rawVolume : 'N/A';
             const processedVol = result.volume;
