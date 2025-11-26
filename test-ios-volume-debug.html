@@ -347,6 +347,9 @@
             }
         };
 
+        let lastLogTime = 0;
+        const LOG_INTERVAL = 500; // 500ms間隔でログ出力
+
         function updateDisplay(result) {
             // 生データと処理後データを表示
             const rawVol = result.rawVolume !== undefined ? result.rawVolume : 'N/A';
@@ -361,6 +364,10 @@
             document.getElementById('note').textContent =
                 result.note || '-';
 
+            // バーの実際の幅を取得
+            const volumeBar = document.getElementById('volumeBar');
+            const barWidth = volumeBar ? volumeBar.style.width : 'N/A';
+
             // 計算過程を表示
             const specs = window.PitchPro?.DeviceDetection?.getDeviceSpecs();
             if (specs && typeof rawVol === 'number') {
@@ -374,7 +381,7 @@
                     <div class="calc-step">2. × 200 = ${volumeAsPercent.toFixed(2)}%</div>
                     <div class="calc-step">3. noiseGate閾値: ${noiseGateThreshold.toFixed(2)}%</div>
                     <div class="calc-step">4. × ${specs.volumeMultiplier} = ${finalVolume.toFixed(2)}%</div>
-                    <div class="calc-step calc-result">→ 最終: ${Math.min(100, finalVolume).toFixed(1)}%</div>
+                    <div class="calc-step calc-result">→ 最終: ${Math.min(100, finalVolume).toFixed(1)}% | バー幅: ${barWidth}</div>
                 `;
                 document.getElementById('calculationDisplay').innerHTML = calcHtml;
             }
@@ -384,6 +391,29 @@
                 document.getElementById('processedVolume').classList.add('warning');
             } else {
                 document.getElementById('processedVolume').classList.remove('warning');
+            }
+
+            // 定期的にログ出力（コンソールにも出力）
+            const now = Date.now();
+            if (now - lastLogTime > LOG_INTERVAL) {
+                lastLogTime = now;
+
+                const rawVolStr = typeof rawVol === 'number' ? rawVol.toFixed(4) : 'N/A';
+                const freqStr = result.frequency > 0 ? result.frequency.toFixed(1) : '0.0';
+
+                // コンソールログ（アプリと同じ形式）
+                console.log(`🔊 ノイズ確認: rawVolume:${rawVolStr} → volume:${processedVol.toFixed(2)}% | バー幅:${barWidth}`);
+                console.log(`🎤 PitchPro検出: freq:${freqStr}Hz vol:${processedVol.toFixed(1)}% clarity:${(result.clarity || 0).toFixed(2)}`);
+
+                // 画面ログ
+                if (processedVol > 0) {
+                    log('info', `🔊 raw:${rawVolStr} → vol:${processedVol.toFixed(1)}% | バー:${barWidth} | freq:${freqStr}Hz`);
+                }
+
+                // 100%到達時は警告ログ
+                if (processedVol >= 100) {
+                    log('warn', `⚠️ 100%到達! rawVolume:${rawVolStr}`);
+                }
             }
         }
     </script>
