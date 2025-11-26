@@ -219,10 +219,15 @@
         let mismatchCount = 0;
 
         function log(type, message) {
+            // コンソールにも出力
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warn' ? '⚠️' : 'ℹ️';
+            console.log(`${prefix} [${timestamp}] ${message}`);
+
             const container = document.getElementById('logContainer');
             const entry = document.createElement('div');
             entry.className = `log-entry log-${type}`;
-            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            entry.textContent = `[${timestamp}] ${message}`;
             container.insertBefore(entry, container.firstChild);
             while (container.children.length > 50) {
                 container.removeChild(container.lastChild);
@@ -318,11 +323,20 @@
 
         let lastLogTime = 0;
 
+        let callCount = 0;
+
         function checkVolumeMatch(result) {
+            callCount++;
             const callbackVolume = result.volume;
             const volumeBar = document.getElementById('volumeBar');
             const barWidthStr = volumeBar ? volumeBar.style.width : '0%';
             const barWidth = parseFloat(barWidthStr) || 0;
+
+            // 最初の5回は詳細ログ出力
+            if (callCount <= 5) {
+                console.log('📦 [callback] result:', result);
+                console.log(`📊 [callback] volume=${callbackVolume.toFixed(4)}, barWidth=${barWidthStr}`);
+            }
 
             // Update display
             document.getElementById('callbackVolume').textContent = `${callbackVolume.toFixed(2)}%`;
