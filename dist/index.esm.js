@@ -1,7 +1,7 @@
 var Be = Object.defineProperty;
 var $e = (h, e, t) => e in h ? Be(h, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : h[e] = t;
 var x = (h, e, t) => $e(h, typeof e != "symbol" ? e + "" : e, t);
-const He = "1.3.5", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).toISOString(), E = class E {
+const He = "1.3.6", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).toISOString(), E = class E {
   /**
    * Detect current device and return optimized specifications
    */
