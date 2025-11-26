@@ -422,6 +422,31 @@ const NOISE_GATE_THRESHOLD = this.config.minVolumeAbsolute * NOISE_GATE_SCALING_
 
 ### 🔴 新たな高優先度課題
 
+#### 0. iOS Safari getUserMedia音量低下問題 ⚠️ NEW
+**発見日**: 2025年11月26日
+**WebKitバグ**: [Bug 230902](https://bugs.webkit.org/show_bug.cgi?id=230902)
+**詳細ドキュメント**: `IOS_SAFARI_GETUSERMEDIA_ISSUE.md`
+
+**問題**: iOS Safari 15以降で`getUserMedia()`を複数回呼び出すと音量が低下する既知バグ
+- `destroy()`→`initialize()`のサイクルで発生
+- ブラウザリフレッシュまで復旧しない
+
+**アプリ側での暫定対策**（推奨）:
+```typescript
+// ❌ 問題パターン
+audioDetector.destroy();     // ストリーム破棄
+audioDetector.initialize();  // 新規getUserMedia → iOS問題発生
+
+// ✅ 推奨パターン
+audioDetector.stopDetection();   // 検出停止のみ（ストリーム保持）
+audioDetector.startDetection();  // 検出再開（getUserMedia不要）
+```
+
+**ライブラリ側の将来対策案**:
+- MediaStreamプール（シングルトン再利用）
+- suspend/resumeメソッド追加
+- iOS判定による条件分岐
+
 #### 1. 統合テスト再有効化
 **現在の状況**: 統合テストがCIで無効化されている
 ```typescript
