@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.6] - 2025-11-26
+
+### 🐛 Bug Fixes
+
+#### setCallbacks()のonPitchUpdateが処理済み音量を返すように修正
+
+**問題**:
+- `setCallbacks()`で設定した`onPitchUpdate`コールバックが、生のRMS値（0.006等）を返していた
+- UIの音量バーは処理済みの値（80%等）を表示しており、コールバックと不一致
+- `autoUpdateUI: true`の時、コールバックで受け取る`result.volume`がUIと乖離する問題
+
+**原因**:
+- `setCallbacks()`が`onPitchUpdate`を`PitchDetector`に直接渡していた
+- `_getProcessedResult()`によるデバイス最適化処理がバイパスされていた
+- UIタイマーでは処理済み、コールバックは生データという二重経路が存在
+
+**修正内容**:
+- `setCallbacks()`で`onPitchUpdate`を`_getProcessedResult()`経由でラップ
+- コールバックがUIと同じデバイス最適化済みの値を受け取るように変更
+
+**影響**:
+- ✅ `result.volume`がUI表示と一致（0-100%範囲）
+- ✅ デバイス固有の`noiseGate`と`volumeMultiplier`が適用済み
+- ✅ 既存の`autoUpdateUI`機能に影響なし
+
+**アップグレードガイド**:
+```typescript
+// 修正前: result.volumeは生RMS値（例: 0.006）
+audioDetector.setCallbacks({
+  onPitchUpdate: (result) => {
+    console.log(result.volume); // 0.006（生RMS値）
+  }
+});
+
+// 修正後: result.volumeは処理済み値（例: 80.5）
+audioDetector.setCallbacks({
+  onPitchUpdate: (result) => {
+    console.log(result.volume); // 80.5（UI表示と同じ%値）
+  }
+});
+```
+
+**関連ファイル**:
+- `/src/components/AudioDetectionComponent.ts`: setCallbacks()のラップ処理追加
+
 ## [1.3.5] - 2025-11-18
 
 ### 🐛 Bug Fixes
