@@ -154,7 +154,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>🔍 iOS音量バー診断テスト v4</h1>
+        <h1>🔍 iOS音量バー診断テスト v5</h1>
 
         <!-- デバイス情報 -->
         <div class="section">
@@ -295,11 +295,11 @@
             try {
                 log('info', '初期化開始...');
 
-                // autoUpdateUI: false にして、コールバックで手動更新
+                // autoUpdateUI: true でPitchProに任せる
                 audioDetector = new PitchPro.AudioDetectionComponent({
                     volumeBarSelector: '#volumeBar',
                     volumeTextSelector: '#volumeText',
-                    autoUpdateUI: false,  // ★ 自動更新OFF
+                    autoUpdateUI: true,  // ★ 自動更新ON（PitchProに任せる）
                     deviceOptimization: true,
                     debug: true  // ★ デバッグON
                 });
@@ -376,15 +376,8 @@
             document.getElementById('note').textContent =
                 result.note || '-';
 
-            // ★ 手動でバーを更新（autoUpdateUI: false なので）
+            // ★ バーはPitchProが自動更新するので、値だけ読み取る
             const volumeBar = document.getElementById('volumeBar');
-            const clampedVol = Math.min(100, Math.max(0, processedVol));
-            if (volumeBar) {
-                volumeBar.style.width = `${clampedVol}%`;
-            }
-            document.getElementById('volumeText').textContent = `${clampedVol.toFixed(1)}%`;
-
-            // バーの実際の幅を取得
             const barWidth = volumeBar ? volumeBar.style.width : 'N/A';
 
             // 計算過程を表示
