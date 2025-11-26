@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iOS音量バー診断テスト</title>
+    <title>iOS音量バー診断テスト v2</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -353,11 +353,13 @@
 
         function updateDisplay(result) {
             // 最初の数回だけresultオブジェクトの中身をログ出力
-            if (logCount < 3) {
+            if (logCount < 5) {
                 logCount++;
-                console.log('📦 result object keys:', Object.keys(result));
-                console.log('📦 result full:', JSON.stringify(result, null, 2));
-                log('info', `📦 result keys: ${Object.keys(result).join(', ')}`);
+                const keys = Object.keys(result);
+                console.log('📦 [v2] result object keys:', keys);
+                console.log('📦 [v2] result full:', result);
+                log('success', `📦 keys: ${keys.join(', ')}`);
+                log('info', `📦 volume=${result.volume}, rawVolume=${result.rawVolume}`);
             }
 
             // 生データと処理後データを表示
