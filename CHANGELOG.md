@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.13] - 2025-11-27
+
+### 🔧 Optimizations
+
+#### PC環境ノイズゲート・音量バー最適化
+
+**問題**:
+- v1.3.12の二重増幅修正後、PC環境でノイズフロア（rawVolume 1.7〜2.3%）が検出されるようになった
+- 静寂時に35Hz〜70Hz帯域の低周波ノイズが誤検出
+- 音量バーの上昇率がやや低い
+
+**原因**:
+- v1.3.12で`RMS_TO_PERCENT_FACTOR`を200→100に修正したことで、実質的なノイズゲート閾値が半分に
+- 以前は`noiseGate(0.023) × 100 × 2.0 = 4.6%`だったのが`0.023 × 100 = 2.3%`に低下
+- ノイズフロア（〜2.3%）とノイズゲート閾値が同値になり、わずかな変動で誤検出
+
+**修正内容**:
+```typescript
+// DeviceDetection.ts - PC設定
+// 修正前
+noiseGate: 0.023,        // 2.3%
+volumeMultiplier: 2.5,
+
+// 修正後
+noiseGate: 0.03,         // 3.0% (ノイズフロア2.3%を確実にブロック)
+volumeMultiplier: 3.5,   // 音量バー上昇率40%改善
+```
+
+**影響**:
+- ✅ 静寂時のノイズ誤検出を完全ブロック
+- ✅ 音量バー上昇率が改善（rawVolume 20%で70%表示）
+- ✅ 低周波ノイズ（35〜70Hz）の誤検出防止
+
+**関連ファイル**:
+- `/src/utils/DeviceDetection.ts`: PC設定のnoiseGate・volumeMultiplier調整
+
 ## [1.3.12] - 2025-11-27
 
 ### 🐛 Bug Fixes

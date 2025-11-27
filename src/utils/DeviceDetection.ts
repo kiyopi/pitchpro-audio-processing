@@ -133,10 +133,11 @@ export class DeviceDetection {
 
       case 'PC':
       default:
+        // v1.3.13: ノイズフロア対策 + 音量バー上昇率改善
         return {
           sensitivity: 1.7,           // 🎤 マイク感度 (PC環境安定性重視)
-          noiseGate: 0.023,           // 🚪 ノイズゲート閾値 (2.3%設定で低周波数検出最適化)
-          volumeMultiplier: 2.5,      // 🔊 表示音量補正 (7.5→2.5 大幅削減で適切レベル)
+          noiseGate: 0.03,            // 🚪 ノイズゲート閾値 (0.023→0.03 ノイズフロア2.3%を確実にブロック)
+          volumeMultiplier: 3.5,      // 🔊 表示音量補正 (2.5→3.5 音量バー上昇率改善)
           smoothingFactor: 0.1        // 📊 平滑化係数（CPU負荷軽減: 0.25→0.1）
         };
     }
