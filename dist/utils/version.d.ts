@@ -2,11 +2,11 @@
  * Library version information
  * Auto-synced with package.json during build
  */
-export declare const VERSION = "1.3.6";
+export declare const VERSION = "1.3.11";
 /**
  * Version display string for debug logs
  */
-export declare const VERSION_STRING = "PitchPro v1.3.6";
+export declare const VERSION_STRING = "PitchPro v1.3.11";
 /**
  * Build timestamp (will be replaced during build)
  */

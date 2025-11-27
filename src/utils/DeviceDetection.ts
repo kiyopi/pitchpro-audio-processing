@@ -114,19 +114,21 @@ export class DeviceDetection {
   private static getDeviceOptimizations(deviceType: 'iPhone' | 'iPad' | 'PC', _isIOS: boolean) {
     switch (deviceType) {
       case 'iPad':
+        // v1.3.11: 二重増幅問題の修正 (sensitivity × RMS_TO_PERCENT × volumeMultiplier)
         return {
-          sensitivity: 4.0,           // 🎤 マイク感度 (PitchDetector用)
-          noiseGate: 0.023,           // 🚪 ノイズゲート閾値 (2.3%設定で低周波数検出感度向上)
-          volumeMultiplier: 4.0,      // 🔊 表示音量補正 (13.0→4.0 大幅削減で適切レベル)
-          smoothingFactor: 0.1        // 📊 平滑化係数（CPU負荷軽減: 0.25→0.1）
+          sensitivity: 2.5,           // 🎤 マイク感度 (4.0→2.5 ノイズフロア低減、100%飽和防止)
+          noiseGate: 0.05,            // 🚪 ノイズゲート閾値 (0.023→0.05 静寂時の誤検知防止)
+          volumeMultiplier: 3.0,      // 🔊 表示音量補正 (4.0→3.0 音量バー挙動を自然に)
+          smoothingFactor: 0.1        // 📊 平滑化係数（CPU負荷軽減）
         };
 
       case 'iPhone':
+        // v1.3.11: 二重増幅問題の修正 + 音域テストノイズ対策
         return {
-          sensitivity: 3.5,           // 🎤 マイク感度 (iPhone最適化値)
-          noiseGate: 0.028,           // 🚪 ノイズゲート閾値 (2.8%設定でiPadとの中間値)
-          volumeMultiplier: 3.0,      // 🔊 表示音量補正 (9.0→3.0 大幅削減で適切レベル)
-          smoothingFactor: 0.1        // 📊 平滑化係数（CPU負荷軽減: 0.25→0.1）
+          sensitivity: 2.0,           // 🎤 マイク感度 (3.5→2.0 環境ノイズ増幅を抑制)
+          noiseGate: 0.08,            // 🚪 ノイズゲート閾値 (0.028→0.08 音域テスト開始時のノイズ対策)
+          volumeMultiplier: 2.0,      // 🔊 表示音量補正 (3.0→2.0 50%で100%到達に改善)
+          smoothingFactor: 0.1        // 📊 平滑化係数（CPU負荷軽減）
         };
 
       case 'PC':
