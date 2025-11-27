@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.12] - 2025-11-27
+
+### 🐛 Bug Fixes
+
+#### 二重増幅問題の根本修正（RMS_TO_PERCENT_FACTOR）
+
+**問題**:
+- v1.3.11でデバイスパラメータを調整したにもかかわらず、音量バーが依然として簡単に100%に到達
+- rawVolume 17% で処理後 68%（期待値 34%の約2倍）
+- rawVolume 25% で処理後 100%（すぐに飽和）
+
+**原因**:
+- `_getProcessedResult()`内の`RMS_TO_PERCENT_FACTOR`が200のまま残っていた
+- 正しくは100であるべきところ、2倍の値が設定されていた
+- ノイズゲート計算にも余分な`* 2.0`が含まれていた
+
+**修正内容**:
+```typescript
+// AudioDetectionComponent.ts
+// 修正前
+const RMS_TO_PERCENT_FACTOR = 200;
+const noiseGateThresholdPercent = baseNoiseGate * 100 * 2.0;
+
+// 修正後
+const RMS_TO_PERCENT_FACTOR = 100;
+const noiseGateThresholdPercent = baseNoiseGate * 100;
+```
+
+**影響**:
+- ✅ 音量計算が正しいスケールに修正
+- ✅ rawVolume 50%で100%に到達（適切なレベル）
+- ✅ iPhone/iPad/PC全デバイスで自然な音量バー挙動
+
+**関連ファイル**:
+- `/src/components/AudioDetectionComponent.ts`: _getProcessedResult()の修正
+
 ## [1.3.11] - 2025-11-27
 
 ### 🔧 Optimizations

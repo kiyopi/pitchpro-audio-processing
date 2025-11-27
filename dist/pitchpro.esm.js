@@ -1,7 +1,7 @@
 var Be = Object.defineProperty;
 var $e = (h, e, t) => e in h ? Be(h, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : h[e] = t;
 var x = (h, e, t) => $e(h, typeof e != "symbol" ? e + "" : e, t);
-const He = "1.3.11", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).toISOString(), E = class E {
+const He = "1.3.12", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).toISOString(), E = class E {
   /**
    * Detect current device and return optimized specifications
    */
@@ -5292,13 +5292,13 @@ const N = class N {
   _getProcessedResult(e) {
     var c, l, m, u, d;
     if (!e) return null;
-    const t = { ...e }, s = e.volume * 200, n = (((c = this.deviceSpecs) == null ? void 0 : c.noiseGate) ?? 0.06) * 100 * 2;
+    const t = { ...e }, s = e.volume * 100, n = (((c = this.deviceSpecs) == null ? void 0 : c.noiseGate) ?? 0.06) * 100;
     if (s < n)
       return t.volume = 0, t.frequency = 0, t.note = "--", t.rawVolume = e.volume, this.config.debug && this.debugLog("UnifiedVolumeProcessing: BLOCKED", {
         device: (l = this.deviceSpecs) == null ? void 0 : l.deviceType,
         volumeAsPercent: s.toFixed(2),
         noiseGateThreshold: `${n.toFixed(2)}%`,
-        note: "Environment noise filtering (2.0x multiplier)"
+        note: "Environment noise filtering"
       }), t;
     const r = ((m = this.deviceSpecs) == null ? void 0 : m.volumeMultiplier) ?? 1, a = s * r;
     return t.volume = Math.min(100, Math.max(0, a)), t.rawVolume = e.volume, this.config.debug && this.debugLog("UnifiedVolumeProcessing: PASSED", {
