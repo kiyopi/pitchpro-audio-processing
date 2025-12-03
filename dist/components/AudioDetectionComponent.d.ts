@@ -203,6 +203,19 @@ export interface AudioDetectionConfig {
      */
     overrideVolumeMultiplier?: number;
     /**
+     * Override the device-detected sensitivity value (v1.3.26+)
+     * Useful for pages where microphone input is reduced (e.g., ducking during BGM playback).
+     * Higher values increase microphone sensitivity, making quiet sounds more detectable.
+     *
+     * @default undefined (use DeviceDetection value)
+     * @example
+     * // Higher sensitivity for ducking compensation
+     * await audioDetector.updateSelectors({
+     *   overrideSensitivity: 4.0  // Increase sensitivity during BGM playback
+     * });
+     */
+    overrideSensitivity?: number;
+    /**
      * Callback function called on each pitch detection update.
      * @param result - The processed pitch detection result including rawVolume and clarity.
      */
@@ -522,7 +535,7 @@ export declare class AudioDetectionComponent {
      * });
      * ```
      */
-    updateSelectors(selectors: Partial<Pick<AudioDetectionConfig, 'volumeBarSelector' | 'volumeTextSelector' | 'frequencySelector' | 'noteSelector' | 'autoUpdateUI' | 'displayMultiplier' | 'overrideNoiseGate' | 'overrideVolumeMultiplier'>>): Promise<void>;
+    updateSelectors(selectors: Partial<Pick<AudioDetectionConfig, 'volumeBarSelector' | 'volumeTextSelector' | 'frequencySelector' | 'noteSelector' | 'autoUpdateUI' | 'displayMultiplier' | 'overrideNoiseGate' | 'overrideVolumeMultiplier' | 'overrideSensitivity'>>): Promise<void>;
     /**
      * コールバック関数を設定
      *
@@ -568,7 +581,7 @@ export declare class AudioDetectionComponent {
         isInitialized: boolean;
         deviceSpecs: DeviceSpecs | null;
         deviceSettings: DeviceSettings | null;
-        config: Required<Omit<AudioDetectionConfig, "minVolumeAbsolute" | "volumeBarSelector" | "volumeTextSelector" | "frequencySelector" | "noteSelector" | "onPitchUpdate" | "overrideNoiseGate" | "overrideVolumeMultiplier">> & {
+        config: Required<Omit<AudioDetectionConfig, "minVolumeAbsolute" | "volumeBarSelector" | "volumeTextSelector" | "frequencySelector" | "noteSelector" | "onPitchUpdate" | "overrideNoiseGate" | "overrideVolumeMultiplier" | "overrideSensitivity">> & {
             volumeBarSelector?: string | undefined;
             volumeTextSelector?: string | undefined;
             frequencySelector?: string | undefined;
@@ -576,6 +589,7 @@ export declare class AudioDetectionComponent {
             minVolumeAbsolute?: number | undefined;
             overrideNoiseGate?: number | undefined;
             overrideVolumeMultiplier?: number | undefined;
+            overrideSensitivity?: number | undefined;
             onPitchUpdate?: ((result: PitchDetectionResult) => void) | undefined;
         };
         lastError: PitchProError | null;
@@ -586,7 +600,14 @@ export declare class AudioDetectionComponent {
             isRunning: boolean;
             currentVolume: number;
             rawVolume: number;
-            currentFrequency: number;
+            /**
+             * Detects device type and applies optimization settings
+             * @private
+             */
+            currentFrequency: number; /**
+             * Detects device type and applies optimization settings
+             * @private
+             */
             detectedNote: string;
             detectedOctave: number | null;
             currentClarity: number;

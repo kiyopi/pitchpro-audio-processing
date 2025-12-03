@@ -230,6 +230,20 @@ export interface AudioDetectionConfig {
    */
   overrideVolumeMultiplier?: number;
 
+  /**
+   * Override the device-detected sensitivity value (v1.3.26+)
+   * Useful for pages where microphone input is reduced (e.g., ducking during BGM playback).
+   * Higher values increase microphone sensitivity, making quiet sounds more detectable.
+   *
+   * @default undefined (use DeviceDetection value)
+   * @example
+   * // Higher sensitivity for ducking compensation
+   * await audioDetector.updateSelectors({
+   *   overrideSensitivity: 4.0  // Increase sensitivity during BGM playback
+   * });
+   */
+  overrideSensitivity?: number;
+
   // Callback Settings (for convenience)
   /**
    * Callback function called on each pitch detection update.
@@ -432,7 +446,7 @@ export class AudioDetectionComponent {
   private static readonly UI_RESTART_DELAY_MS = 200;
 
   /** @private Configuration with applied defaults */
-  private config: Required<Omit<AudioDetectionConfig, 'volumeBarSelector' | 'volumeTextSelector' | 'frequencySelector' | 'noteSelector' | 'onPitchUpdate' | 'minVolumeAbsolute' | 'overrideNoiseGate' | 'overrideVolumeMultiplier'>> & {
+  private config: Required<Omit<AudioDetectionConfig, 'volumeBarSelector' | 'volumeTextSelector' | 'frequencySelector' | 'noteSelector' | 'onPitchUpdate' | 'minVolumeAbsolute' | 'overrideNoiseGate' | 'overrideVolumeMultiplier' | 'overrideSensitivity'>> & {
     volumeBarSelector?: string;
     volumeTextSelector?: string;
     frequencySelector?: string;
@@ -440,6 +454,7 @@ export class AudioDetectionComponent {
     minVolumeAbsolute?: number;
     overrideNoiseGate?: number;           // v1.3.22: アプリ側からnoiseGateを上書き
     overrideVolumeMultiplier?: number;    // v1.3.22: アプリ側からvolumeMultiplierを上書き
+    overrideSensitivity?: number;         // v1.3.26: アプリ側からsensitivityを上書き
     onPitchUpdate?: (result: PitchDetectionResult) => void;
   };
   
@@ -552,6 +567,7 @@ export class AudioDetectionComponent {
       displayMultiplier: config.displayMultiplier ?? 1.0, // v1.3.14: UI表示専用倍率
       overrideNoiseGate: config.overrideNoiseGate,           // v1.3.22: アプリ側からnoiseGateを上書き
       overrideVolumeMultiplier: config.overrideVolumeMultiplier, // v1.3.22: アプリ側からvolumeMultiplierを上書き
+      overrideSensitivity: config.overrideSensitivity,     // v1.3.26: アプリ側からsensitivityを上書き
 
       onPitchUpdate: config.onPitchUpdate, // コールバック関数はオプショナル
       
@@ -907,7 +923,7 @@ export class AudioDetectionComponent {
    * ```
    */
   async updateSelectors(selectors: Partial<Pick<AudioDetectionConfig,
-    'volumeBarSelector' | 'volumeTextSelector' | 'frequencySelector' | 'noteSelector' | 'autoUpdateUI' | 'displayMultiplier' | 'overrideNoiseGate' | 'overrideVolumeMultiplier'>>): Promise<void> {
+    'volumeBarSelector' | 'volumeTextSelector' | 'frequencySelector' | 'noteSelector' | 'autoUpdateUI' | 'displayMultiplier' | 'overrideNoiseGate' | 'overrideVolumeMultiplier' | 'overrideSensitivity'>>): Promise<void> {
 
     this.debugLog('Updating selectors:', selectors);
 
@@ -927,6 +943,12 @@ export class AudioDetectionComponent {
     if (selectors.overrideVolumeMultiplier !== undefined) {
       this.config.overrideVolumeMultiplier = selectors.overrideVolumeMultiplier;
       console.log(`🔊 [v1.3.22] overrideVolumeMultiplier set to: ${selectors.overrideVolumeMultiplier}`);
+    }
+
+    // Handle overrideSensitivity change (v1.3.26)
+    if (selectors.overrideSensitivity !== undefined) {
+      this.config.overrideSensitivity = selectors.overrideSensitivity;
+      console.log(`🎤 [v1.3.26] overrideSensitivity set to: ${selectors.overrideSensitivity}`);
     }
 
     // Handle autoUpdateUI change first
@@ -1619,22 +1641,39 @@ export class AudioDetectionComponent {
 
     const processedResult = { ...rawResult };
 
-    // Step 1: 生のRMS値を、扱いやすい0-100の範囲の「初期音量」に変換します。
+    // Step 1: sensitivity（マイク感度）を適用
+    // v1.3.26: overrideSensitivityが設定されている場合はそれを優先（ダッキング対策等）
+    const sensitivity = this.config.overrideSensitivity ?? this.deviceSpecs?.sensitivity ?? 1.0;
+    const sensitizedVolume = rawResult.volume * sensitivity;
+
+    // Step 2: 生のRMS値を、扱いやすい0-100の範囲の「初期音量」に変換します。
     // v1.3.12: 200→100に修正（二重増幅問題の解消）
     const RMS_TO_PERCENT_FACTOR = 100;
-    const volumeAsPercent = rawResult.volume * RMS_TO_PERCENT_FACTOR;
+    const volumeAsPercent = sensitizedVolume * RMS_TO_PERCENT_FACTOR;
 
-    // Step 2: ノイズゲート閾値を取得
+    // Step 3: ノイズゲート閾値を取得
     // v1.3.22: overrideNoiseGateが設定されている場合はそれを優先（ダッキング対策等）
     const baseNoiseGate = this.config.overrideNoiseGate ?? this.deviceSpecs?.noiseGate ?? 0.060;
     const noiseGateThresholdPercent = baseNoiseGate * 100;
 
-    // 🔧 v1.3.22 DEBUG: ノイズゲート処理の確認ログ（override対応）
+    // 🔧 v1.3.26 DEBUG: 処理状況の確認ログ（override対応）
     const isNoiseGateOverridden = this.config.overrideNoiseGate !== undefined;
-    console.log(`🔍 [_getProcessedResult] volumeAsPercent:${volumeAsPercent.toFixed(2)}% noiseGate:${noiseGateThresholdPercent.toFixed(2)}%${isNoiseGateOverridden ? ' (OVERRIDE)' : ''} deviceSpecs:${this.deviceSpecs ? 'OK' : 'NULL'}`);
+    const isSensitivityOverridden = this.config.overrideSensitivity !== undefined;
+    const clarity = rawResult.clarity ?? 0;
+    const clarityThreshold = this.config.clarityThreshold ?? 0.4;
+    const hasValidFrequency = rawResult.frequency !== undefined && rawResult.frequency > 0;
+    console.log(`🔍 [_getProcessedResult] volumeAsPercent:${volumeAsPercent.toFixed(2)}% noiseGate:${noiseGateThresholdPercent.toFixed(2)}%${isNoiseGateOverridden ? ' (OVERRIDE)' : ''} sensitivity:${sensitivity.toFixed(1)}x${isSensitivityOverridden ? ' (OVERRIDE)' : ''} clarity:${clarity.toFixed(2)} frequency:${rawResult.frequency?.toFixed(1) ?? 0}Hz deviceSpecs:${this.deviceSpecs ? 'OK' : 'NULL'}`);
 
-    // Step 3: ノイズゲートを適用します。
-    if (volumeAsPercent < noiseGateThresholdPercent) {
+    // Step 4: ノイズゲートを適用します。
+    // v1.3.26修正: clarityベースの判定は、音程が検出されている場合のみ適用
+    // - 音程が検出されていない（frequency=0）場合は、clarityも0のはずなのでノイズとしてブロック
+    // - 音量がnoiseGate以上 → 通す
+    // - 音量がnoiseGate未満でも、音程が検出されていてclarityが高い → 人間の声と判断して通す
+    const isVolumeAboveGate = volumeAsPercent >= noiseGateThresholdPercent;
+    const isHighClarityWithPitch = hasValidFrequency && clarity >= clarityThreshold;
+
+    if (!isVolumeAboveGate && !isHighClarityWithPitch) {
+        // 音量が低く、かつ音程が検出されていないか、clarityも低い → ノイズとしてブロック
         processedResult.volume = 0;
         processedResult.frequency = 0;
         processedResult.note = '--';
@@ -1645,13 +1684,21 @@ export class AudioDetectionComponent {
                 device: this.deviceSpecs?.deviceType,
                 volumeAsPercent: volumeAsPercent.toFixed(2),
                 noiseGateThreshold: `${noiseGateThresholdPercent.toFixed(2)}%`,
-                note: 'Environment noise filtering'
+                clarity: clarity.toFixed(2),
+                clarityThreshold: clarityThreshold.toFixed(2),
+                hasValidFrequency,
+                note: 'Low volume AND (no pitch OR low clarity) - noise filtering'
             });
         }
         return processedResult;
     }
 
-    // Step 4: ノイズゲートを通過した場合、volumeMultiplierで最終的な表示音量を計算します。
+    // v1.3.26: clarityが高くて通過した場合のログ
+    if (!isVolumeAboveGate && isHighClarityWithPitch) {
+        console.log(`✅ [v1.3.26] Low volume but high clarity with pitch - voice detected: vol=${volumeAsPercent.toFixed(2)}% clarity=${clarity.toFixed(2)} freq=${rawResult.frequency?.toFixed(1)}Hz`);
+    }
+
+    // Step 5: ノイズゲートを通過した場合、volumeMultiplierで最終的な表示音量を計算します。
     // v1.3.22: overrideVolumeMultiplierが設定されている場合はそれを優先（ダッキング対策等）
     const volumeMultiplier = this.config.overrideVolumeMultiplier ?? this.deviceSpecs?.volumeMultiplier ?? 1.0;
     const finalVolume = volumeAsPercent * volumeMultiplier;
