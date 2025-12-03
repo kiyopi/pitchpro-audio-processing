@@ -21,6 +21,12 @@ export declare class DeviceDetection {
     private static detectIOSDeviceType;
     /**
      * Get device-specific optimization parameters
+     * v1.3.23: Android追加、全デバイス設定見直し
+     *
+     * 設計方針:
+     * - 準備ページ（BGMなし）: デフォルト設定を使用
+     * - トレーニングページ（BGMあり・ダッキング環境）: override機能で上書き
+     * - iPhoneのみダッキングの影響が大きいため、他デバイスはoverrideなしでも動作
      */
     private static getDeviceOptimizations;
     /**

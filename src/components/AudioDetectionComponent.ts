@@ -187,7 +187,49 @@ export interface AudioDetectionConfig {
    * });
    */
   autoUpdateUI?: boolean;
-  
+
+  /**
+   * UI display multiplier for volume bar (v1.3.14+)
+   * Multiplies the volume value for UI display only, without affecting detection accuracy.
+   * Useful for iOS ducking compensation where microphone input is reduced during audio playback.
+   *
+   * @default 1.0 (no multiplication)
+   * @example
+   * // iOS ducking compensation (microphone reduced to ~30% during BGM playback)
+   * const detector = new AudioDetectionComponent({
+   *   autoUpdateUI: true,
+   *   displayMultiplier: 3.0  // Compensate for ~2.7x reduction
+   * });
+   */
+  displayMultiplier?: number;
+
+  /**
+   * Override the device-detected noiseGate value (v1.3.22+)
+   * Useful for pages with different noise conditions (e.g., ducking during BGM playback).
+   * Value is a decimal (0.0-1.0), where 0.15 = 15% noise gate threshold.
+   *
+   * @default undefined (use DeviceDetection value)
+   * @example
+   * // Lower noise gate for ducking compensation
+   * await audioDetector.updateSelectors({
+   *   overrideNoiseGate: 0.10  // 10% threshold during BGM playback
+   * });
+   */
+  overrideNoiseGate?: number;
+
+  /**
+   * Override the device-detected volumeMultiplier value (v1.3.22+)
+   * Useful for pages with different volume requirements (e.g., ducking during BGM playback).
+   *
+   * @default undefined (use DeviceDetection value)
+   * @example
+   * // Higher volume multiplier for ducking compensation
+   * await audioDetector.updateSelectors({
+   *   overrideVolumeMultiplier: 5.0  // Compensate for ~2.7x ducking reduction
+   * });
+   */
+  overrideVolumeMultiplier?: number;
+
   // Callback Settings (for convenience)
   /**
    * Callback function called on each pitch detection update.
@@ -390,12 +432,14 @@ export class AudioDetectionComponent {
   private static readonly UI_RESTART_DELAY_MS = 200;
 
   /** @private Configuration with applied defaults */
-  private config: Required<Omit<AudioDetectionConfig, 'volumeBarSelector' | 'volumeTextSelector' | 'frequencySelector' | 'noteSelector' | 'onPitchUpdate' | 'minVolumeAbsolute'>> & {
+  private config: Required<Omit<AudioDetectionConfig, 'volumeBarSelector' | 'volumeTextSelector' | 'frequencySelector' | 'noteSelector' | 'onPitchUpdate' | 'minVolumeAbsolute' | 'overrideNoiseGate' | 'overrideVolumeMultiplier'>> & {
     volumeBarSelector?: string;
     volumeTextSelector?: string;
     frequencySelector?: string;
     noteSelector?: string;
     minVolumeAbsolute?: number;
+    overrideNoiseGate?: number;           // v1.3.22: アプリ側からnoiseGateを上書き
+    overrideVolumeMultiplier?: number;    // v1.3.22: アプリ側からvolumeMultiplierを上書き
     onPitchUpdate?: (result: PitchDetectionResult) => void;
   };
   
@@ -505,7 +549,10 @@ export class AudioDetectionComponent {
       
       uiUpdateInterval: config.uiUpdateInterval ?? 50, // 20fps
       autoUpdateUI: config.autoUpdateUI ?? true,
-      
+      displayMultiplier: config.displayMultiplier ?? 1.0, // v1.3.14: UI表示専用倍率
+      overrideNoiseGate: config.overrideNoiseGate,           // v1.3.22: アプリ側からnoiseGateを上書き
+      overrideVolumeMultiplier: config.overrideVolumeMultiplier, // v1.3.22: アプリ側からvolumeMultiplierを上書き
+
       onPitchUpdate: config.onPitchUpdate, // コールバック関数はオプショナル
       
       debug: config.debug ?? false,
@@ -616,6 +663,16 @@ export class AudioDetectionComponent {
           this.deviceSpecs = specs;
           this.callbacks.onDeviceDetected?.(specs);
         }
+      });
+
+      // 🔧 v1.3.19 FIX: MicrophoneControllerのコンストラクタ内でdetectDevice()が既に呼ばれているため、
+      // setCallbacks()後にdeviceSpecsを手動で取得する必要がある
+      // （onDeviceChangeコールバックはコンストラクタ時点では未設定のため発火していない）
+      this.deviceSpecs = this.micController.getDeviceSpecs();
+      console.log('🔧 [v1.3.19] deviceSpecs取得:', {
+        deviceType: this.deviceSpecs?.deviceType,
+        noiseGate: this.deviceSpecs?.noiseGate,
+        volumeMultiplier: this.deviceSpecs?.volumeMultiplier
       });
 
       // Initialize microphone and get AudioManager reference
@@ -743,17 +800,19 @@ export class AudioDetectionComponent {
     }
     
     try {
+      // Apply displayMultiplier for UI display (v1.3.14: iOS ducking compensation)
+      const displayMultiplier = this.config.displayMultiplier ?? 1.0;
+      const displayVolume = Math.min(100, Math.max(0, result.volume * displayMultiplier));
+
       // Update volume bar - verify element matches current selector to prevent cross-mode updates
       if (this.uiElements.volumeBar && this.config.volumeBarSelector) {
         const currentElement = document.querySelector(this.config.volumeBarSelector);
         if (currentElement && currentElement === this.uiElements.volumeBar) {
-          // result.volume は既に補正済みの値（_getProcessedResultで処理済み）
-          const volumePercent = Math.min(100, Math.max(0, result.volume));
           if (this.uiElements.volumeBar instanceof HTMLProgressElement) {
-            this.uiElements.volumeBar.value = volumePercent;
+            this.uiElements.volumeBar.value = displayVolume;
           } else {
             // Assume it's a div with a width style
-            (this.uiElements.volumeBar as HTMLElement).style.width = `${volumePercent}%`;
+            (this.uiElements.volumeBar as HTMLElement).style.width = `${displayVolume}%`;
           }
         }
       }
@@ -762,9 +821,7 @@ export class AudioDetectionComponent {
       if (this.uiElements.volumeText && this.config.volumeTextSelector) {
         const currentElement = document.querySelector(this.config.volumeTextSelector);
         if (currentElement && currentElement === this.uiElements.volumeText) {
-          // result.volume は既に補正済みの値（_getProcessedResultで処理済み）
-          const volumePercent = Math.min(100, Math.max(0, result.volume));
-          this.uiElements.volumeText.textContent = `${volumePercent.toFixed(1)}%`;
+          this.uiElements.volumeText.textContent = `${displayVolume.toFixed(1)}%`;
         }
       }
 
@@ -825,13 +882,14 @@ export class AudioDetectionComponent {
 
   /**
    * Updates UI element selectors and re-caches DOM elements
-   * 
+   *
    * @param selectors - Object containing new selector strings
    * @param selectors.volumeBarSelector - New selector for volume bar element
    * @param selectors.volumeTextSelector - New selector for volume text element
    * @param selectors.frequencySelector - New selector for frequency display element
    * @param selectors.noteSelector - New selector for note display element (if not provided, will be cleared to prevent cross-mode interference)
-   * 
+   * @param selectors.autoUpdateUI - Enable/disable automatic UI updates (v1.3.14+)
+   *
    * @example
    * ```typescript
    * // Switch volume bar to different element (e.g., range test mode)
@@ -840,12 +898,49 @@ export class AudioDetectionComponent {
    *   volumeTextSelector: '#range-test-volume-text',
    *   frequencySelector: '#range-test-frequency-value'
    * });
+   *
+   * // Switch to manual UI control (e.g., training page with custom sensitivity)
+   * audioDetector.updateSelectors({
+   *   volumeBarSelector: '#training-volume-bar',
+   *   autoUpdateUI: false  // Disable automatic updates, handle in onPitchUpdate callback
+   * });
    * ```
    */
-  async updateSelectors(selectors: Partial<Pick<AudioDetectionConfig, 
-    'volumeBarSelector' | 'volumeTextSelector' | 'frequencySelector' | 'noteSelector'>>): Promise<void> {
-    
+  async updateSelectors(selectors: Partial<Pick<AudioDetectionConfig,
+    'volumeBarSelector' | 'volumeTextSelector' | 'frequencySelector' | 'noteSelector' | 'autoUpdateUI' | 'displayMultiplier' | 'overrideNoiseGate' | 'overrideVolumeMultiplier'>>): Promise<void> {
+
     this.debugLog('Updating selectors:', selectors);
+
+    // Handle displayMultiplier change
+    if (selectors.displayMultiplier !== undefined) {
+      this.config.displayMultiplier = selectors.displayMultiplier;
+      this.debugLog(`displayMultiplier changed to: ${selectors.displayMultiplier}`);
+    }
+
+    // Handle overrideNoiseGate change (v1.3.22)
+    if (selectors.overrideNoiseGate !== undefined) {
+      this.config.overrideNoiseGate = selectors.overrideNoiseGate;
+      console.log(`🚪 [v1.3.22] overrideNoiseGate set to: ${selectors.overrideNoiseGate} (${(selectors.overrideNoiseGate * 100).toFixed(1)}%)`);
+    }
+
+    // Handle overrideVolumeMultiplier change (v1.3.22)
+    if (selectors.overrideVolumeMultiplier !== undefined) {
+      this.config.overrideVolumeMultiplier = selectors.overrideVolumeMultiplier;
+      console.log(`🔊 [v1.3.22] overrideVolumeMultiplier set to: ${selectors.overrideVolumeMultiplier}`);
+    }
+
+    // Handle autoUpdateUI change first
+    if (selectors.autoUpdateUI !== undefined && selectors.autoUpdateUI !== this.config.autoUpdateUI) {
+      const wasAutoUpdate = this.config.autoUpdateUI;
+      this.config.autoUpdateUI = selectors.autoUpdateUI;
+      this.debugLog(`autoUpdateUI changed: ${wasAutoUpdate} → ${selectors.autoUpdateUI}`);
+
+      // If switching from auto to manual, stop UI updates
+      if (!selectors.autoUpdateUI && this.uiUpdateTimer !== null) {
+        this.stopUIUpdates();
+        this.debugLog('UI updates stopped (autoUpdateUI disabled)');
+      }
+    }
     
     // Set flag to prevent UI updates during selector changes
     this.isUpdatingSelectors = true;
@@ -891,16 +986,23 @@ export class AudioDetectionComponent {
     // Reset the new UI elements as well to ensure they start clean
     this.resetAllUIElements();
     
-    // Clear the flag and resume UI updates if they were running
+    // Clear the flag and resume UI updates if they were running AND autoUpdateUI is still enabled
     this.isUpdatingSelectors = false;
-    
-    if (wasUIUpdating) {
+
+    // Only restart UI updates if autoUpdateUI is enabled
+    if (wasUIUpdating && this.config.autoUpdateUI) {
       // Add longer delay to ensure reset values are visible
       await this.delay(AudioDetectionComponent.UI_RESTART_DELAY_MS);
       this.startUIUpdates();
+    } else if (!wasUIUpdating && this.config.autoUpdateUI && selectors.autoUpdateUI === true) {
+      // If autoUpdateUI was just enabled, start UI updates
+      await this.delay(AudioDetectionComponent.UI_RESTART_DELAY_MS);
+      this.startUIUpdates();
+      this.debugLog('UI updates started (autoUpdateUI enabled)');
     }
-    
+
     this.debugLog('Selectors updated, all elements reset, and UI elements re-cached:', Object.keys(this.uiElements));
+    this.debugLog('Current autoUpdateUI:', this.config.autoUpdateUI);
   }
 
   /**
@@ -928,24 +1030,38 @@ export class AudioDetectionComponent {
 
     // コールバックが設定された場合、既存のPitchDetectorにも設定を伝播
     // 注意: onPitchUpdateは_getProcessedResult()経由で処理済み結果を返すようにラップする
+    // 🔧 v1.3.18: undefinedのコールバックは渡さない（既存のhandlePitchUpdate接続を維持するため）
     if (this.pitchDetector) {
-      this.pitchDetector.setCallbacks({
-        // onPitchUpdateをラップして、デバイス最適化済みの値をコールバックに渡す
-        onPitchUpdate: callbacks.onPitchUpdate ? (rawResult: PitchDetectionResult) => {
+      const pitchDetectorCallbacks: {
+        onPitchUpdate?: (rawResult: PitchDetectionResult) => void;
+        onError?: (error: Error) => void;
+      } = {};
+
+      // onPitchUpdateが明示的に設定された場合のみ、ラップして渡す
+      if (callbacks.onPitchUpdate) {
+        pitchDetectorCallbacks.onPitchUpdate = (rawResult: PitchDetectionResult) => {
           const processedResult = this._getProcessedResult(rawResult);
           if (processedResult) {
             callbacks.onPitchUpdate?.(processedResult);
           }
-        } : undefined,
-        // PitchDetectorのErrorCallbackは標準Errorを期待するため、PitchProErrorをErrorにラップ
-        onError: callbacks.onError ? (error: Error) => {
+        };
+      }
+
+      // onErrorが明示的に設定された場合のみ、ラップして渡す
+      if (callbacks.onError) {
+        pitchDetectorCallbacks.onError = (error: Error) => {
           // PitchProErrorの場合はそのまま、標準Errorの場合は構造化エラーに変換
           const structuredError = error instanceof Error && 'code' in error
             ? error as any // Already a PitchProError
             : this.createStructuredError(error, 'pitch_detector');
           callbacks.onError?.(structuredError);
-        } : undefined
-      });
+        };
+      }
+
+      // 空のオブジェクトを渡さない（既存のコールバックを維持）
+      if (Object.keys(pitchDetectorCallbacks).length > 0) {
+        this.pitchDetector.setCallbacks(pitchDetectorCallbacks);
+      }
     }
   }
 
@@ -1508,10 +1624,14 @@ export class AudioDetectionComponent {
     const RMS_TO_PERCENT_FACTOR = 100;
     const volumeAsPercent = rawResult.volume * RMS_TO_PERCENT_FACTOR;
 
-    // Step 2: DeviceDetectionから、ノイズゲート閾値を取得（適度な環境ノイズ対応）
-    // v1.3.12: 余分な2.0倍を削除（RMS_TO_PERCENT_FACTOR修正に合わせて調整）
-    const baseNoiseGate = this.deviceSpecs?.noiseGate ?? 0.060;
+    // Step 2: ノイズゲート閾値を取得
+    // v1.3.22: overrideNoiseGateが設定されている場合はそれを優先（ダッキング対策等）
+    const baseNoiseGate = this.config.overrideNoiseGate ?? this.deviceSpecs?.noiseGate ?? 0.060;
     const noiseGateThresholdPercent = baseNoiseGate * 100;
+
+    // 🔧 v1.3.22 DEBUG: ノイズゲート処理の確認ログ（override対応）
+    const isNoiseGateOverridden = this.config.overrideNoiseGate !== undefined;
+    console.log(`🔍 [_getProcessedResult] volumeAsPercent:${volumeAsPercent.toFixed(2)}% noiseGate:${noiseGateThresholdPercent.toFixed(2)}%${isNoiseGateOverridden ? ' (OVERRIDE)' : ''} deviceSpecs:${this.deviceSpecs ? 'OK' : 'NULL'}`);
 
     // Step 3: ノイズゲートを適用します。
     if (volumeAsPercent < noiseGateThresholdPercent) {
@@ -1531,8 +1651,9 @@ export class AudioDetectionComponent {
         return processedResult;
     }
 
-    // Step 4: ノイズゲートを通過した場合、デバイス固有のvolumeMultiplierで最終的な表示音量を計算します。
-    const volumeMultiplier = this.deviceSpecs?.volumeMultiplier ?? 1.0;
+    // Step 4: ノイズゲートを通過した場合、volumeMultiplierで最終的な表示音量を計算します。
+    // v1.3.22: overrideVolumeMultiplierが設定されている場合はそれを優先（ダッキング対策等）
+    const volumeMultiplier = this.config.overrideVolumeMultiplier ?? this.deviceSpecs?.volumeMultiplier ?? 1.0;
     const finalVolume = volumeAsPercent * volumeMultiplier;
 
     // 最終的な値を0-100の範囲に丸めて設定します。

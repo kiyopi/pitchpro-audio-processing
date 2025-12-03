@@ -528,12 +528,12 @@ export class AudioManager {
   /**
    * Adjusts microphone sensitivity with automatic gain monitoring
    * 
-   * @param sensitivity - Sensitivity multiplier (0.1 ~ 10.0)
+   * @param sensitivity - Sensitivity multiplier (0.1 ~ 20.0)
    * - 0.1-1.0: Reduced sensitivity for loud environments
    * - 1.0: Standard sensitivity (PC default)
    * - 3.0: iPhone optimized sensitivity
    * - 7.0: iPad optimized sensitivity
-   * - 10.0: Maximum sensitivity for quiet environments
+   * - 10.0-20.0: Extended range for iOS ducking compensation
    * 
    * @example
    * ```typescript
@@ -557,8 +557,8 @@ export class AudioManager {
   }
 
   setSensitivity(sensitivity: number): void {
-    // Range limit (extended to 10.0x for iPad real device support)
-    const clampedSensitivity = Math.max(0.1, Math.min(10.0, sensitivity));
+    // Range limit (extended to 20.0x for iOS ducking compensation support)
+    const clampedSensitivity = Math.max(0.1, Math.min(20.0, sensitivity));
     
     if (this.gainNode) {
       // ENHANCED: Robust gain setting with immediate verification

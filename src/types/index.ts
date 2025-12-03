@@ -128,7 +128,7 @@ export interface AccuracyResult {
 
 // Device detection types
 export interface DeviceSpecs {
-  deviceType: 'iPhone' | 'iPad' | 'PC';
+  deviceType: 'iPhone' | 'iPad' | 'Android' | 'PC';
   isIOS: boolean;
   sensitivity: number;
   noiseGate: number;

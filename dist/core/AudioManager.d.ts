@@ -140,12 +140,12 @@ export declare class AudioManager {
     /**
      * Adjusts microphone sensitivity with automatic gain monitoring
      *
-     * @param sensitivity - Sensitivity multiplier (0.1 ~ 10.0)
+     * @param sensitivity - Sensitivity multiplier (0.1 ~ 20.0)
      * - 0.1-1.0: Reduced sensitivity for loud environments
      * - 1.0: Standard sensitivity (PC default)
      * - 3.0: iPhone optimized sensitivity
      * - 7.0: iPad optimized sensitivity
-     * - 10.0: Maximum sensitivity for quiet environments
+     * - 10.0-20.0: Extended range for iOS ducking compensation
      *
      * @example
      * ```typescript

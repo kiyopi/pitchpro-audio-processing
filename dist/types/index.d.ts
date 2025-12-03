@@ -101,7 +101,7 @@ export interface AccuracyResult {
     score: number;
 }
 export interface DeviceSpecs {
-    deviceType: 'iPhone' | 'iPad' | 'PC';
+    deviceType: 'iPhone' | 'iPad' | 'Android' | 'PC';
     isIOS: boolean;
     sensitivity: number;
     noiseGate: number;

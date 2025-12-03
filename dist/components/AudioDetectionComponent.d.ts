@@ -164,6 +164,45 @@ export interface AudioDetectionConfig {
      */
     autoUpdateUI?: boolean;
     /**
+     * UI display multiplier for volume bar (v1.3.14+)
+     * Multiplies the volume value for UI display only, without affecting detection accuracy.
+     * Useful for iOS ducking compensation where microphone input is reduced during audio playback.
+     *
+     * @default 1.0 (no multiplication)
+     * @example
+     * // iOS ducking compensation (microphone reduced to ~30% during BGM playback)
+     * const detector = new AudioDetectionComponent({
+     *   autoUpdateUI: true,
+     *   displayMultiplier: 3.0  // Compensate for ~2.7x reduction
+     * });
+     */
+    displayMultiplier?: number;
+    /**
+     * Override the device-detected noiseGate value (v1.3.22+)
+     * Useful for pages with different noise conditions (e.g., ducking during BGM playback).
+     * Value is a decimal (0.0-1.0), where 0.15 = 15% noise gate threshold.
+     *
+     * @default undefined (use DeviceDetection value)
+     * @example
+     * // Lower noise gate for ducking compensation
+     * await audioDetector.updateSelectors({
+     *   overrideNoiseGate: 0.10  // 10% threshold during BGM playback
+     * });
+     */
+    overrideNoiseGate?: number;
+    /**
+     * Override the device-detected volumeMultiplier value (v1.3.22+)
+     * Useful for pages with different volume requirements (e.g., ducking during BGM playback).
+     *
+     * @default undefined (use DeviceDetection value)
+     * @example
+     * // Higher volume multiplier for ducking compensation
+     * await audioDetector.updateSelectors({
+     *   overrideVolumeMultiplier: 5.0  // Compensate for ~2.7x ducking reduction
+     * });
+     */
+    overrideVolumeMultiplier?: number;
+    /**
      * Callback function called on each pitch detection update.
      * @param result - The processed pitch detection result including rawVolume and clarity.
      */
@@ -465,6 +504,7 @@ export declare class AudioDetectionComponent {
      * @param selectors.volumeTextSelector - New selector for volume text element
      * @param selectors.frequencySelector - New selector for frequency display element
      * @param selectors.noteSelector - New selector for note display element (if not provided, will be cleared to prevent cross-mode interference)
+     * @param selectors.autoUpdateUI - Enable/disable automatic UI updates (v1.3.14+)
      *
      * @example
      * ```typescript
@@ -474,9 +514,15 @@ export declare class AudioDetectionComponent {
      *   volumeTextSelector: '#range-test-volume-text',
      *   frequencySelector: '#range-test-frequency-value'
      * });
+     *
+     * // Switch to manual UI control (e.g., training page with custom sensitivity)
+     * audioDetector.updateSelectors({
+     *   volumeBarSelector: '#training-volume-bar',
+     *   autoUpdateUI: false  // Disable automatic updates, handle in onPitchUpdate callback
+     * });
      * ```
      */
-    updateSelectors(selectors: Partial<Pick<AudioDetectionConfig, 'volumeBarSelector' | 'volumeTextSelector' | 'frequencySelector' | 'noteSelector'>>): Promise<void>;
+    updateSelectors(selectors: Partial<Pick<AudioDetectionConfig, 'volumeBarSelector' | 'volumeTextSelector' | 'frequencySelector' | 'noteSelector' | 'autoUpdateUI' | 'displayMultiplier' | 'overrideNoiseGate' | 'overrideVolumeMultiplier'>>): Promise<void>;
     /**
      * コールバック関数を設定
      *
@@ -522,12 +568,14 @@ export declare class AudioDetectionComponent {
         isInitialized: boolean;
         deviceSpecs: DeviceSpecs | null;
         deviceSettings: DeviceSettings | null;
-        config: Required<Omit<AudioDetectionConfig, "minVolumeAbsolute" | "volumeBarSelector" | "volumeTextSelector" | "frequencySelector" | "noteSelector" | "onPitchUpdate">> & {
+        config: Required<Omit<AudioDetectionConfig, "minVolumeAbsolute" | "volumeBarSelector" | "volumeTextSelector" | "frequencySelector" | "noteSelector" | "onPitchUpdate" | "overrideNoiseGate" | "overrideVolumeMultiplier">> & {
             volumeBarSelector?: string | undefined;
             volumeTextSelector?: string | undefined;
             frequencySelector?: string | undefined;
             noteSelector?: string | undefined;
             minVolumeAbsolute?: number | undefined;
+            overrideNoiseGate?: number | undefined;
+            overrideVolumeMultiplier?: number | undefined;
             onPitchUpdate?: ((result: PitchDetectionResult) => void) | undefined;
         };
         lastError: PitchProError | null;
@@ -563,25 +611,7 @@ export declare class AudioDetectionComponent {
             lastError: Error | null;
             audioManagerStatus: {
                 isInitialized: boolean;
-                refCount: number; /**
-                 * コールバック関数を設定
-                 *
-                 * @param callbacks - 設定するコールバック関数
-                 *
-                 * @example
-                 * ```typescript
-                 * audioDetector.setCallbacks({
-                 *   onPitchUpdate: (result) => {
-                 *     console.log('音程検出:', result);
-                 *     // result.volume は既にデバイス固有補正済み（0-100%）
-                 *     // PC: 生音量 × 3.0, iPhone: 生音量 × 7.5, iPad: 生音量 × 20.0
-                 *   },
-                 *   onError: (error) => {
-                 *     console.error('検出エラー:', error);
-                 *   }
-                 * });
-                 * ```
-                 */
+                refCount: number;
                 audioContextState: string;
                 mediaStreamActive: boolean;
                 activeAnalysers: string[];
@@ -600,25 +630,7 @@ export declare class AudioDetectionComponent {
                 lastHealthCheck: import("../types").HealthStatus | null;
                 audioManagerStatus: {
                     isInitialized: boolean;
-                    refCount: number; /**
-                     * コールバック関数を設定
-                     *
-                     * @param callbacks - 設定するコールバック関数
-                     *
-                     * @example
-                     * ```typescript
-                     * audioDetector.setCallbacks({
-                     *   onPitchUpdate: (result) => {
-                     *     console.log('音程検出:', result);
-                     *     // result.volume は既にデバイス固有補正済み（0-100%）
-                     *     // PC: 生音量 × 3.0, iPhone: 生音量 × 7.5, iPad: 生音量 × 20.0
-                     *   },
-                     *   onError: (error) => {
-                     *     console.error('検出エラー:', error);
-                     *   }
-                     * });
-                     * ```
-                     */
+                    refCount: number;
                     audioContextState: string;
                     mediaStreamActive: boolean;
                     activeAnalysers: string[];

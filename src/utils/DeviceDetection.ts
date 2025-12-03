@@ -48,20 +48,23 @@ export class DeviceDetection {
     // iOS device detection (including iPadOS 13+ workaround)
     const isIPhone = /iPhone/.test(userAgent);
     const isIPad = /iPad/.test(userAgent);
-    
+
     // iPadOS 13+ reports as \"Macintosh\" but has touch support
     const isIPadOS = /Macintosh/.test(userAgent) && 'ontouchend' in document;
-    
+
     // Additional iOS detection methods
     const hasIOSNavigator = /iPad|iPhone|iPod/.test(userAgent);
     const hasIOSPlatform = /iPad|iPhone|iPod/.test((navigator as any).platform || '');
-    
+
     // Combined iOS detection
     const isIOS = isIPhone || isIPad || isIPadOS || hasIOSNavigator || hasIOSPlatform;
-    
+
+    // Android detection (v1.3.23)
+    const isAndroid = /Android/i.test(userAgent);
+
     // More specific device type detection
-    let deviceType: 'iPhone' | 'iPad' | 'PC' = 'PC';
-    
+    let deviceType: 'iPhone' | 'iPad' | 'Android' | 'PC' = 'PC';
+
     if (isIPhone) {
       deviceType = 'iPhone';
     } else if (isIPad || isIPadOS) {
@@ -69,6 +72,9 @@ export class DeviceDetection {
     } else if (isIOS) {
       // Fallback iOS device - could be iPhone or iPad
       deviceType = DeviceDetection.detectIOSDeviceType();
+    } else if (isAndroid) {
+      // v1.3.23: Android専用設定
+      deviceType = 'Android';
     }
 
     // Get device-specific optimizations
@@ -110,35 +116,54 @@ export class DeviceDetection {
 
   /**
    * Get device-specific optimization parameters
+   * v1.3.23: Android追加、全デバイス設定見直し
+   *
+   * 設計方針:
+   * - 準備ページ（BGMなし）: デフォルト設定を使用
+   * - トレーニングページ（BGMあり・ダッキング環境）: override機能で上書き
+   * - iPhoneのみダッキングの影響が大きいため、他デバイスはoverrideなしでも動作
    */
-  private static getDeviceOptimizations(deviceType: 'iPhone' | 'iPad' | 'PC', _isIOS: boolean) {
+  private static getDeviceOptimizations(deviceType: 'iPhone' | 'iPad' | 'Android' | 'PC', _isIOS: boolean) {
     switch (deviceType) {
       case 'iPad':
-        // v1.3.11: 二重増幅問題の修正 (sensitivity × RMS_TO_PERCENT × volumeMultiplier)
+        // v1.3.25: iPad設定調整（ノイズ問題修正）
+        // ログ分析: 静寂時でもvolumeAsPercent 8%〜10%のノイズ発生
+        // noiseGate 5%→12%に上げてノイズをブロック
         return {
-          sensitivity: 2.5,           // 🎤 マイク感度 (4.0→2.5 ノイズフロア低減、100%飽和防止)
-          noiseGate: 0.05,            // 🚪 ノイズゲート閾値 (0.023→0.05 静寂時の誤検知防止)
-          volumeMultiplier: 3.0,      // 🔊 表示音量補正 (4.0→3.0 音量バー挙動を自然に)
-          smoothingFactor: 0.1        // 📊 平滑化係数（CPU負荷軽減）
+          sensitivity: 2.5,           // 🎤 マイク感度
+          noiseGate: 0.12,            // 🚪 ノイズゲート閾値 (5%→12% ノイズブロック)
+          volumeMultiplier: 1.2,      // 🔊 表示音量補正
+          smoothingFactor: 0.1        // 📊 平滑化係数
         };
 
       case 'iPhone':
-        // v1.3.11: 二重増幅問題の修正 + 音域テストノイズ対策
+        // v1.3.22: 準備ページ用デフォルト設定（BGMなし環境）
+        // ダッキング環境ではoverride機能で上書き（noiseGate: 15%, volMult: 2.5）
         return {
-          sensitivity: 2.0,           // 🎤 マイク感度 (3.5→2.0 環境ノイズ増幅を抑制)
-          noiseGate: 0.08,            // 🚪 ノイズゲート閾値 (0.028→0.08 音域テスト開始時のノイズ対策)
-          volumeMultiplier: 2.0,      // 🔊 表示音量補正 (3.0→2.0 50%で100%到達に改善)
-          smoothingFactor: 0.1        // 📊 平滑化係数（CPU負荷軽減）
+          sensitivity: 2.0,           // 🎤 マイク感度 ※アプリが8xに上書き
+          noiseGate: 0.25,            // 🚪 ノイズゲート閾値 (25%)
+          volumeMultiplier: 1.2,      // 🔊 表示音量補正
+          smoothingFactor: 0.1        // 📊 平滑化係数
+        };
+
+      case 'Android':
+        // v1.3.23: Android専用設定（新規追加）
+        // Androidはダッキングの影響がiPhoneより軽微
+        return {
+          sensitivity: 2.0,           // 🎤 マイク感度
+          noiseGate: 0.08,            // 🚪 ノイズゲート閾値 (8% - iPhone程高くない)
+          volumeMultiplier: 2.5,      // 🔊 表示音量補正
+          smoothingFactor: 0.1        // 📊 平滑化係数
         };
 
       case 'PC':
       default:
-        // v1.3.13: ノイズフロア対策 + 音量バー上昇率改善
+        // v1.3.23: PC設定（ダッキングなし）
         return {
-          sensitivity: 1.7,           // 🎤 マイク感度 (PC環境安定性重視)
-          noiseGate: 0.03,            // 🚪 ノイズゲート閾値 (0.023→0.03 ノイズフロア2.3%を確実にブロック)
-          volumeMultiplier: 3.5,      // 🔊 表示音量補正 (2.5→3.5 音量バー上昇率改善)
-          smoothingFactor: 0.1        // 📊 平滑化係数（CPU負荷軽減: 0.25→0.1）
+          sensitivity: 1.7,           // 🎤 マイク感度
+          noiseGate: 0.03,            // 🚪 ノイズゲート閾値 (3%)
+          volumeMultiplier: 3.5,      // 🔊 表示音量補正
+          smoothingFactor: 0.1        // 📊 平滑化係数
         };
     }
   }
