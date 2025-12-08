@@ -63,9 +63,9 @@ export class MicrophoneLifecycleManager {
     // Apply configuration with defaults
     this.config = {
       healthCheckIntervalMs: userConfig.healthCheckIntervalMs ?? 5000,     // 5 seconds
-      idleTimeoutMs: userConfig.idleTimeoutMs ?? 300000,                   // 5 minutes
+      idleTimeoutMs: userConfig.idleTimeoutMs ?? 120000,                   // 2 minutes
       autoRecoveryDelayMs: userConfig.autoRecoveryDelayMs ?? 2000,         // 2 seconds
-      maxIdleTimeBeforeRelease: userConfig.maxIdleTimeBeforeRelease ?? 600000, // 10 minutes
+      maxIdleTimeBeforeRelease: userConfig.maxIdleTimeBeforeRelease ?? 180000, // 3 minutes
       maxAutoRecoveryAttempts: userConfig.maxAutoRecoveryAttempts ?? 3,
       logLevel: userConfig.logLevel ?? LogLevel.INFO,
       enableDetailedLogging: userConfig.enableDetailedLogging ?? false

@@ -1,7 +1,7 @@
 var Be = Object.defineProperty;
 var $e = (h, e, t) => e in h ? Be(h, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : h[e] = t;
 var x = (h, e, t) => $e(h, typeof e != "symbol" ? e + "" : e, t);
-const He = "1.3.13", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).toISOString(), E = class E {
+const He = "1.4.0", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).toISOString(), E = class E {
   /**
    * Detect current device and return optimized specifications
    */
@@ -3265,12 +3265,12 @@ class tt {
     if (this.refCount = 0, this.isActive = !1, this.lastHealthCheck = null, this.healthCheckInterval = null, this.idleCheckInterval = null, this.visibilityCheckInterval = null, this.lastActivityTime = Date.now(), this.isPageVisible = !0, this.isUserActive = !0, this.autoRecoveryAttempts = 0, this.eventListeners = /* @__PURE__ */ new Map(), this.callbacks = {}, this.audioManager = e, this.config = {
       healthCheckIntervalMs: t.healthCheckIntervalMs ?? 5e3,
       // 5 seconds
-      idleTimeoutMs: t.idleTimeoutMs ?? 3e5,
-      // 5 minutes
+      idleTimeoutMs: t.idleTimeoutMs ?? 12e4,
+      // 2 minutes
       autoRecoveryDelayMs: t.autoRecoveryDelayMs ?? 2e3,
       // 2 seconds
-      maxIdleTimeBeforeRelease: t.maxIdleTimeBeforeRelease ?? 6e5,
-      // 10 minutes
+      maxIdleTimeBeforeRelease: t.maxIdleTimeBeforeRelease ?? 18e4,
+      // 3 minutes
       maxAutoRecoveryAttempts: t.maxAutoRecoveryAttempts ?? 3,
       logLevel: t.logLevel ?? de.INFO,
       enableDetailedLogging: t.enableDetailedLogging ?? !1
