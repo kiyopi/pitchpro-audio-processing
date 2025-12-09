@@ -540,7 +540,26 @@ export declare class AudioDetectionComponent {
             rawVolume: number;
             currentFrequency: number;
             detectedNote: string;
-            detectedOctave: number | null;
+            detectedOctave: number | null; /**
+             * Stops pitch detection but preserves UI state
+             *
+             * @description This method stops the pitch detection process while keeping UI elements
+             * in their current state. For complete reset including UI, use reset() instead.
+             *
+             * @returns boolean - Returns true if detection stopped successfully, false otherwise
+             *
+             * @example
+             * ```typescript
+             * // Stop detection but keep UI values
+             * const stopped = audioDetector.stopDetection();
+             * if (stopped) {
+             *   console.log('Detection stopped, UI preserved');
+             * }
+             *
+             * // For complete reset including UI:
+             * audioDetector.microphoneController?.reset();
+             * ```
+             */
             currentClarity: number;
             lastError: Error | null;
             frameRateStatus: {
@@ -629,6 +648,26 @@ export declare class AudioDetectionComponent {
             };
         } | undefined;
     };
+    /**
+     * Enable/disable harmonic correction for pitch detection
+     *
+     * @description Controls the internal harmonic correction in PitchDetector.
+     * When disabled, result.frequency will contain raw pitch data without
+     * octave jump correction, allowing external applications to implement
+     * their own harmonic correction logic.
+     *
+     * @param enabled - true to enable (default), false to disable
+     *
+     * @example
+     * ```typescript
+     * // Disable PitchPro's harmonic correction to get raw frequency data
+     * audioDetector.setHarmonicCorrectionEnabled(false);
+     *
+     * // Re-enable if needed
+     * audioDetector.setHarmonicCorrectionEnabled(true);
+     * ```
+     */
+    setHarmonicCorrectionEnabled(enabled: boolean): void;
     /**
      * Provides access to the MicrophoneController for unified system management
      *

@@ -1,7 +1,7 @@
 var Be = Object.defineProperty;
 var $e = (h, e, t) => e in h ? Be(h, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : h[e] = t;
 var x = (h, e, t) => $e(h, typeof e != "symbol" ? e + "" : e, t);
-const He = "1.4.0", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).toISOString(), E = class E {
+const He = "1.5.0", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).toISOString(), E = class E {
   /**
    * Detect current device and return optimized specifications
    */
@@ -4985,6 +4985,29 @@ const N = class N {
       pitchDetectorStatus: (e = this.pitchDetector) == null ? void 0 : e.getStatus(),
       micControllerStatus: (t = this.micController) == null ? void 0 : t.getStatus()
     };
+  }
+  /**
+   * Enable/disable harmonic correction for pitch detection
+   *
+   * @description Controls the internal harmonic correction in PitchDetector.
+   * When disabled, result.frequency will contain raw pitch data without
+   * octave jump correction, allowing external applications to implement
+   * their own harmonic correction logic.
+   *
+   * @param enabled - true to enable (default), false to disable
+   *
+   * @example
+   * ```typescript
+   * // Disable PitchPro's harmonic correction to get raw frequency data
+   * audioDetector.setHarmonicCorrectionEnabled(false);
+   *
+   * // Re-enable if needed
+   * audioDetector.setHarmonicCorrectionEnabled(true);
+   * ```
+   */
+  setHarmonicCorrectionEnabled(e) {
+    var t;
+    (t = this.pitchDetector) == null || t.setHarmonicCorrectionEnabled(e);
   }
   /**
    * Provides access to the MicrophoneController for unified system management

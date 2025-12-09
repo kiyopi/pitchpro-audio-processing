@@ -1037,6 +1037,29 @@ export class AudioDetectionComponent {
   }
 
   /**
+   * Enable/disable harmonic correction for pitch detection
+   *
+   * @description Controls the internal harmonic correction in PitchDetector.
+   * When disabled, result.frequency will contain raw pitch data without
+   * octave jump correction, allowing external applications to implement
+   * their own harmonic correction logic.
+   *
+   * @param enabled - true to enable (default), false to disable
+   *
+   * @example
+   * ```typescript
+   * // Disable PitchPro's harmonic correction to get raw frequency data
+   * audioDetector.setHarmonicCorrectionEnabled(false);
+   *
+   * // Re-enable if needed
+   * audioDetector.setHarmonicCorrectionEnabled(true);
+   * ```
+   */
+  setHarmonicCorrectionEnabled(enabled: boolean): void {
+    this.pitchDetector?.setHarmonicCorrectionEnabled(enabled);
+  }
+
+  /**
    * Provides access to the MicrophoneController for unified system management
    * 
    * @description Exposes the MicrophoneController instance to enable external access
