@@ -1427,6 +1427,9 @@ export class AudioDetectionComponent {
     this.uiUpdateTimer = window.setInterval(() => {
       // 🎯 修正: PitchDetectorの実際の状態をチェック
       if (this.pitchDetector && this.pitchDetector.getStatus().componentState === 'detecting') {
+        // Update activity to prevent idle timeout during active detection
+        this.micController?.updateActivity();
+
         // Get the latest pitch detection result
         const rawResult = this.pitchDetector.getLatestResult();
         

@@ -1,7 +1,7 @@
 var Be = Object.defineProperty;
 var $e = (h, e, t) => e in h ? Be(h, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : h[e] = t;
 var x = (h, e, t) => $e(h, typeof e != "symbol" ? e + "" : e, t);
-const He = "1.5.1", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).toISOString(), E = class E {
+const He = "1.5.2", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).toISOString(), E = class E {
   /**
    * Detect current device and return optimized specifications
    */
@@ -3393,6 +3393,7 @@ class tt {
   }
   /**
    * Update user activity timestamp
+   * Call this method when user activity is detected to prevent idle timeout
    */
   updateActivity() {
     this.lastActivityTime = Date.now(), this.isUserActive = !0;
@@ -4035,6 +4036,13 @@ class st {
     return this.currentState !== "uninitialized";
   }
   /**
+   * Update activity timestamp to prevent idle timeout
+   * Call this method during active pitch detection to keep the session alive
+   */
+  updateActivity() {
+    this.lifecycleManager.updateActivity();
+  }
+  /**
    * Setup internal event handlers
    */
   setupEventHandlers() {
@@ -4339,7 +4347,7 @@ class st {
     }
     if (this.pitchDetector)
       try {
-        return this.pitchDetector.startDetection() ? (this.logger.info("PitchDetector detection started successfully"), console.log("✅ [MicrophoneController] Pitch detection started"), console.log("🎉 [MicrophoneController] System startup completed successfully"), !0) : (this.logger.warn("PitchDetector failed to start detection"), console.warn("⚠️ [MicrophoneController] Pitch detection failed to start"), !1);
+        return this.pitchDetector.startDetection() ? (this.lifecycleManager.updateActivity(), this.logger.info("PitchDetector detection started successfully"), console.log("✅ [MicrophoneController] Pitch detection started"), console.log("🎉 [MicrophoneController] System startup completed successfully"), !0) : (this.logger.warn("PitchDetector failed to start detection"), console.warn("⚠️ [MicrophoneController] Pitch detection failed to start"), !1);
       } catch (e) {
         return this.logger.error("Error during PitchDetector start", e), console.warn("⚠️ [MicrophoneController] PitchDetector start encountered error:", e.message), !1;
       }
@@ -5257,12 +5265,14 @@ const N = class N {
    */
   startUIUpdates() {
     this.uiUpdateTimer && clearInterval(this.uiUpdateTimer), this.uiUpdateTimer = window.setInterval(() => {
+      var e;
       if (this.pitchDetector && this.pitchDetector.getStatus().componentState === "detecting") {
-        const e = this.pitchDetector.getLatestResult(), t = this._getProcessedResult(e);
-        if (t)
-          this.config.autoUpdateUI && this.updateUI(t), this.config.onPitchUpdate ? (this.debugLog("Calling onPitchUpdate callback with result:", t), this.config.onPitchUpdate(t)) : this.debugLog("onPitchUpdate callback not set - skipping callback execution");
+        (e = this.micController) == null || e.updateActivity();
+        const t = this.pitchDetector.getLatestResult(), i = this._getProcessedResult(t);
+        if (i)
+          this.config.autoUpdateUI && this.updateUI(i), this.config.onPitchUpdate ? (this.debugLog("Calling onPitchUpdate callback with result:", i), this.config.onPitchUpdate(i)) : this.debugLog("onPitchUpdate callback not set - skipping callback execution");
         else {
-          const i = {
+          const s = {
             frequency: 0,
             note: "-",
             octave: 0,
@@ -5270,7 +5280,7 @@ const N = class N {
             rawVolume: 0,
             clarity: 0
           };
-          this.config.autoUpdateUI && this.updateUI(i), this.config.onPitchUpdate && this.config.onPitchUpdate(i);
+          this.config.autoUpdateUI && this.updateUI(s), this.config.onPitchUpdate && this.config.onPitchUpdate(s);
         }
       }
     }, this.config.uiUpdateInterval);

@@ -158,6 +158,11 @@ export declare class MicrophoneController {
      */
     isInitialized(): boolean;
     /**
+     * Update activity timestamp to prevent idle timeout
+     * Call this method during active pitch detection to keep the session alive
+     */
+    updateActivity(): void;
+    /**
      * Setup internal event handlers
      */
     private setupEventHandlers;

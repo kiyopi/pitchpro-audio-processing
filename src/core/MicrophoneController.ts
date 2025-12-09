@@ -265,6 +265,14 @@ export class MicrophoneController {
   }
 
   /**
+   * Update activity timestamp to prevent idle timeout
+   * Call this method during active pitch detection to keep the session alive
+   */
+  updateActivity(): void {
+    this.lifecycleManager.updateActivity();
+  }
+
+  /**
    * Setup internal event handlers
    */
   private setupEventHandlers(): void {
@@ -682,6 +690,9 @@ export class MicrophoneController {
       try {
         const started = this.pitchDetector.startDetection();
         if (started) {
+          // Update activity to prevent idle timeout during active detection
+          this.lifecycleManager.updateActivity();
+
           this.logger.info('PitchDetector detection started successfully');
           console.log('✅ [MicrophoneController] Pitch detection started');
           console.log('🎉 [MicrophoneController] System startup completed successfully');

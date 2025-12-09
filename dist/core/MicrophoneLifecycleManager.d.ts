@@ -71,8 +71,9 @@ export declare class MicrophoneLifecycleManager {
     private handleVisibilityChange;
     /**
      * Update user activity timestamp
+     * Call this method when user activity is detected to prevent idle timeout
      */
-    private updateActivity;
+    updateActivity(): void;
     /**
      * Start health monitoring
      */

@@ -329,8 +329,9 @@ export class MicrophoneLifecycleManager {
 
   /**
    * Update user activity timestamp
+   * Call this method when user activity is detected to prevent idle timeout
    */
-  private updateActivity(): void {
+  public updateActivity(): void {
     this.lastActivityTime = Date.now();
     this.isUserActive = true;
   }
