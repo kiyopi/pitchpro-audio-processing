@@ -271,6 +271,27 @@ export class MicrophoneController {
     // Lifecycle manager callbacks
     this.lifecycleManager.setCallbacks({
       onStateChange: (state) => {
+        // Handle idle timeout notification
+        if (state === 'inactive') {
+          console.log('😴 [MicrophoneController] Idle timeout detected - notifying user');
+
+          // Dispatch custom event for app-side handling
+          this.dispatchCustomEvent('pitchpro:idleTimeout', {
+            reason: 'idle_timeout',
+            message: 'Microphone resources released due to inactivity'
+          });
+
+          // Show warning notification if system is available
+          this.errorSystem?.showWarning(
+            'Session Timeout',
+            'Microphone resources have been released due to inactivity.',
+            {
+              solution: 'Please reload the page to restart.',
+              autoHide: false
+            }
+          );
+        }
+
         this.updateState(state === 'active' ? 'active' : 'ready');
       },
       onError: (error) => {

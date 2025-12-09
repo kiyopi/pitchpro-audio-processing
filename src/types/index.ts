@@ -171,6 +171,7 @@ export interface MicrophoneControllerEvents {
   'pitchpro:sensitivityChanged': CustomEvent<{ sensitivity: number }>;
   'pitchpro:noiseGateChanged': CustomEvent<{ threshold: number }>;
   'pitchpro:deviceDetected': CustomEvent<{ specs: DeviceSpecs }>;
+  'pitchpro:idleTimeout': CustomEvent<{ reason: string; message: string }>;
 }
 
 export interface LifecycleEvents {

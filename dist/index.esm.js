@@ -1,7 +1,7 @@
 var Be = Object.defineProperty;
 var $e = (h, e, t) => e in h ? Be(h, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : h[e] = t;
 var x = (h, e, t) => $e(h, typeof e != "symbol" ? e + "" : e, t);
-const He = "1.5.0", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).toISOString(), E = class E {
+const He = "1.5.1", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).toISOString(), E = class E {
   /**
    * Detect current device and return optimized specifications
    */
@@ -4040,7 +4040,18 @@ class st {
   setupEventHandlers() {
     this.lifecycleManager.setCallbacks({
       onStateChange: (e) => {
-        this.updateState(e === "active" ? "active" : "ready");
+        var t;
+        e === "inactive" && (console.log("😴 [MicrophoneController] Idle timeout detected - notifying user"), this.dispatchCustomEvent("pitchpro:idleTimeout", {
+          reason: "idle_timeout",
+          message: "Microphone resources released due to inactivity"
+        }), (t = this.errorSystem) == null || t.showWarning(
+          "Session Timeout",
+          "Microphone resources have been released due to inactivity.",
+          {
+            solution: "Please reload the page to restart.",
+            autoHide: !1
+          }
+        )), this.updateState(e === "active" ? "active" : "ready");
       },
       onError: (e) => {
         this.handleError(e, "lifecycle");

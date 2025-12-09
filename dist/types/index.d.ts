@@ -154,6 +154,10 @@ export interface MicrophoneControllerEvents {
     'pitchpro:deviceDetected': CustomEvent<{
         specs: DeviceSpecs;
     }>;
+    'pitchpro:idleTimeout': CustomEvent<{
+        reason: string;
+        message: string;
+    }>;
 }
 export interface LifecycleEvents {
     'pitchpro:lifecycle:trackEnded': CustomEvent<{
