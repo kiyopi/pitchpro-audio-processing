@@ -58,10 +58,13 @@ export class DeviceDetection {
     
     // Combined iOS detection
     const isIOS = isIPhone || isIPad || isIPadOS || hasIOSNavigator || hasIOSPlatform;
-    
+
+    // Android detection
+    const isAndroid = /Android/i.test(userAgent);
+
     // More specific device type detection
-    let deviceType: 'iPhone' | 'iPad' | 'PC' = 'PC';
-    
+    let deviceType: 'iPhone' | 'iPad' | 'Android' | 'PC' = 'PC';
+
     if (isIPhone) {
       deviceType = 'iPhone';
     } else if (isIPad || isIPadOS) {
@@ -69,6 +72,8 @@ export class DeviceDetection {
     } else if (isIOS) {
       // Fallback iOS device - could be iPhone or iPad
       deviceType = DeviceDetection.detectIOSDeviceType();
+    } else if (isAndroid) {
+      deviceType = 'Android';
     }
 
     // Get device-specific optimizations
@@ -111,7 +116,7 @@ export class DeviceDetection {
   /**
    * Get device-specific optimization parameters
    */
-  private static getDeviceOptimizations(deviceType: 'iPhone' | 'iPad' | 'PC', _isIOS: boolean) {
+  private static getDeviceOptimizations(deviceType: 'iPhone' | 'iPad' | 'Android' | 'PC', _isIOS: boolean) {
     switch (deviceType) {
       case 'iPad':
         // v1.3.11: 二重増幅問題の修正 (sensitivity × RMS_TO_PERCENT × volumeMultiplier)
@@ -129,6 +134,15 @@ export class DeviceDetection {
           noiseGate: 0.08,            // 🚪 ノイズゲート閾値 (0.028→0.08 音域テスト開始時のノイズ対策)
           volumeMultiplier: 2.0,      // 🔊 表示音量補正 (3.0→2.0 50%で100%到達に改善)
           smoothingFactor: 0.1        // 📊 平滑化係数（CPU負荷軽減）
+        };
+
+      case 'Android':
+        // v1.5.3: Android対応（iPhoneと同等の初期値）
+        return {
+          sensitivity: 2.0,           // 🎤 マイク感度 (iPhoneと同等)
+          noiseGate: 0.08,            // 🚪 ノイズゲート閾値 (iPhoneと同等)
+          volumeMultiplier: 2.0,      // 🔊 表示音量補正 (iPhoneと同等)
+          smoothingFactor: 0.1        // 📊 平滑化係数
         };
 
       case 'PC':

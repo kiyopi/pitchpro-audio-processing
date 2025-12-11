@@ -23,17 +23,17 @@ const He = "1.5.2", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).to
    * Analyze user agent string and determine device specifications
    */
   static analyzeUserAgent(e) {
-    const t = /iPhone/.test(e), i = /iPad/.test(e), s = /Macintosh/.test(e) && "ontouchend" in document, o = /iPad|iPhone|iPod/.test(e), n = /iPad|iPhone|iPod/.test(navigator.platform || ""), r = t || i || s || o || n;
-    let a = "PC";
-    t ? a = "iPhone" : i || s ? a = "iPad" : r && (a = E.detectIOSDeviceType());
-    const c = E.getDeviceOptimizations(a, r);
+    const t = /iPhone/.test(e), i = /iPad/.test(e), s = /Macintosh/.test(e) && "ontouchend" in document, o = /iPad|iPhone|iPod/.test(e), n = /iPad|iPhone|iPod/.test(navigator.platform || ""), r = t || i || s || o || n, a = /Android/i.test(e);
+    let c = "PC";
+    t ? c = "iPhone" : i || s ? c = "iPad" : r ? c = E.detectIOSDeviceType() : a && (c = "Android");
+    const l = E.getDeviceOptimizations(c, r);
     return {
-      deviceType: a,
+      deviceType: c,
       isIOS: r,
-      sensitivity: c.sensitivity,
-      noiseGate: c.noiseGate,
-      volumeMultiplier: c.volumeMultiplier,
-      smoothingFactor: c.smoothingFactor,
+      sensitivity: l.sensitivity,
+      noiseGate: l.noiseGate,
+      volumeMultiplier: l.volumeMultiplier,
+      smoothingFactor: l.smoothingFactor,
       // 後方互換性のため残す（将来的に削除予定）
       divisor: 6,
       gainCompensation: 1,
@@ -73,6 +73,17 @@ const He = "1.5.2", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).to
           // 🔊 表示音量補正 (3.0→2.0 50%で100%到達に改善)
           smoothingFactor: 0.1
           // 📊 平滑化係数（CPU負荷軽減）
+        };
+      case "Android":
+        return {
+          sensitivity: 2,
+          // 🎤 マイク感度 (iPhoneと同等)
+          noiseGate: 0.08,
+          // 🚪 ノイズゲート閾値 (iPhoneと同等)
+          volumeMultiplier: 2,
+          // 🔊 表示音量補正 (iPhoneと同等)
+          smoothingFactor: 0.1
+          // 📊 平滑化係数
         };
       case "PC":
       default:
