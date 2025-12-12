@@ -30,6 +30,8 @@ export declare class MicrophoneLifecycleManager {
     private isPageVisible;
     private isUserActive;
     private autoRecoveryAttempts;
+    private readonly initTime;
+    private static readonly INIT_GUARD_MS;
     private eventListeners;
     private config;
     private callbacks;

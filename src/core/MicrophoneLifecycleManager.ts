@@ -44,6 +44,10 @@ export class MicrophoneLifecycleManager {
   private isPageVisible = true;
   private isUserActive = true;
   private autoRecoveryAttempts = 0;
+
+  // iPad Safari対策: 初期化時刻とガード期間
+  private readonly initTime = Date.now();
+  private static readonly INIT_GUARD_MS = 2000; // 初期化後2秒間はhiddenを無視
   
   // Event listeners storage for cleanup
   private eventListeners = new Map<string, { target: EventTarget; listener: EventListener; eventName: string }>();
@@ -287,6 +291,13 @@ export class MicrophoneLifecycleManager {
    */
   private handleVisibilityChange(): void {
     if (!this.isActive) return;
+
+    // iPad Safari対策: 初期化直後のhiddenイベントを無視
+    // iPad Safariではページロード直後にvisibilitychange: hiddenが誤発火することがある
+    if (!this.isPageVisible && (Date.now() - this.initTime < MicrophoneLifecycleManager.INIT_GUARD_MS)) {
+      console.log('⏳ [MicrophoneLifecycleManager] 初期化直後のhiddenイベントを無視（iPad Safari対策）');
+      return;
+    }
 
     if (this.isPageVisible) {
       console.log('👁️ [MicrophoneLifecycleManager] Page became visible - resuming monitoring');

@@ -1,17 +1,17 @@
-var Be = Object.defineProperty;
-var $e = (h, e, t) => e in h ? Be(h, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : h[e] = t;
-var x = (h, e, t) => $e(h, typeof e != "symbol" ? e + "" : e, t);
-const He = "1.5.2", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).toISOString(), E = class E {
+var He = Object.defineProperty;
+var Ve = (h, e, t) => e in h ? He(h, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : h[e] = t;
+var x = (h, e, t) => Ve(h, typeof e != "symbol" ? e + "" : e, t);
+const Ge = "1.5.2", Ae = `PitchPro v${Ge}`, rt = (/* @__PURE__ */ new Date()).toISOString(), A = class A {
   /**
    * Detect current device and return optimized specifications
    */
   static getDeviceSpecs() {
-    if (E.cachedSpecs)
-      return E.cachedSpecs;
+    if (A.cachedSpecs)
+      return A.cachedSpecs;
     if (typeof window > "u" || typeof navigator > "u")
-      return E.getDefaultSpecs();
-    const e = navigator.userAgent, t = E.analyzeUserAgent(e);
-    return E.cachedSpecs = t, console.log("📱 [DeviceDetection] Device analysis:", {
+      return A.getDefaultSpecs();
+    const e = navigator.userAgent, t = A.analyzeUserAgent(e);
+    return A.cachedSpecs = t, console.log("📱 [DeviceDetection] Device analysis:", {
       userAgent: e.substring(0, 100) + "...",
       deviceType: t.deviceType,
       isIOS: t.isIOS,
@@ -25,8 +25,8 @@ const He = "1.5.2", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).to
   static analyzeUserAgent(e) {
     const t = /iPhone/.test(e), i = /iPad/.test(e), s = /Macintosh/.test(e) && "ontouchend" in document, o = /iPad|iPhone|iPod/.test(e), n = /iPad|iPhone|iPod/.test(navigator.platform || ""), r = t || i || s || o || n, a = /Android/i.test(e);
     let c = "PC";
-    t ? c = "iPhone" : i || s ? c = "iPad" : r ? c = E.detectIOSDeviceType() : a && (c = "Android");
-    const l = E.getDeviceOptimizations(c, r);
+    t ? c = "iPhone" : i || s ? c = "iPad" : r ? c = A.detectIOSDeviceType() : a && (c = "Android");
+    const l = A.getDeviceOptimizations(c, r);
     return {
       deviceType: c,
       isIOS: r,
@@ -143,10 +143,10 @@ const He = "1.5.2", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).to
    */
   static getDeviceCapabilities() {
     return {
-      deviceSpecs: E.getDeviceSpecs(),
-      webAudioSupport: E.supportsWebAudio(),
-      mediaDevicesSupport: E.supportsMediaDevices(),
-      mediaRecorderSupport: E.supportsMediaRecorder(),
+      deviceSpecs: A.getDeviceSpecs(),
+      webAudioSupport: A.supportsWebAudio(),
+      mediaDevicesSupport: A.supportsMediaDevices(),
+      mediaRecorderSupport: A.supportsMediaRecorder(),
       touchSupport: "ontouchend" in document,
       userAgent: typeof navigator < "u" ? navigator.userAgent : "Unknown",
       screenSize: typeof window < "u" ? {
@@ -162,13 +162,13 @@ const He = "1.5.2", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).to
    * Check if current device is mobile
    */
   static isMobile() {
-    return E.getDeviceSpecs().isIOS || /Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test((navigator == null ? void 0 : navigator.userAgent) || "");
+    return A.getDeviceSpecs().isIOS || /Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test((navigator == null ? void 0 : navigator.userAgent) || "");
   }
   /**
    * Check if current device is tablet
    */
   static isTablet() {
-    if (E.getDeviceSpecs().deviceType === "iPad") return !0;
+    if (A.getDeviceSpecs().deviceType === "iPad") return !0;
     const t = (navigator == null ? void 0 : navigator.userAgent) || "";
     return /Android/i.test(t) && !/Mobile/i.test(t);
   }
@@ -176,13 +176,13 @@ const He = "1.5.2", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).to
    * Check if current device is desktop
    */
   static isDesktop() {
-    return !E.isMobile() && !E.isTablet();
+    return !A.isMobile() && !A.isTablet();
   }
   /**
    * Get recommended audio constraints for current device
    */
   static getOptimalAudioConstraints() {
-    const e = E.getDeviceSpecs(), t = {
+    const e = A.getDeviceSpecs(), t = {
       audio: {
         echoCancellation: !1,
         noiseSuppression: !1,
@@ -212,14 +212,14 @@ const He = "1.5.2", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).to
    * Clear cached device specifications (for testing)
    */
   static clearCache() {
-    E.cachedSpecs = null;
+    A.cachedSpecs = null;
   }
   /**
    * Get device-specific debugging information
    */
   static getDebugInfo() {
     return {
-      ...E.getDeviceCapabilities(),
+      ...A.getDeviceCapabilities(),
       detectionMethods: {
         userAgentIPhone: /iPhone/.test((navigator == null ? void 0 : navigator.userAgent) || ""),
         userAgentIPad: /iPad/.test((navigator == null ? void 0 : navigator.userAgent) || ""),
@@ -231,12 +231,12 @@ const He = "1.5.2", be = `PitchPro v${He}`, nt = (/* @__PURE__ */ new Date()).to
     };
   }
 };
-E.cachedSpecs = null;
-let G = E;
+A.cachedSpecs = null;
+let G = A;
 var k = /* @__PURE__ */ ((h) => (h.AUDIO_CONTEXT_ERROR = "AUDIO_CONTEXT_ERROR", h.MICROPHONE_ACCESS_DENIED = "MICROPHONE_ACCESS_DENIED", h.PITCH_DETECTION_ERROR = "PITCH_DETECTION_ERROR", h.BUFFER_OVERFLOW = "BUFFER_OVERFLOW", h.INVALID_SAMPLE_RATE = "INVALID_SAMPLE_RATE", h.DEVICE_NOT_SUPPORTED = "DEVICE_NOT_SUPPORTED", h.PROCESSING_TIMEOUT = "PROCESSING_TIMEOUT", h))(k || {});
-class A extends Error {
+class E extends Error {
   constructor(e, t, i) {
-    super(e), this.name = "PitchProError", this.code = t, this.timestamp = /* @__PURE__ */ new Date(), this.context = i, Error.captureStackTrace && Error.captureStackTrace(this, A);
+    super(e), this.name = "PitchProError", this.code = t, this.timestamp = /* @__PURE__ */ new Date(), this.context = i, Error.captureStackTrace && Error.captureStackTrace(this, E);
   }
   toJSON() {
     return {
@@ -249,17 +249,17 @@ class A extends Error {
     };
   }
 }
-class R extends A {
+class R extends E {
   constructor(e, t) {
     super(e, "AUDIO_CONTEXT_ERROR", t), this.name = "AudioContextError";
   }
 }
-class Ee extends A {
+class we extends E {
   constructor(e, t) {
     super(e, "MICROPHONE_ACCESS_DENIED", t), this.name = "MicrophoneAccessError";
   }
 }
-class Ve extends A {
+class je extends E {
   constructor(e, t, i, s) {
     super(
       e,
@@ -281,12 +281,12 @@ class Ve extends A {
     return (e = this.context) == null ? void 0 : e.recoveryAttempts;
   }
 }
-class Te extends A {
+class De extends E {
   constructor(e, t) {
     super(e, "PITCH_DETECTION_ERROR", t), this.name = "PitchDetectionError";
   }
 }
-function Ie(h) {
+function Ne(h) {
   return [
     "BUFFER_OVERFLOW",
     "PROCESSING_TIMEOUT",
@@ -425,7 +425,7 @@ class F {
         userAgent: typeof navigator < "u" ? navigator.userAgent : "unknown",
         timestamp: Date.now(),
         url: typeof window < "u" ? window.location.href : "unknown",
-        isRecoverable: Ie(e)
+        isRecoverable: Ne(e)
       }
     };
   }
@@ -471,7 +471,7 @@ class F {
     };
   }
 }
-class Ge {
+class Qe {
   /**
    * Creates a new AudioManager instance with device-optimized configuration
    * 
@@ -922,7 +922,7 @@ class Ge {
         try {
           i.readyState !== "ended" ? (i.stop(), console.log(`🛑 [AudioManager] Track ${s} stop complete`)) : console.log(`⚠️ [AudioManager] Track ${s} already ended`);
         } catch (o) {
-          const n = new A(
+          const n = new E(
             `メディアトラック ${s} の停止中にエラーが発生しました: ${o.message}`,
             k.AUDIO_CONTEXT_ERROR,
             {
@@ -964,7 +964,7 @@ class Ge {
    */
   _createStructuredError(e, t) {
     var i, s;
-    return e.message.includes("Permission denied") || e.message.includes("NotAllowedError") || e.message.includes("permission") ? new Ee(
+    return e.message.includes("Permission denied") || e.message.includes("NotAllowedError") || e.message.includes("permission") ? new we(
       "マイクへのアクセス許可が拒否されました。ブラウザの設定でマイクアクセスを許可してください。",
       {
         operation: t,
@@ -981,7 +981,7 @@ class Ge {
         sampleRate: ((s = this.audioContext) == null ? void 0 : s.sampleRate) || "unknown",
         deviceSpecs: this.getPlatformSpecs()
       }
-    ) : new A(
+    ) : new E(
       `${t}中に予期しないエラーが発生しました: ${e.message}`,
       k.AUDIO_CONTEXT_ERROR,
       {
@@ -1102,7 +1102,7 @@ class Ge {
     };
   }
 }
-function je(h) {
+function We(h) {
   return h && h.__esModule && Object.prototype.hasOwnProperty.call(h, "default") ? h.default : h;
 }
 function D(h) {
@@ -1126,7 +1126,7 @@ function D(h) {
   }
   this._out = null, this._data = null, this._inv = 0;
 }
-var Qe = D;
+var Je = D;
 D.prototype.fromComplexArray = function(e, t) {
   for (var i = t || new Array(e.length >>> 1), s = 0; s < e.length; s += 2)
     i[s >>> 1] = e[s];
@@ -1183,8 +1183,8 @@ D.prototype._transform4 = function() {
     var m = o >>> 2;
     for (n = 0; n < t; n += o)
       for (var u = n + m, d = n, f = 0; d < u; d += 2, f += s) {
-        const p = d, y = p + m, v = y + m, S = v + m, b = e[p], g = e[p + 1], C = e[y], I = e[y + 1], P = e[v], q = e[v + 1], L = e[S], z = e[S + 1], O = b, U = g, B = l[f], $ = c * l[f + 1], H = C * B - I * $, V = C * $ + I * B, X = l[2 * f], Y = c * l[2 * f + 1], K = P * X - q * Y, Z = P * Y + q * X, ee = l[3 * f], te = c * l[3 * f + 1], ie = L * ee - z * te, se = L * te + z * ee, oe = O + K, j = U + Z, Q = O - K, ne = U - Z, re = H + ie, W = V + se, J = c * (H - ie), ae = c * (V - se), he = oe + re, fe = j + W, ge = oe - re, pe = j - W, ve = Q + ae, ye = ne - J, Se = Q - ae, Ce = ne + J;
-        e[p] = he, e[p + 1] = fe, e[y] = ve, e[y + 1] = ye, e[v] = ge, e[v + 1] = pe, e[S] = Se, e[S + 1] = Ce;
+        const p = d, y = p + m, v = y + m, S = v + m, b = e[p], g = e[p + 1], C = e[y], I = e[y + 1], P = e[v], q = e[v + 1], z = e[S], O = e[S + 1], L = b, U = g, B = l[f], $ = c * l[f + 1], H = C * B - I * $, V = C * $ + I * B, X = l[2 * f], Y = c * l[2 * f + 1], K = P * X - q * Y, Z = P * Y + q * X, ee = l[3 * f], te = c * l[3 * f + 1], ie = z * ee - O * te, se = z * te + O * ee, oe = L + K, j = U + Z, Q = L - K, ne = U - Z, re = H + ie, W = V + se, J = c * (H - ie), ae = c * (V - se), he = oe + re, ge = j + W, pe = oe - re, ve = j - W, ye = Q + ae, Se = ne - J, Ce = Q - ae, Me = ne + J;
+        e[p] = he, e[p + 1] = ge, e[y] = ye, e[y + 1] = Se, e[v] = pe, e[v + 1] = ve, e[S] = Ce, e[S + 1] = Me;
       }
   }
 };
@@ -1193,20 +1193,20 @@ D.prototype._singleTransform2 = function(e, t, i) {
   s[e] = l, s[e + 1] = m, s[e + 2] = u, s[e + 3] = d;
 };
 D.prototype._singleTransform4 = function(e, t, i) {
-  const s = this._out, o = this._data, n = this._inv ? -1 : 1, r = i * 2, a = i * 3, c = o[t], l = o[t + 1], m = o[t + i], u = o[t + i + 1], d = o[t + r], f = o[t + r + 1], p = o[t + a], y = o[t + a + 1], v = c + d, S = l + f, b = c - d, g = l - f, C = m + p, I = u + y, P = n * (m - p), q = n * (u - y), L = v + C, z = S + I, O = b + q, U = g - P, B = v - C, $ = S - I, H = b - q, V = g + P;
-  s[e] = L, s[e + 1] = z, s[e + 2] = O, s[e + 3] = U, s[e + 4] = B, s[e + 5] = $, s[e + 6] = H, s[e + 7] = V;
+  const s = this._out, o = this._data, n = this._inv ? -1 : 1, r = i * 2, a = i * 3, c = o[t], l = o[t + 1], m = o[t + i], u = o[t + i + 1], d = o[t + r], f = o[t + r + 1], p = o[t + a], y = o[t + a + 1], v = c + d, S = l + f, b = c - d, g = l - f, C = m + p, I = u + y, P = n * (m - p), q = n * (u - y), z = v + C, O = S + I, L = b + q, U = g - P, B = v - C, $ = S - I, H = b - q, V = g + P;
+  s[e] = z, s[e + 1] = O, s[e + 2] = L, s[e + 3] = U, s[e + 4] = B, s[e + 5] = $, s[e + 6] = H, s[e + 7] = V;
 };
 D.prototype._realTransform4 = function() {
   var e = this._out, t = this._csize, i = this._width, s = 1 << i, o = t / s << 1, n, r, a = this._bitrev;
   if (o === 4)
     for (n = 0, r = 0; n < t; n += o, r++) {
-      const Me = a[r];
-      this._singleRealTransform2(n, Me >>> 1, s >>> 1);
+      const be = a[r];
+      this._singleRealTransform2(n, be >>> 1, s >>> 1);
     }
   else
     for (n = 0, r = 0; n < t; n += o, r++) {
-      const Me = a[r];
-      this._singleRealTransform4(n, Me >>> 1, s >>> 1);
+      const be = a[r];
+      this._singleRealTransform4(n, be >>> 1, s >>> 1);
     }
   var c = this._inv ? -1 : 1, l = this.table;
   for (s >>= 2; s >= 2; s >>= 2) {
@@ -1214,15 +1214,15 @@ D.prototype._realTransform4 = function() {
     var m = o >>> 1, u = m >>> 1, d = u >>> 1;
     for (n = 0; n < t; n += o)
       for (var f = 0, p = 0; f <= d; f += 2, p += s) {
-        var y = n + f, v = y + u, S = v + u, b = S + u, g = e[y], C = e[y + 1], I = e[v], P = e[v + 1], q = e[S], L = e[S + 1], z = e[b], O = e[b + 1], U = g, B = C, $ = l[p], H = c * l[p + 1], V = I * $ - P * H, X = I * H + P * $, Y = l[2 * p], K = c * l[2 * p + 1], Z = q * Y - L * K, ee = q * K + L * Y, te = l[3 * p], ie = c * l[3 * p + 1], se = z * te - O * ie, oe = z * ie + O * te, j = U + Z, Q = B + ee, ne = U - Z, re = B - ee, W = V + se, J = X + oe, ae = c * (V - se), he = c * (X - oe), fe = j + W, ge = Q + J, pe = ne + he, ve = re - ae;
-        if (e[y] = fe, e[y + 1] = ge, e[v] = pe, e[v + 1] = ve, f === 0) {
-          var ye = j - W, Se = Q - J;
-          e[S] = ye, e[S + 1] = Se;
+        var y = n + f, v = y + u, S = v + u, b = S + u, g = e[y], C = e[y + 1], I = e[v], P = e[v + 1], q = e[S], z = e[S + 1], O = e[b], L = e[b + 1], U = g, B = C, $ = l[p], H = c * l[p + 1], V = I * $ - P * H, X = I * H + P * $, Y = l[2 * p], K = c * l[2 * p + 1], Z = q * Y - z * K, ee = q * K + z * Y, te = l[3 * p], ie = c * l[3 * p + 1], se = O * te - L * ie, oe = O * ie + L * te, j = U + Z, Q = B + ee, ne = U - Z, re = B - ee, W = V + se, J = X + oe, ae = c * (V - se), he = c * (X - oe), ge = j + W, pe = Q + J, ve = ne + he, ye = re - ae;
+        if (e[y] = ge, e[y + 1] = pe, e[v] = ve, e[v + 1] = ye, f === 0) {
+          var Se = j - W, Ce = Q - J;
+          e[S] = Se, e[S + 1] = Ce;
           continue;
         }
         if (f !== d) {
-          var Ce = ne, xe = -re, Ne = j, Re = -Q, Pe = -c * he, qe = -c * ae, _e = -c * J, ke = -c * W, Le = Ce + Pe, ze = xe + qe, Oe = Ne + ke, Ue = Re - _e, Ae = n + u - f, we = n + m - f;
-          e[Ae] = Le, e[Ae + 1] = ze, e[we] = Oe, e[we + 1] = Ue;
+          var Me = ne, Re = -re, Pe = j, qe = -Q, _e = -c * he, ke = -c * ae, ze = -c * J, Oe = -c * W, Le = Me + _e, Ue = Re + ke, Be = Pe + Oe, $e = qe - ze, Te = n + u - f, Fe = n + m - f;
+          e[Te] = Le, e[Te + 1] = Ue, e[Fe] = Be, e[Fe + 1] = $e;
         }
       }
   }
@@ -1235,7 +1235,7 @@ D.prototype._singleRealTransform4 = function(e, t, i) {
   const s = this._out, o = this._data, n = this._inv ? -1 : 1, r = i * 2, a = i * 3, c = o[t], l = o[t + i], m = o[t + r], u = o[t + a], d = c + m, f = c - m, p = l + u, y = n * (l - u), v = d + p, S = f, b = -y, g = d - p, C = f, I = y;
   s[e] = v, s[e + 1] = 0, s[e + 2] = S, s[e + 3] = b, s[e + 4] = g, s[e + 5] = 0, s[e + 6] = C, s[e + 7] = I;
 };
-const We = /* @__PURE__ */ je(Qe);
+const Xe = /* @__PURE__ */ We(Je);
 class ce {
   /**
    * Constructs a new {@link Autocorrelator} able to handle input arrays of the
@@ -1263,7 +1263,7 @@ class ce {
     x(this, "_inverseBuffer");
     if (e < 1)
       throw new Error("Input length must be at least one");
-    this._inputLength = e, this._fft = new We(Ke(2 * e)), this._bufferSupplier = t, this._paddedInputBuffer = this._bufferSupplier(this._fft.size), this._transformBuffer = this._bufferSupplier(2 * this._fft.size), this._inverseBuffer = this._bufferSupplier(2 * this._fft.size);
+    this._inputLength = e, this._fft = new Xe(et(2 * e)), this._bufferSupplier = t, this._paddedInputBuffer = this._bufferSupplier(this._fft.size), this._transformBuffer = this._bufferSupplier(2 * this._fft.size), this._inverseBuffer = this._bufferSupplier(2 * this._fft.size);
   }
   /**
    * A helper method to create an {@link Autocorrelator} using
@@ -1336,18 +1336,18 @@ class ce {
     return t;
   }
 }
-function Je(h) {
+function Ye(h) {
   const e = [];
   let t = !1, i = -1 / 0, s = -1;
   for (let o = 1; o < h.length - 1; o++)
     h[o - 1] <= 0 && h[o] > 0 ? (t = !0, s = o, i = h[o]) : h[o - 1] > 0 && h[o] <= 0 ? (t = !1, s !== -1 && e.push(s)) : t && h[o] > i && (i = h[o], s = o);
   return e;
 }
-function Xe(h, e) {
+function Ke(h, e) {
   const [t, i, s] = [h - 1, h, h + 1], [o, n, r] = [e[t], e[i], e[s]], a = o / 2 - n + r / 2, c = -(o / 2) * (i + s) + n * (t + s) - r / 2 * (t + i), l = o * i * s / 2 - n * t * s + r * t * i / 2, m = -c / (2 * a), u = a * m * m + c * m + l;
   return [m, u];
 }
-let Ye = class ue {
+let Ze = class ue {
   /**
    * Constructs a new {@link PitchDetector} able to handle input arrays of the
    * given length.
@@ -1482,12 +1482,12 @@ let Ye = class ue {
   findPitch(e, t) {
     if (this._belowMinimumVolume(e)) return [0, 0];
     this._nsdf(e);
-    const i = Je(this._nsdfBuffer);
+    const i = Ye(this._nsdfBuffer);
     if (i.length === 0)
       return [0, 0];
     const s = Math.max(...i.map((a) => this._nsdfBuffer[a])), o = i.find(
       (a) => this._nsdfBuffer[a] >= this._clarityThreshold * s
-    ), [n, r] = Xe(
+    ), [n, r] = Ke(
       // @ts-expect-error resultIndex is guaranteed to be defined
       o,
       this._nsdfBuffer
@@ -1525,7 +1525,7 @@ let Ye = class ue {
       this._nsdfBuffer[i] = 0;
   }
 };
-function Ke(h) {
+function et(h) {
   return h--, h |= h >> 1, h |= h >> 2, h |= h >> 4, h |= h >> 8, h |= h >> 16, h++, h;
 }
 const M = class M {
@@ -2089,7 +2089,7 @@ M.A4_FREQUENCY = 440, M.A4_MIDI_NUMBER = 69, M.NOTE_NAMES = ["C", "C#", "D", "D#
   octave: 12
 };
 let T = M;
-class Ze {
+class tt {
   // 推奨45FPS（22ms、音楽演奏に適切）
   constructor(e = 45) {
     this.lastFrameTime = 0, this.nextFrameTime = 0, this.frameDrops = 0, this.MIN_FPS = 30, this.MAX_FPS = 60, this.OPTIMAL_FPS = 45, this.targetFPS = Math.max(this.MIN_FPS, Math.min(e, this.MAX_FPS)), this.frameInterval = 1e3 / this.targetFPS;
@@ -2125,7 +2125,7 @@ class Ze {
     };
   }
 }
-class et {
+class it {
   /**
    * Creates a new PitchDetector instance with comprehensive configuration options
    * 
@@ -2230,7 +2230,7 @@ class et {
       minVolumeThreshold: 0.01,
       // 消音判定の音量閾値
       ...t.silenceDetection
-    }, this.frameRateLimiter = new Ze(60), console.log(`${be} PitchDetector created with config:`, this.config);
+    }, this.frameRateLimiter = new tt(60), console.log(`${Ae} PitchDetector created with config:`, this.config);
   }
   /**
    * Sets callback functions for pitch detection events
@@ -2330,9 +2330,9 @@ class et {
         minDecibels: -90,
         maxDecibels: -10,
         useFilters: !1
-      }), this.analyserIds.push(r), this.pitchDetector = Ye.forFloat32Array(this.analyser.fftSize), typeof process < "u" && ((e = process.env) == null ? void 0 : e.NODE_ENV) === "development" && console.log(`[Debug] Pitchyインスタンス作成: ${!!this.pitchDetector}, FFTサイズ: ${this.analyser.fftSize}`), this.componentState = "ready", this.isInitialized = !0, (i = (t = this.callbacks).onStateChange) == null || i.call(t, this.componentState);
+      }), this.analyserIds.push(r), this.pitchDetector = Ze.forFloat32Array(this.analyser.fftSize), typeof process < "u" && ((e = process.env) == null ? void 0 : e.NODE_ENV) === "development" && console.log(`[Debug] Pitchyインスタンス作成: ${!!this.pitchDetector}, FFTサイズ: ${this.analyser.fftSize}`), this.componentState = "ready", this.isInitialized = !0, (i = (t = this.callbacks).onStateChange) == null || i.call(t, this.componentState);
     } catch (n) {
-      const r = n instanceof A ? n : new R(
+      const r = n instanceof E ? n : new R(
         "PitchDetector initialization failed",
         {
           originalError: n instanceof Error ? n.message : String(n),
@@ -2367,7 +2367,7 @@ class et {
       return (t = (e = this.callbacks).onError) == null || t.call(e, r), !1;
     }
     if (!this.analyser || !this.pitchDetector) {
-      const r = new Te(
+      const r = new De(
         "ピッチ検出に必要なコンポーネントが初期化されていません。initialize()メソッドを先に呼び出してください。",
         {
           operation: "startDetection",
@@ -2424,7 +2424,7 @@ class et {
       const g = this.pitchDetector.findPitch(i, a);
       c = g[0] || 0, l = g[1] || 0;
     } catch (g) {
-      const C = new Te(
+      const C = new De(
         "Pitch detection algorithm failed",
         {
           bufferLength: i.length,
@@ -2433,7 +2433,7 @@ class et {
           originalError: g instanceof Error ? g.message : String(g)
         }
       );
-      if (console.warn("⚠️ [PitchDetector] Pitch detection error (recoverable):", C.toJSON()), Ie(C))
+      if (console.warn("⚠️ [PitchDetector] Pitch detection error (recoverable):", C.toJSON()), Ne(C))
         c = 0, l = 0;
       else {
         (S = (v = this.callbacks).onError) == null || S.call(v, C);
@@ -2806,7 +2806,7 @@ class et {
     this.harmonicConfig = { ...this.harmonicConfig, ...e }, this.resetHarmonicHistory(), typeof process < "u" && ((t = process.env) == null || t.NODE_ENV);
   }
 }
-class rt {
+class at {
   /**
    * Creates a new NoiseFilter with configurable 3-stage filtering
    * 
@@ -2907,7 +2907,7 @@ class rt {
     if (!this.config.useFilters)
       return t && e.connect(t), e;
     if (!this.highpassFilter || !this.lowpassFilter || !this.notchFilter) {
-      const i = new A(
+      const i = new E(
         "ノイズフィルターが正しく初期化されていません。コンストラクタでuseFilters: trueで初期化してください。",
         k.AUDIO_CONTEXT_ERROR,
         {
@@ -2988,7 +2988,7 @@ class rt {
     try {
       e.highpassFreq !== void 0 && this.highpassFilter && (this.highpassFilter.frequency.setValueAtTime(e.highpassFreq, t), this.config.highpassFreq = e.highpassFreq), e.lowpassFreq !== void 0 && this.lowpassFilter && (this.lowpassFilter.frequency.setValueAtTime(e.lowpassFreq, t), this.config.lowpassFreq = e.lowpassFreq), e.notchFreq !== void 0 && this.notchFilter && (this.notchFilter.frequency.setValueAtTime(e.notchFreq, t), this.config.notchFreq = e.notchFreq), e.highpassQ !== void 0 && this.highpassFilter && (this.highpassFilter.Q.setValueAtTime(e.highpassQ, t), this.config.highpassQ = e.highpassQ), e.lowpassQ !== void 0 && this.lowpassFilter && (this.lowpassFilter.Q.setValueAtTime(e.lowpassQ, t), this.config.lowpassQ = e.lowpassQ), e.notchQ !== void 0 && this.notchFilter && (this.notchFilter.Q.setValueAtTime(e.notchQ, t), this.config.notchQ = e.notchQ), console.log("🔧 [NoiseFilter] Filter parameters updated:", e);
     } catch (i) {
-      const s = new A(
+      const s = new E(
         "フィルターパラメータの更新に失敗しました。指定した値が範囲外であるか、フィルターが無効になっている可能性があります。",
         k.INVALID_SAMPLE_RATE,
         {
@@ -3033,7 +3033,7 @@ class rt {
         phase: s[0]
       };
     } catch (t) {
-      const i = new A(
+      const i = new E(
         "フィルター応答の計算に失敗しました。デフォルト値を返します。",
         k.PROCESSING_TIMEOUT,
         {
@@ -3149,7 +3149,7 @@ class rt {
     }
   }
 }
-var de = /* @__PURE__ */ ((h) => (h[h.DEBUG = 0] = "DEBUG", h[h.INFO = 1] = "INFO", h[h.WARN = 2] = "WARN", h[h.ERROR = 3] = "ERROR", h[h.SILENT = 4] = "SILENT", h))(de || {});
+var me = /* @__PURE__ */ ((h) => (h[h.DEBUG = 0] = "DEBUG", h[h.INFO = 1] = "INFO", h[h.WARN = 2] = "WARN", h[h.ERROR = 3] = "ERROR", h[h.SILENT = 4] = "SILENT", h))(me || {});
 class le {
   constructor(e = 1, t = "", i = {}) {
     this.listeners = [], this.level = e, this.prefix = t, this.context = i;
@@ -3237,7 +3237,7 @@ class le {
    * Format and output to console
    */
   logToConsole(e) {
-    const t = new Date(e.timestamp).toISOString(), i = de[e.level], s = e.prefix ? `[${e.prefix}]` : "", o = `${t} ${i} ${s} ${e.message}`, n = this.getConsoleMethod(e.level);
+    const t = new Date(e.timestamp).toISOString(), i = me[e.level], s = e.prefix ? `[${e.prefix}]` : "", o = `${t} ${i} ${s} ${e.message}`, n = this.getConsoleMethod(e.level);
     e.context && Object.keys(e.context).length > 0 ? n(o, e.context) : n(o);
   }
   /**
@@ -3270,10 +3270,9 @@ class le {
     return e >= this.level;
   }
 }
-const me = new le(1, "PitchPro"), at = (h, e) => me.debug(h, e), ct = (h, e) => me.info(h, e), lt = (h, e) => me.warn(h, e), ht = (h, e, t) => me.error(h, e, t);
-class tt {
+const fe = new le(1, "PitchPro"), ct = (h, e) => fe.debug(h, e), lt = (h, e) => fe.info(h, e), ht = (h, e) => fe.warn(h, e), ut = (h, e, t) => fe.error(h, e, t), de = class de {
   constructor(e, t = {}) {
-    if (this.refCount = 0, this.isActive = !1, this.lastHealthCheck = null, this.healthCheckInterval = null, this.idleCheckInterval = null, this.visibilityCheckInterval = null, this.lastActivityTime = Date.now(), this.isPageVisible = !0, this.isUserActive = !0, this.autoRecoveryAttempts = 0, this.eventListeners = /* @__PURE__ */ new Map(), this.callbacks = {}, this.audioManager = e, this.config = {
+    if (this.refCount = 0, this.isActive = !1, this.lastHealthCheck = null, this.healthCheckInterval = null, this.idleCheckInterval = null, this.visibilityCheckInterval = null, this.lastActivityTime = Date.now(), this.isPageVisible = !0, this.isUserActive = !0, this.autoRecoveryAttempts = 0, this.initTime = Date.now(), this.eventListeners = /* @__PURE__ */ new Map(), this.callbacks = {}, this.audioManager = e, this.config = {
       healthCheckIntervalMs: t.healthCheckIntervalMs ?? 5e3,
       // 5 seconds
       idleTimeoutMs: t.idleTimeoutMs ?? 12e4,
@@ -3283,7 +3282,7 @@ class tt {
       maxIdleTimeBeforeRelease: t.maxIdleTimeBeforeRelease ?? 18e4,
       // 3 minutes
       maxAutoRecoveryAttempts: t.maxAutoRecoveryAttempts ?? 3,
-      logLevel: t.logLevel ?? de.INFO,
+      logLevel: t.logLevel ?? me.INFO,
       enableDetailedLogging: t.enableDetailedLogging ?? !1
     }, this.logger = new le(
       this.config.logLevel,
@@ -3396,11 +3395,17 @@ class tt {
    * Handle page visibility changes
    */
   handleVisibilityChange() {
-    this.isActive && (this.isPageVisible ? (console.log("👁️ [MicrophoneLifecycleManager] Page became visible - resuming monitoring"), this.updateActivity(), this.autoRecoveryAttempts = 0, !this.isActive && this.refCount > 0 && (this.isActive = !0, this.startHealthMonitoring(), this.startIdleMonitoring(), this.startVisibilityMonitoring()), setTimeout(() => {
-      this.performHealthCheck();
-    }, 1e3)) : (console.log("🙈 [MicrophoneLifecycleManager] Page became hidden - stopping health monitoring"), this.stopAllMonitoring(), setTimeout(() => {
-      !this.isPageVisible && this.isActive && Date.now() - this.lastActivityTime > this.config.maxIdleTimeBeforeRelease && (console.log("⏰ [MicrophoneLifecycleManager] Long inactivity detected - releasing resources"), this.forceRelease());
-    }, this.config.maxIdleTimeBeforeRelease)));
+    if (this.isActive) {
+      if (!this.isPageVisible && Date.now() - this.initTime < de.INIT_GUARD_MS) {
+        console.log("⏳ [MicrophoneLifecycleManager] 初期化直後のhiddenイベントを無視（iPad Safari対策）");
+        return;
+      }
+      this.isPageVisible ? (console.log("👁️ [MicrophoneLifecycleManager] Page became visible - resuming monitoring"), this.updateActivity(), this.autoRecoveryAttempts = 0, !this.isActive && this.refCount > 0 && (this.isActive = !0, this.startHealthMonitoring(), this.startIdleMonitoring(), this.startVisibilityMonitoring()), setTimeout(() => {
+        this.performHealthCheck();
+      }, 1e3)) : (console.log("🙈 [MicrophoneLifecycleManager] Page became hidden - stopping health monitoring"), this.stopAllMonitoring(), setTimeout(() => {
+        !this.isPageVisible && this.isActive && Date.now() - this.lastActivityTime > this.config.maxIdleTimeBeforeRelease && (console.log("⏰ [MicrophoneLifecycleManager] Long inactivity detected - releasing resources"), this.forceRelease());
+      }, this.config.maxIdleTimeBeforeRelease));
+    }
   }
   /**
    * Update user activity timestamp
@@ -3466,7 +3471,7 @@ class tt {
             }
           }, this.config.autoRecoveryDelayMs);
         else {
-          const n = new Ve(
+          const n = new je(
             `Microphone health check failed after ${this.autoRecoveryAttempts} recovery attempts. Monitoring stopped to prevent infinite error loop.`,
             o,
             this.autoRecoveryAttempts,
@@ -3567,8 +3572,10 @@ class tt {
       listenerCount: this.eventListeners.size
     }), this.stopAllMonitoring(), this.forceRelease(), this.removeAllTrackedEventListeners(), this.isActive = !1, this.refCount = 0, this.autoRecoveryAttempts = 0, this.logger.info("MicrophoneLifecycleManager cleanup complete");
   }
-}
-class it {
+};
+de.INIT_GUARD_MS = 2e3;
+let Ee = de;
+class st {
   constructor() {
     if (this.container = null, this.notifications = /* @__PURE__ */ new Map(), this.notificationCounter = 0, this.defaultDuration = 5e3, this.maxNotifications = 0, this.cssClasses = {
       container: "pitchpro-notifications",
@@ -3933,7 +3940,7 @@ class it {
     e && e.parentNode && e.parentNode.removeChild(e), this.container = null, this.notifications.clear(), console.log("✅ [ErrorNotificationSystem] Cleanup complete");
   }
 }
-class st {
+class ot {
   /**
    * Creates a new MicrophoneController with integrated management systems
    * 
@@ -3979,14 +3986,14 @@ class st {
         position: ((l = e.notifications) == null ? void 0 : l.position) ?? "top-right"
       },
       logging: {
-        level: ((m = e.logging) == null ? void 0 : m.level) ?? de.INFO,
+        level: ((m = e.logging) == null ? void 0 : m.level) ?? me.INFO,
         prefix: ((u = e.logging) == null ? void 0 : u.prefix) ?? "MicrophoneController"
       }
     }, this.logger = new le(
       this.config.logging.level,
       this.config.logging.prefix,
       { component: "MicrophoneController" }
-    ), this.logger.debug("Initializing MicrophoneController", { config: this.config }), this.audioManager = new Ge(this.config.audioManager), this.lifecycleManager = new tt(this.audioManager, this.config.lifecycle), this.errorSystem = this.config.notifications.enabled ? new it() : null, this.setupEventHandlers(), this.detectDevice();
+    ), this.logger.debug("Initializing MicrophoneController", { config: this.config }), this.audioManager = new Qe(this.config.audioManager), this.lifecycleManager = new Ee(this.audioManager, this.config.lifecycle), this.errorSystem = this.config.notifications.enabled ? new st() : null, this.setupEventHandlers(), this.detectDevice();
   }
   /**
    * Sets callback functions for microphone controller events
@@ -4524,7 +4531,7 @@ class st {
    */
   handleError(e, t) {
     var s, o;
-    const i = e instanceof A ? e : this._createStructuredError(e, t);
+    const i = e instanceof E ? e : this._createStructuredError(e, t);
     F.logError(i, `MicrophoneController ${t}`), console.error(`❌ [MicrophoneController] Error in ${t}:`, i.toJSON()), this.lastError = e, this.updateState("error"), this.errorSystem && (t === "initialization" || t === "lifecycle" ? this.errorSystem.showMicrophoneError(e, t) : this.errorSystem.showError(
       "マイクエラー",
       `${t}でエラーが発生しました: ${e.message}`,
@@ -4567,7 +4574,7 @@ class st {
    * @returns Structured PitchProError with context
    */
   _createStructuredError(e, t) {
-    return e.message.includes("Permission denied") || e.message.includes("NotAllowedError") || e.message.includes("permission") || e.message.includes("denied") ? new Ee(
+    return e.message.includes("Permission denied") || e.message.includes("NotAllowedError") || e.message.includes("permission") || e.message.includes("denied") ? new we(
       "マイクへのアクセス許可が拒否されました。ブラウザの設定でマイクアクセスを許可してください。",
       {
         operation: t,
@@ -4586,7 +4593,7 @@ class st {
         audioManagerStatus: this.audioManager.getStatus(),
         deviceSpecs: this.deviceSpecs
       }
-    ) : new A(
+    ) : new E(
       `${t}中に予期しないエラーが発生しました: ${e.message}`,
       k.MICROPHONE_ACCESS_DENIED,
       {
@@ -4741,7 +4748,7 @@ const N = class N {
       // コールバック関数はオプショナル
       debug: e.debug ?? !1,
       logPrefix: e.logPrefix ?? "🎵 AudioDetection"
-    }, this.config.deviceOptimization && this.detectAndOptimizeDevice(), this.checkAutoUpdateUIWarnings(), this.debugLog(`${be} AudioDetectionComponent created with config:`, this.config);
+    }, this.config.deviceOptimization && this.detectAndOptimizeDevice(), this.checkAutoUpdateUIWarnings(), this.debugLog(`${Ae} AudioDetectionComponent created with config:`, this.config);
   }
   /** @private Helper method for creating delays */
   delay(e) {
@@ -4789,7 +4796,7 @@ const N = class N {
       return;
     }
     try {
-      this.updateState("initializing"), this.debugLog(`${be} Starting initialization...`), this.micController = new st({
+      this.updateState("initializing"), this.debugLog(`${Ae} Starting initialization...`), this.micController = new ot({
         audioManager: {
           sampleRate: 44100,
           echoCancellation: !1,
@@ -4827,7 +4834,7 @@ const N = class N {
         smoothing: ((n = this.deviceSpecs) == null ? void 0 : n.smoothingFactor) ?? r.smoothingFactor,
         deviceOptimization: this.config.deviceOptimization
       };
-      this.debugLog("PitchDetector config object:", a), this.pitchDetector = new et(this.audioManager, a), this.pitchDetector.setCallbacks({
+      this.debugLog("PitchDetector config object:", a), this.pitchDetector = new it(this.audioManager, a), this.pitchDetector.setCallbacks({
         onPitchUpdate: (l) => {
           this.handlePitchUpdate(l);
         },
@@ -5382,7 +5389,7 @@ const N = class N {
    */
   handleError(e, t) {
     var s, o;
-    const i = e instanceof A ? e : this.createStructuredError(e, t);
+    const i = e instanceof E ? e : this.createStructuredError(e, t);
     this.lastError = i, this.updateState("error"), (o = (s = this.callbacks).onError) == null || o.call(s, i), this.debugLog("Error handled:", i.toJSON());
   }
   /**
@@ -5390,7 +5397,7 @@ const N = class N {
    * @private
    */
   createStructuredError(e, t) {
-    return e.message.includes("Permission denied") || e.message.includes("NotAllowedError") || e.message.includes("permission") ? new Ee(
+    return e.message.includes("Permission denied") || e.message.includes("NotAllowedError") || e.message.includes("permission") ? new we(
       "マイクへのアクセス許可が拒否されました。ブラウザの設定でマイクアクセスを許可してください。",
       {
         operation: t,
@@ -5406,7 +5413,7 @@ const N = class N {
         componentState: this.currentState,
         deviceSpecs: this.deviceSpecs
       }
-    ) : new A(
+    ) : new E(
       `${t}中に予期しないエラーが発生しました: ${e.message}`,
       k.PITCH_DETECTION_ERROR,
       {
@@ -5427,8 +5434,8 @@ const N = class N {
   }
 };
 N.NOTE_RESET_DELAY_MS = 300, N.SELECTOR_UPDATE_DELAY_MS = 50, N.UI_RESTART_DELAY_MS = 200;
-let Fe = N;
-class ut {
+let Ie = N;
+class dt {
   constructor(e = {}) {
     this.historyBuffer = [], this.config = {
       historyWindowMs: 2e3,
@@ -5599,7 +5606,7 @@ const _ = {
   FAIR: "fair",
   POOR: "poor"
 };
-class dt {
+class mt {
   constructor(e = {}) {
     this.analysisBuffer = [], this.config = {
       analysisWindowMs: 3e3,
@@ -5783,7 +5790,7 @@ class dt {
     };
   }
 }
-class mt {
+class ft {
   constructor() {
     this.calibrationData = null, this.isCalibrated = !1, this.calibrationInProgress = !1, this.deviceSpecs = G.getDeviceSpecs();
   }
@@ -6304,8 +6311,8 @@ w.SCALE_PATTERNS = {
   11: "Major Seventh",
   12: "Perfect Octave"
 };
-let De = w;
-const ft = (/* @__PURE__ */ new Date()).toISOString(), gt = {
+let xe = w;
+const gt = (/* @__PURE__ */ new Date()).toISOString(), pt = {
   pitchDetector: {
     fftSize: 4096,
     smoothing: 0.1,
@@ -6337,31 +6344,31 @@ const ft = (/* @__PURE__ */ new Date()).toISOString(), gt = {
   }
 };
 export {
-  Fe as AudioDetectionComponent,
-  Ge as AudioManager,
-  ft as BUILD_DATE,
-  nt as BUILD_TIMESTAMP,
-  mt as CalibrationSystem,
-  gt as DEFAULT_CONFIG,
+  Ie as AudioDetectionComponent,
+  Qe as AudioManager,
+  gt as BUILD_DATE,
+  rt as BUILD_TIMESTAMP,
+  ft as CalibrationSystem,
+  pt as DEFAULT_CONFIG,
   G as DeviceDetection,
-  it as ErrorNotificationSystem,
+  st as ErrorNotificationSystem,
   T as FrequencyUtils,
-  ut as HarmonicCorrection,
-  de as LogLevel,
+  dt as HarmonicCorrection,
+  me as LogLevel,
   le as Logger,
-  st as MicrophoneController,
-  Ve as MicrophoneHealthError,
-  tt as MicrophoneLifecycleManager,
-  De as MusicTheory,
-  rt as NoiseFilter,
-  et as PitchDetector,
-  He as VERSION,
-  be as VERSION_STRING,
-  dt as VoiceAnalyzer,
-  at as debug,
-  me as defaultLogger,
-  ht as error,
-  ct as info,
-  lt as warn
+  ot as MicrophoneController,
+  je as MicrophoneHealthError,
+  Ee as MicrophoneLifecycleManager,
+  xe as MusicTheory,
+  at as NoiseFilter,
+  it as PitchDetector,
+  Ge as VERSION,
+  Ae as VERSION_STRING,
+  mt as VoiceAnalyzer,
+  ct as debug,
+  fe as defaultLogger,
+  ut as error,
+  lt as info,
+  ht as warn
 };
 //# sourceMappingURL=index.esm.js.map

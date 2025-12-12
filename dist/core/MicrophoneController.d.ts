@@ -433,7 +433,26 @@ export declare class MicrophoneController {
             isActive: boolean;
             isPageVisible: boolean;
             isUserActive: boolean;
-            lastActivityTime: number;
+            lastActivityTime: number; /**
+             * Registers an AudioDetectionComponent instance with this controller for UI management
+             *
+             * @description Enables the MicrophoneController to control AudioDetectionComponent UI
+             * reset operations for complete system reset including comprehensive UI cleanup.
+             *
+             * @param component - The AudioDetectionComponent instance to register
+             *
+             * @example
+             * ```typescript
+             * const audioDetector = new AudioDetectionComponent();
+             * const micController = audioDetector.microphoneController;
+             *
+             * // Register component for UI control
+             * micController.registerAudioDetectionComponent(audioDetector);
+             *
+             * // Now reset() includes comprehensive UI reset
+             * micController.reset(); // Includes AudioDetectionComponent UI reset
+             * ```
+             */
             timeSinceActivity: number;
             autoRecoveryAttempts: number;
             lastHealthCheck: import("../types").HealthStatus | null;
