@@ -250,7 +250,7 @@ interface DeviceSettings {
  * 
  * Supports unified management through MicrophoneController for centralized system control.
  * 
- * @version 1.3.0 (自動同期)
+ * @version 1.6.0 (自動同期)
  * @author PitchPro Team
  * @license MIT
  * 

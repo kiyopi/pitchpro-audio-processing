@@ -1,7 +1,7 @@
 var He = Object.defineProperty;
 var Ve = (h, e, t) => e in h ? He(h, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : h[e] = t;
 var I = (h, e, t) => Ve(h, typeof e != "symbol" ? e + "" : e, t);
-const Ge = "1.5.2", Ee = `PitchPro v${Ge}`, rt = (/* @__PURE__ */ new Date()).toISOString(), E = class E {
+const Ge = "1.6.0", Ee = `PitchPro v${Ge}`, rt = (/* @__PURE__ */ new Date()).toISOString(), E = class E {
   /**
    * Detect current device and return optimized specifications
    */
@@ -4671,7 +4671,7 @@ class nt {
  * 
  * Supports unified management through MicrophoneController for centralized system control.
  * 
- * @version 1.3.0 (自動同期)
+ * @version 1.6.0 (自動同期)
  * @author PitchPro Team
  * @license MIT
  * 

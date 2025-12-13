@@ -914,6 +914,67 @@ console.log('✅ デバイス能力:', {
 });
 ```
 
+### 🆕 DeviceOverrides - アプリ側ノイズゲート調整（v1.6.0）
+
+アプリ側から`overrides.noiseGate`を設定する際の推奨値と注意点です。
+
+#### 推奨ノイズゲート値
+
+| デバイス | 推奨値 | 範囲 | 説明 |
+|---------|--------|------|------|
+| **PC** | 0.05〜0.08 | 5〜8% | 環境ノイズ3-5%を除外 |
+| **iPhone** | 0.05 | 5% | 内蔵NC活用、低閾値で安定 |
+| **iPad** | 0.05 | 5% | 同上 |
+
+#### ⚠️ 高すぎるノイズゲートの問題
+
+**症状**: 発声中に`volume: 0.0%`が返される
+
+**原因**: `noiseGate`が高すぎると、音節間・子音・息継ぎ時の瞬間的な音量低下で0.0%になる
+
+```typescript
+// ❌ 問題のある設定
+overrides: {
+  noiseGate: 0.15  // 15%は高すぎる - 声14%がブロックされる
+}
+
+// ✅ 推奨設定
+overrides: {
+  noiseGate: 0.08  // PC: 8%
+  // noiseGate: 0.05  // iOS: 5%
+}
+```
+
+#### 設定例
+
+```typescript
+import { AudioDetectionComponent } from '@pitchpro/audio-processing';
+
+// デバイス判定してノイズゲートを設定
+const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+
+const audioDetector = new AudioDetectionComponent({
+  volumeBarSelector: '#volume-bar',
+  overrides: {
+    // デバイス別に最適値を設定
+    noiseGate: isIOS ? 0.05 : 0.08,  // iOS: 5%, PC: 8%
+
+    // その他のオプション
+    sensitivity: 2.0,           // マイク感度（0.5〜5.0）
+    volumeMultiplier: 3.0,      // 音量倍率（1.0〜10.0）
+    minFrequency: 50,           // 最低周波数（30〜100Hz）
+    maxFrequency: 1500,         // 最高周波数（800〜2000Hz）
+    harmonicCorrectionEnabled: true  // 倍音補正初期値
+  }
+});
+```
+
+#### ノイズゲート調整のポイント
+
+1. **環境ノイズを測定**: 無音時の`rawVolume`値を確認（通常3-5%）
+2. **声の最小音量を確認**: 小さな声での`rawVolume`値（通常10-15%）
+3. **閾値は声の最小値より低く**: 環境ノイズより高く、声の最小値より低い値を設定
+4. **デバイスごとに調整**: iOSは内蔵ノイズキャンセリングがあるため低閾値でOK
 
 ## 🧪 ブラウザ互換性
 
