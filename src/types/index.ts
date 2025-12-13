@@ -21,6 +21,12 @@ export interface PitchDetectorConfig {
   // 🔧 noiseGate削除: minVolumeAbsoluteと重複のため不要
   deviceOptimization?: boolean;
   silenceDetection?: SilenceDetectionConfig;
+
+  /** 検出対象の最低周波数 Hz (default: 30) */
+  minFrequency?: number;
+
+  /** 検出対象の最高周波数 Hz (default: 1200) */
+  maxFrequency?: number;
 }
 
 // Silence detection types
@@ -137,6 +143,49 @@ export interface DeviceSpecs {
   noiseThreshold: number;
   smoothingFactor: number;
   volumeMultiplier: number;
+}
+
+/**
+ * アプリ側からのオーバーライド設定
+ * DeviceDetectionの自動検出値を上書きする
+ *
+ * @description
+ * - sensitivity, noiseGate, volumeMultiplier: デバイス固有値を上書き
+ * - minFrequency, maxFrequency: 検出対象の周波数範囲を指定
+ * - harmonicCorrectionEnabled: 倍音補正の初期状態（ランタイム変更はsetHarmonicCorrectionEnabled()を使用）
+ *
+ * ⚠️ clarityThreshold, minVolumeAbsolute はAudioDetectionConfigに既存のため除外
+ */
+export interface DeviceOverrides {
+  /** マイク感度倍率 (0.5〜5.0) */
+  sensitivity?: number;
+
+  /** ノイズゲート閾値 (0.01〜0.20) */
+  noiseGate?: number;
+
+  /** 音量表示倍率 (1.0〜10.0) */
+  volumeMultiplier?: number;
+
+  /** 検出対象の最低周波数 Hz (30〜100) */
+  minFrequency?: number;
+
+  /** 検出対象の最高周波数 Hz (800〜2000) */
+  maxFrequency?: number;
+
+  /**
+   * 倍音補正の初期状態 (default: true)
+   * ランタイム変更はsetHarmonicCorrectionEnabled()を使用
+   */
+  harmonicCorrectionEnabled?: boolean;
+}
+
+/**
+ * DeviceSpecsにオーバーライド結果を含めた拡張型
+ */
+export interface DeviceSpecsWithOverrides extends DeviceSpecs {
+  minFrequency: number;
+  maxFrequency: number;
+  harmonicCorrectionEnabled: boolean;
 }
 
 // Lifecycle management types

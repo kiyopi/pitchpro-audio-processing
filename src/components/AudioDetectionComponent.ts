@@ -70,7 +70,7 @@ import {
   MicrophoneAccessError,
   ErrorCode
 } from '../utils/errors';
-import type { PitchDetectionResult, DeviceSpecs } from '../types';
+import type { PitchDetectionResult, DeviceSpecs, DeviceOverrides, DeviceSpecsWithOverrides } from '../types';
 
 /**
  * Configuration interface for AudioDetectionComponent
@@ -194,10 +194,31 @@ export interface AudioDetectionConfig {
    * @param result - The processed pitch detection result including rawVolume and clarity.
    */
   onPitchUpdate?: (result: PitchDetectionResult) => void;
-  
+
   // Debug Settings
   debug?: boolean;
   logPrefix?: string;
+
+  /**
+   * アプリ側からのデバイス設定オーバーライド
+   *
+   * @description DeviceDetectionの自動検出値を上書きする設定。
+   * sensitivity, noiseGate, volumeMultiplier, minFrequency, maxFrequency,
+   * harmonicCorrectionEnabled（初期値のみ、ランタイム変更はsetHarmonicCorrectionEnabled()を使用）
+   *
+   * @example
+   * ```typescript
+   * const audioDetector = new AudioDetectionComponent({
+   *   overrides: {
+   *     sensitivity: 2.0,
+   *     minFrequency: 50,
+   *     maxFrequency: 1500,
+   *     harmonicCorrectionEnabled: false  // 音域テスト時は無効化
+   *   }
+   * });
+   * ```
+   */
+  overrides?: DeviceOverrides;
 }
 
 /**
@@ -354,13 +375,16 @@ export interface AudioDetectionConfig {
    * @default true
    */
   autoUpdateUI?: boolean;
-  
+
   // Event callbacks
   onPitchUpdate?: (result: PitchDetectionResult) => void;
-  
+
   // Debug configuration
   debug?: boolean;
   logPrefix?: string;
+
+  /** アプリ側からのデバイス設定オーバーライド */
+  overrides?: DeviceOverrides;
 }
 
 /**
@@ -390,13 +414,14 @@ export class AudioDetectionComponent {
   private static readonly UI_RESTART_DELAY_MS = 200;
 
   /** @private Configuration with applied defaults */
-  private config: Required<Omit<AudioDetectionConfig, 'volumeBarSelector' | 'volumeTextSelector' | 'frequencySelector' | 'noteSelector' | 'onPitchUpdate' | 'minVolumeAbsolute'>> & {
+  private config: Required<Omit<AudioDetectionConfig, 'volumeBarSelector' | 'volumeTextSelector' | 'frequencySelector' | 'noteSelector' | 'onPitchUpdate' | 'minVolumeAbsolute' | 'overrides'>> & {
     volumeBarSelector?: string;
     volumeTextSelector?: string;
     frequencySelector?: string;
     noteSelector?: string;
     minVolumeAbsolute?: number;
     onPitchUpdate?: (result: PitchDetectionResult) => void;
+    overrides?: DeviceOverrides;
   };
   
   /** @private AudioManager instance for resource management (initialized from MicrophoneController) */
@@ -414,8 +439,8 @@ export class AudioDetectionComponent {
   /** @private Event callbacks */
   private callbacks: AudioDetectionCallbacks = {};
   
-  /** @private Device specifications */
-  private deviceSpecs: DeviceSpecs | null = null;
+  /** @private Device specifications (with overrides applied) */
+  private deviceSpecs: DeviceSpecsWithOverrides | null = null;
   
   /** @private Device-specific settings */
   private deviceSettings: DeviceSettings | null = null;
@@ -495,21 +520,24 @@ export class AudioDetectionComponent {
       volumeTextSelector: config.volumeTextSelector,
       frequencySelector: config.frequencySelector,
       noteSelector: config.noteSelector,
-      
+
       clarityThreshold: config.clarityThreshold ?? 0.4,
       minVolumeAbsolute: config.minVolumeAbsolute, // 🔧 DeviceDetectionの値を優先（デフォルト値削除）
       fftSize: config.fftSize ?? 4096,
       smoothing: config.smoothing ?? 0.1,
-      
+
       deviceOptimization: config.deviceOptimization ?? true,
-      
+
       uiUpdateInterval: config.uiUpdateInterval ?? 50, // 20fps
       autoUpdateUI: config.autoUpdateUI ?? true,
-      
+
       onPitchUpdate: config.onPitchUpdate, // コールバック関数はオプショナル
-      
+
       debug: config.debug ?? false,
-      logPrefix: config.logPrefix ?? '🎵 AudioDetection'
+      logPrefix: config.logPrefix ?? '🎵 AudioDetection',
+
+      // 🆕 v1.6.0: アプリ側オーバーライド設定
+      overrides: config.overrides,
     };
 
     // 🔧 FIX: AudioManager will be obtained from MicrophoneController during initialization
@@ -613,7 +641,8 @@ export class AudioDetectionComponent {
           this.handleError(error, 'microphone_controller');
         },
         onDeviceChange: (specs) => {
-          this.deviceSpecs = specs;
+          // 🆕 v1.6.0: デバイス変更時もオーバーライドを適用
+          this.deviceSpecs = DeviceDetection.getDeviceSpecsWithOverrides(this.config.overrides);
           this.callbacks.onDeviceDetected?.(specs);
         }
       });
@@ -634,8 +663,8 @@ export class AudioDetectionComponent {
       });
 
       // Initialize PitchDetector with DeviceDetection settings as Single Source of Truth
-      // DeviceDetectionからPC向けのデフォルト値を取得（getDeviceSpecsはPC用のフォールバック値を含む）
-      const fallbackSpecs = DeviceDetection.getDeviceSpecs(); // PC設定がフォールバック
+      // 🆕 v1.6.0: オーバーライド適用済みのスペックをフォールバックとして使用
+      const fallbackSpecs = DeviceDetection.getDeviceSpecsWithOverrides(this.config.overrides);
 
       const pitchDetectorConfig = {
         clarityThreshold: this.config.clarityThreshold,
@@ -643,7 +672,10 @@ export class AudioDetectionComponent {
         minVolumeAbsolute: this.deviceSpecs?.noiseGate ?? fallbackSpecs.noiseGate,
         fftSize: this.config.fftSize,
         smoothing: this.deviceSpecs?.smoothingFactor ?? fallbackSpecs.smoothingFactor,
-        deviceOptimization: this.config.deviceOptimization
+        deviceOptimization: this.config.deviceOptimization,
+        // 🆕 v1.6.0: 周波数範囲をオーバーライドから適用
+        minFrequency: this.deviceSpecs?.minFrequency ?? fallbackSpecs.minFrequency,
+        maxFrequency: this.deviceSpecs?.maxFrequency ?? fallbackSpecs.maxFrequency
       };
 
       this.debugLog('PitchDetector config object:', pitchDetectorConfig);
@@ -674,6 +706,11 @@ export class AudioDetectionComponent {
       });
 
       await this.pitchDetector.initialize();
+
+      // 🆕 v1.6.0: harmonicCorrectionEnabled初期値を適用
+      const harmonicEnabled = this.deviceSpecs?.harmonicCorrectionEnabled ?? fallbackSpecs.harmonicCorrectionEnabled;
+      this.pitchDetector.setHarmonicCorrectionEnabled(harmonicEnabled);
+      this.debugLog('Applied harmonicCorrectionEnabled:', harmonicEnabled);
 
       // Verify PitchDetector's actual status after initialization
       const pitchDetectorStatus = this.pitchDetector.getStatus();
@@ -1092,24 +1129,28 @@ export class AudioDetectionComponent {
    * @private
    */
   private detectAndOptimizeDevice(): void {
-    this.deviceSpecs = DeviceDetection.getDeviceSpecs();
-    
+    // 🆕 v1.6.0: getDeviceSpecsWithOverrides()を使用してアプリ側オーバーライドを適用
+    this.deviceSpecs = DeviceDetection.getDeviceSpecsWithOverrides(this.config.overrides);
+
     // ⬇️ 独自のdeviceSettingsMapを削除し、deviceSpecsを直接利用するように変更
     // DeviceDetection.ts が唯一の情報源となる
-    
-    this.debugLog('Using DeviceDetection values directly:', {
+
+    this.debugLog('Using DeviceDetection values (with overrides):', {
       device: this.deviceSpecs.deviceType,
       noiseGate: `${this.deviceSpecs.noiseGate} (${(this.deviceSpecs.noiseGate * 100).toFixed(2)}% threshold)`,
       volumeMultiplier: this.deviceSpecs.volumeMultiplier,
       sensitivity: this.deviceSpecs.sensitivity,
-      smoothingFactor: this.deviceSpecs.smoothingFactor
+      smoothingFactor: this.deviceSpecs.smoothingFactor,
+      minFrequency: this.deviceSpecs.minFrequency,
+      maxFrequency: this.deviceSpecs.maxFrequency,
+      harmonicCorrectionEnabled: this.deviceSpecs.harmonicCorrectionEnabled
     });
-    
+
     this.debugLog('Device optimization applied:', {
       device: this.deviceSpecs.deviceType,
       settings: this.deviceSpecs // ⬅️ deviceSettingsではなくdeviceSpecsを参照
     });
-  }    // ⬇️ 独自のdeviceSettingsMapを削除し、deviceSpecsを直接利用するように変更\n    // DeviceDetection.ts が唯一の情報源となる\n    \n    console.log(`🔧 [DeviceOptimization] Using DeviceDetection values directly:`);\n    console.log(`📱 Device: ${this.deviceSpecs.deviceType}`);\n    console.log(`🎯 noiseGate: ${this.deviceSpecs.noiseGate} (${(this.deviceSpecs.noiseGate * 100).toFixed(2)}% threshold)`);\n    console.log(`🔊 volumeMultiplier: ${this.deviceSpecs.volumeMultiplier}`);\n    console.log(`🎤 sensitivity: ${this.deviceSpecs.sensitivity}`);\n    console.log(`📊 smoothingFactor: ${this.deviceSpecs.smoothingFactor}`);\n    \n    this.debugLog('Device optimization applied:', {\n      device: this.deviceSpecs.deviceType,\n      settings: this.deviceSpecs // ⬅️ deviceSettingsではなくdeviceSpecsを参照\n    });\n  }
+  }
 
   /**
    * Caches UI elements for efficient updates

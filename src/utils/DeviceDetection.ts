@@ -5,7 +5,7 @@
  * Handles iPadOS 13+ detection issues and provides device-specific configurations
  */
 
-import type { DeviceSpecs } from '../types';
+import type { DeviceSpecs, DeviceOverrides, DeviceSpecsWithOverrides } from '../types';
 
 export class DeviceDetection {
   private static cachedSpecs: DeviceSpecs | null = null;
@@ -39,6 +39,77 @@ export class DeviceDetection {
     });
 
     return deviceSpecs;
+  }
+
+  /**
+   * デバイス検出値にアプリ側オーバーライドをマージ
+   *
+   * @description
+   * DeviceDetectionの自動検出値をベースに、アプリ側からの上書き設定を適用。
+   * 各パラメータは安全な範囲内にクランプされる。
+   *
+   * @param overrides アプリ側からの上書き設定
+   * @returns マージ済みDeviceSpecs（minFrequency, maxFrequency, harmonicCorrectionEnabled含む）
+   *
+   * @example
+   * ```typescript
+   * const specs = DeviceDetection.getDeviceSpecsWithOverrides({
+   *   sensitivity: 2.0,
+   *   minFrequency: 50,
+   *   harmonicCorrectionEnabled: false
+   * });
+   * ```
+   */
+  static getDeviceSpecsWithOverrides(overrides?: DeviceOverrides): DeviceSpecsWithOverrides {
+    const baseSpecs = DeviceDetection.getDeviceSpecs();
+
+    // デフォルト周波数範囲
+    const defaultMinFreq = 30;
+    const defaultMaxFreq = 1200;
+
+    const result: DeviceSpecsWithOverrides = {
+      ...baseSpecs,
+      // オーバーライド適用（範囲制限付き）
+      sensitivity: overrides?.sensitivity !== undefined
+        ? Math.max(0.5, Math.min(5.0, overrides.sensitivity))
+        : baseSpecs.sensitivity,
+      noiseGate: overrides?.noiseGate !== undefined
+        ? Math.max(0.01, Math.min(0.20, overrides.noiseGate))
+        : baseSpecs.noiseGate,
+      volumeMultiplier: overrides?.volumeMultiplier !== undefined
+        ? Math.max(1.0, Math.min(10.0, overrides.volumeMultiplier))
+        : baseSpecs.volumeMultiplier,
+      // 新規パラメータ
+      minFrequency: overrides?.minFrequency !== undefined
+        ? Math.max(30, Math.min(100, overrides.minFrequency))
+        : defaultMinFreq,
+      maxFrequency: overrides?.maxFrequency !== undefined
+        ? Math.max(800, Math.min(2000, overrides.maxFrequency))
+        : defaultMaxFreq,
+      harmonicCorrectionEnabled: overrides?.harmonicCorrectionEnabled ?? true,
+    };
+
+    // オーバーライド適用時はログ出力
+    if (overrides) {
+      console.log('🔧 [DeviceDetection] Overrides applied:', {
+        original: {
+          sensitivity: baseSpecs.sensitivity,
+          noiseGate: baseSpecs.noiseGate,
+          volumeMultiplier: baseSpecs.volumeMultiplier,
+        },
+        overrides,
+        result: {
+          sensitivity: result.sensitivity,
+          noiseGate: result.noiseGate,
+          volumeMultiplier: result.volumeMultiplier,
+          minFrequency: result.minFrequency,
+          maxFrequency: result.maxFrequency,
+          harmonicCorrectionEnabled: result.harmonicCorrectionEnabled,
+        }
+      });
+    }
+
+    return result;
   }
 
   /**

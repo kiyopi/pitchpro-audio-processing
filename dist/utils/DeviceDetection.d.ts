@@ -4,13 +4,33 @@
  * Detects device types, capabilities, and provides optimized settings
  * Handles iPadOS 13+ detection issues and provides device-specific configurations
  */
-import type { DeviceSpecs } from '../types';
+import type { DeviceSpecs, DeviceOverrides, DeviceSpecsWithOverrides } from '../types';
 export declare class DeviceDetection {
     private static cachedSpecs;
     /**
      * Detect current device and return optimized specifications
      */
     static getDeviceSpecs(): DeviceSpecs;
+    /**
+     * デバイス検出値にアプリ側オーバーライドをマージ
+     *
+     * @description
+     * DeviceDetectionの自動検出値をベースに、アプリ側からの上書き設定を適用。
+     * 各パラメータは安全な範囲内にクランプされる。
+     *
+     * @param overrides アプリ側からの上書き設定
+     * @returns マージ済みDeviceSpecs（minFrequency, maxFrequency, harmonicCorrectionEnabled含む）
+     *
+     * @example
+     * ```typescript
+     * const specs = DeviceDetection.getDeviceSpecsWithOverrides({
+     *   sensitivity: 2.0,
+     *   minFrequency: 50,
+     *   harmonicCorrectionEnabled: false
+     * });
+     * ```
+     */
+    static getDeviceSpecsWithOverrides(overrides?: DeviceOverrides): DeviceSpecsWithOverrides;
     /**
      * Analyze user agent string and determine device specifications
      */

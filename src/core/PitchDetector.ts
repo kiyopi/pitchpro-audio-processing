@@ -299,9 +299,12 @@ export class PitchDetector {
       smoothing: 0.9, // 揺れ防止のため強化 (0.1 → 0.9)
       clarityThreshold: 0.4,    // 0.8から0.4に現実的な値に変更
       // ⬇️ 固定のデフォルト値を削除し、configから渡される値を優先する
-      minVolumeAbsolute: config.minVolumeAbsolute ?? 0.015, // 安全なフォールバック値
+      minVolumeAbsolute: config.minVolumeAbsolute ?? 0.005, // 低音域対応のため緩和 (0.015 → 0.005)
       // 🔧 noiseGate削除: minVolumeAbsoluteと重複のため不要
       deviceOptimization: true, // v1.1.8: デバイス最適化デフォルト有効
+      // 🆕 周波数範囲設定（v1.6.0）
+      minFrequency: config.minFrequency ?? 30,
+      maxFrequency: config.maxFrequency ?? 1200,
       ...config  // 🎯 外部設定で上書き
     };
     
@@ -663,12 +666,12 @@ export class PitchDetector {
       }
     }
     
-    // Human vocal range filtering (practical adjustment)
-    // Optimized for actual human voice range:
-    // - Low range: 30Hz and above (extended for low bass instruments and voices)
-    // - High range: 1200Hz and below (practical singing range)
+    // Human vocal range filtering (configurable range)
+    // 🆕 v1.6.0: config.minFrequency/maxFrequency で設定可能に
+    // - Low range: minFrequency Hz and above (default: 30Hz)
+    // - High range: maxFrequency Hz and below (default: 1200Hz)
     // - Exclude extreme low frequency noise while preserving deep male voices and low bass
-    const isValidVocalRange = pitch >= 30 && pitch <= 1200;
+    const isValidVocalRange = pitch >= this.config.minFrequency && pitch <= this.config.maxFrequency;
     
     if (pitch && clarity > this.config.clarityThreshold && this.currentVolume > this.config.minVolumeAbsolute && isValidVocalRange) {
       let finalFreq = pitch;

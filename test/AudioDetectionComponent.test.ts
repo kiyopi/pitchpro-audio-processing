@@ -19,7 +19,23 @@ vi.mock('../src/utils/DeviceDetection', () => ({
       divisor: 6,
       gainCompensation: 1.0,
       noiseThreshold: 5,
-      smoothingFactor: 0.2
+      smoothingFactor: 0.2,
+      volumeMultiplier: 3.0
+    })),
+    // 🆕 v1.6.0: getDeviceSpecsWithOverridesモック追加
+    getDeviceSpecsWithOverrides: vi.fn(() => ({
+      deviceType: 'PC',
+      isIOS: false,
+      sensitivity: 1,
+      noiseGate: 0.02,
+      divisor: 6,
+      gainCompensation: 1.0,
+      noiseThreshold: 5,
+      smoothingFactor: 0.2,
+      volumeMultiplier: 3.0,
+      minFrequency: 30,
+      maxFrequency: 1200,
+      harmonicCorrectionEnabled: true
     }))
   }
 }));

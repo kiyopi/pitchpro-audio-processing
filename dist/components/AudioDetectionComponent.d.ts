@@ -58,7 +58,7 @@
  */
 import { MicrophoneController } from '../core/MicrophoneController';
 import { PitchProError } from '../utils/errors';
-import type { PitchDetectionResult, DeviceSpecs } from '../types';
+import type { PitchDetectionResult, DeviceSpecs, DeviceOverrides, DeviceSpecsWithOverrides } from '../types';
 /**
  * Configuration interface for AudioDetectionComponent
  */
@@ -170,6 +170,26 @@ export interface AudioDetectionConfig {
     onPitchUpdate?: (result: PitchDetectionResult) => void;
     debug?: boolean;
     logPrefix?: string;
+    /**
+     * アプリ側からのデバイス設定オーバーライド
+     *
+     * @description DeviceDetectionの自動検出値を上書きする設定。
+     * sensitivity, noiseGate, volumeMultiplier, minFrequency, maxFrequency,
+     * harmonicCorrectionEnabled（初期値のみ、ランタイム変更はsetHarmonicCorrectionEnabled()を使用）
+     *
+     * @example
+     * ```typescript
+     * const audioDetector = new AudioDetectionComponent({
+     *   overrides: {
+     *     sensitivity: 2.0,
+     *     minFrequency: 50,
+     *     maxFrequency: 1500,
+     *     harmonicCorrectionEnabled: false  // 音域テスト時は無効化
+     *   }
+     * });
+     * ```
+     */
+    overrides?: DeviceOverrides;
 }
 /**
  * Callback functions for AudioDetectionComponent events
@@ -316,6 +336,8 @@ export interface AudioDetectionConfig {
     onPitchUpdate?: (result: PitchDetectionResult) => void;
     debug?: boolean;
     logPrefix?: string;
+    /** アプリ側からのデバイス設定オーバーライド */
+    overrides?: DeviceOverrides;
 }
 /**
  * Event callbacks for AudioDetectionComponent
@@ -352,7 +374,7 @@ export declare class AudioDetectionComponent {
     private currentState;
     /** @private Event callbacks */
     private callbacks;
-    /** @private Device specifications */
+    /** @private Device specifications (with overrides applied) */
     private deviceSpecs;
     /** @private Device-specific settings */
     private deviceSettings;
@@ -520,15 +542,16 @@ export declare class AudioDetectionComponent {
     getStatus(): {
         state: "error" | "uninitialized" | "initializing" | "ready" | "detecting" | "stopped";
         isInitialized: boolean;
-        deviceSpecs: DeviceSpecs | null;
+        deviceSpecs: DeviceSpecsWithOverrides | null;
         deviceSettings: DeviceSettings | null;
-        config: Required<Omit<AudioDetectionConfig, "minVolumeAbsolute" | "volumeBarSelector" | "volumeTextSelector" | "frequencySelector" | "noteSelector" | "onPitchUpdate">> & {
+        config: Required<Omit<AudioDetectionConfig, "minVolumeAbsolute" | "volumeBarSelector" | "volumeTextSelector" | "frequencySelector" | "noteSelector" | "onPitchUpdate" | "overrides">> & {
             volumeBarSelector?: string | undefined;
             volumeTextSelector?: string | undefined;
             frequencySelector?: string | undefined;
             noteSelector?: string | undefined;
             minVolumeAbsolute?: number | undefined;
             onPitchUpdate?: ((result: PitchDetectionResult) => void) | undefined;
+            overrides?: DeviceOverrides | undefined;
         };
         lastError: PitchProError | null;
         pitchDetectorStatus: {
@@ -540,26 +563,7 @@ export declare class AudioDetectionComponent {
             rawVolume: number;
             currentFrequency: number;
             detectedNote: string;
-            detectedOctave: number | null; /**
-             * Stops pitch detection but preserves UI state
-             *
-             * @description This method stops the pitch detection process while keeping UI elements
-             * in their current state. For complete reset including UI, use reset() instead.
-             *
-             * @returns boolean - Returns true if detection stopped successfully, false otherwise
-             *
-             * @example
-             * ```typescript
-             * // Stop detection but keep UI values
-             * const stopped = audioDetector.stopDetection();
-             * if (stopped) {
-             *   console.log('Detection stopped, UI preserved');
-             * }
-             *
-             * // For complete reset including UI:
-             * audioDetector.microphoneController?.reset();
-             * ```
-             */
+            detectedOctave: number | null;
             currentClarity: number;
             lastError: Error | null;
             frameRateStatus: {
@@ -582,25 +586,7 @@ export declare class AudioDetectionComponent {
             lastError: Error | null;
             audioManagerStatus: {
                 isInitialized: boolean;
-                refCount: number; /**
-                 * コールバック関数を設定
-                 *
-                 * @param callbacks - 設定するコールバック関数
-                 *
-                 * @example
-                 * ```typescript
-                 * audioDetector.setCallbacks({
-                 *   onPitchUpdate: (result) => {
-                 *     console.log('音程検出:', result);
-                 *     // result.volume は既にデバイス固有補正済み（0-100%）
-                 *     // PC: 生音量 × 3.0, iPhone: 生音量 × 7.5, iPad: 生音量 × 20.0
-                 *   },
-                 *   onError: (error) => {
-                 *     console.error('検出エラー:', error);
-                 *   }
-                 * });
-                 * ```
-                 */
+                refCount: number;
                 audioContextState: string;
                 mediaStreamActive: boolean;
                 activeAnalysers: string[];
@@ -619,25 +605,7 @@ export declare class AudioDetectionComponent {
                 lastHealthCheck: import("../types").HealthStatus | null;
                 audioManagerStatus: {
                     isInitialized: boolean;
-                    refCount: number; /**
-                     * コールバック関数を設定
-                     *
-                     * @param callbacks - 設定するコールバック関数
-                     *
-                     * @example
-                     * ```typescript
-                     * audioDetector.setCallbacks({
-                     *   onPitchUpdate: (result) => {
-                     *     console.log('音程検出:', result);
-                     *     // result.volume は既にデバイス固有補正済み（0-100%）
-                     *     // PC: 生音量 × 3.0, iPhone: 生音量 × 7.5, iPad: 生音量 × 20.0
-                     *   },
-                     *   onError: (error) => {
-                     *     console.error('検出エラー:', error);
-                     *   }
-                     * });
-                     * ```
-                     */
+                    refCount: number;
                     audioContextState: string;
                     mediaStreamActive: boolean;
                     activeAnalysers: string[];
